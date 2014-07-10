@@ -138,7 +138,7 @@ int RS232_OpenComport(int comport_number, int baudrate)
   new_port_settings.c_cflag = baudr | CS8 | CLOCAL | CREAD;
   new_port_settings.c_iflag = IGNPAR;
   new_port_settings.c_oflag = 0;
-  new_port_settings.c_lflag = 0;
+  new_port_settings.c_lflag = ICANON;
   new_port_settings.c_cc[VMIN] = 0;      /* block untill n bytes are received */
   new_port_settings.c_cc[VTIME] = 0;     /* block untill a timer expires (n * 100 mSec.) */
   error = tcsetattr(Cport[comport_number], TCSANOW, &new_port_settings);
@@ -168,7 +168,7 @@ int RS232_OpenComport(int comport_number, int baudrate)
 }
 
 
-int RS232_PollComport(int comport_number, unsigned char *buf, int size)
+inline int RS232_PollComport(int comport_number, unsigned char *buf, int size)
 {
   int n;
 
@@ -178,7 +178,7 @@ int RS232_PollComport(int comport_number, unsigned char *buf, int size)
 }
 
 
-int RS232_SendByte(int comport_number, unsigned char byte)
+inline int RS232_SendByte(int comport_number, unsigned char byte)
 {
   int n;
 
@@ -189,7 +189,7 @@ int RS232_SendByte(int comport_number, unsigned char byte)
 }
 
 
-int RS232_SendBuf(int comport_number, unsigned char *buf, int size)
+inline int RS232_SendBuf(int comport_number, unsigned char *buf, int size)
 {
   return(write(Cport[comport_number], buf, size));
 }

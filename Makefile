@@ -1,16 +1,26 @@
 CC=arm-linux-gnueabi-gcc
-CFLAGS= -march=armv7-a -mcpu=cortex-a8 -mfloat-abi=soft
+CFLAGS= -march=armv7-a -mcpu=cortex-a8 -mfloat-abi=soft -Wall
 
-all:connect
-connect:connect.o rs232.o
-	$(CC) $(CFLAGS) -o connect connect.o rs232.o
-connect.o:connect.c
-	$(CC) $(CFLAGS) -c connect.c
+all:a_modem_test rs232_test
 rs232.o:rs232.c
 	$(CC) $(CFLAGS) -c rs232.c
+acoustic_modem.o:acoustic_modem.c acoustic_modem.h
+	$(CC) $(CFLAGS) -c acoustic_modem.c
+rs232_test.o:rs232_test.c
+	$(CC) $(CFLAGS) -c rs232_test.c
+a_modem_test.o:a_modem_test.c
+	$(CC) $(CFLAGS) -c a_modem_test.c 
+a_modem_test:a_modem_test.o acoustic_modem.o rs232.o
+	$(CC) $(CFLAGS) -o a_modem_test a_modem_test.o rs232.o \
+	acoustic_modem.o
+rs232_test:rs232_test.o rs232.o
+	$(CC) $(CFLAGS) -o rs232_test rs232_test.o rs232.o
+
 clean:
-	rm -f *.o connect
-run:program
-	./connect
-deploy:program
-	scp ./connect root@charlie:~/.
+	rm -f *.o 
+run:
+	
+deploy:
+	mv a_modem_test bin/.
+	mv rs232_test bin/.
+	scp ./bin/* root@charlie:~/.
