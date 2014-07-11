@@ -168,6 +168,7 @@ int RS232_OpenComport(int comport_number, int baudrate)
 }
 
 
+
 inline int RS232_PollComport(int comport_number, unsigned char *buf, int size)
 {
   int n;
@@ -176,7 +177,56 @@ inline int RS232_PollComport(int comport_number, unsigned char *buf, int size)
 
   return(n);
 }
+inline void RS232_Flush(int comport_number){
+	tcflush(Cport[comport_number],TCIOFLUSH);
+}
 
+int RS232_wait_info(int comport_number,char *key_word,int timeout,char *info,int info_size){
+//non block
+int n;
+char buf[BUFSIZE];
+int delay=0;
+while(delay<timeout){
+n=RS232_PollComport(comport_number,buf,BUFSIZE);
+if (n<1){
+delay++;
+}else{
+buf[n]=0;
+if (n<info_size){
+if (strcasestr(buf,key_word)){
+strcpy(info,buf);//copy msg
+return n;
+}
+}else{
+printf("info_size to small\n");
+return FAIL;
+}
+}
+usleep(1000);
+}
+// timeout
+printf("info timeout\n");
+return FALSE;
+}
+
+int RS232_wait_ack(int comport_number,char *ack_msg,int timeout){
+//non block
+int n;
+char buf[BUFSIZE];
+int delay=0;
+while(delay<timeout){
+n=RS232_PollComport(comport_number,buf,BUFSIZE);
+if (n<1){//input not ready
+delay++;
+}else{// input ready
+buf[n]=0;
+if (strcasestr(buf,ack_msg))return TRUE;
+}
+usleep(1000);
+}
+printf("ack timeout\n");
+return FALSE;
+}
 
 inline int RS232_SendByte(int comport_number, unsigned char byte)
 {
@@ -455,6 +505,7 @@ int RS232_PollComport(int comport_number, unsigned char *buf, int size)
 }
 
 
+
 int RS232_SendByte(int comport_number, unsigned char byte)
 {
   int n;
@@ -520,7 +571,6 @@ int RS232_IsDSREnabled(int comport_number)
   if(status&MS_DSR_ON) return(1);
   else return(0);
 }
-
 
 void RS232_enableDTR(int comport_number)
 {

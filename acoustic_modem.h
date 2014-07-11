@@ -1,5 +1,6 @@
 #define a_modem_dev_no 18
 #define a_modem_serial_baudrate 115200
+#define a_modem_dev_path "/dev/ttyUSB2"
 
 typedef struct{
 int addr;
@@ -40,6 +41,8 @@ int a_modem_status();
 // get atxn atrn info
 int a_modem_prob();
 
-int a_modem_wait_info(char *key_word,int timeout,char *info,int info_size);
+int a_modem_Is_Sync(int samp_interval,int N_retry);
 
-int a_modem_wait_ack(char *ack_msg,int timeout_mili);
+inline int a_modem_wait_info(char *key_word,int timeout,char *info,int info_size);
+
+inline int a_modem_wait_ack(char *ack_msg,int timeout_mili);

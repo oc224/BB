@@ -55,7 +55,8 @@ extern "C" {
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
-
+#include "system.h"
+#define BUFSIZE 128
 #else
 
 #include <windows.h>
@@ -64,8 +65,11 @@ extern "C" {
 
 int RS232_OpenComport(int, int);
 inline int RS232_PollComport(int, unsigned char *, int);
+int RS232_wait_info(int comport_number,char *key_word,int timeout,char *info,int info_size);
+int RS232_wait_ack(int comport_number,char *ack_msg,int timeout);
 inline int RS232_SendByte(int, unsigned char);
 inline int RS232_SendBuf(int, unsigned char *, int);
+inline void RS232_Flush(int comport_number);
 void RS232_CloseComport(int);
 void RS232_cputs(int, const char *);
 int RS232_IsDCDEnabled(int);
