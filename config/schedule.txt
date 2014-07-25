@@ -1,0 +1,10 @@
+Anderson{
+play 5 /ffs/lfm_data_t3_l1.wav
+record 5
+sleep 5
+}
+Bob{
+play 5 /ffs/lfm_data_t3_l1.wav
+record 5
+sleep 5
+}

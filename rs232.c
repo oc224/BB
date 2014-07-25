@@ -34,6 +34,7 @@
 /* For more info and how to use this library, visit: http://www.teuniz.net/RS-232/ */
 
 #include "rs232.h"
+#include <string.h>
 
 #ifdef __linux__   /* Linux */
 
@@ -161,7 +162,7 @@ int RS232_OpenComport(int comport_number, int baudrate)
 	return(0);
 }
 
-inline int RS232_PollComport(int comport_number, unsigned char *buf, int size)
+inline int RS232_PollComport(int comport_number,char *buf, int size)
 {
 	int n;
 
@@ -220,7 +221,7 @@ int RS232_wait_ack(int comport_number,char *ack_msg,int timeout) {
 	return FAIL;
 }
 
-inline int RS232_SendByte(int comport_number, unsigned char byte)
+inline int RS232_SendByte(int comport_number, char byte)
 {
 	int n;
 
@@ -230,7 +231,7 @@ inline int RS232_SendByte(int comport_number, unsigned char byte)
 	return(0);
 }
 
-inline int RS232_SendBuf(int comport_number, unsigned char *buf, int size)
+inline int RS232_SendBuf(int comport_number,char *buf, int size)
 {
 	return(write(Cport[comport_number], buf, size));
 }

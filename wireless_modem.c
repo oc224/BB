@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -6,7 +7,6 @@
 #include "rs232.h"
 #include "system.h"
 
-#define BUFSIZE 32
 
 static w_modem w_modem_info;
 int w_modem_err(char *msg) {
@@ -16,7 +16,6 @@ int w_modem_err(char *msg) {
 
 int w_modem_open() {
 //Entering command mode
-	int n;
 // open serial port
 	if (RS232_OpenComport(w_modem_dev_no, w_modem_serial_baud_rate)) {
 		printf("W_modem, Can not open serial port\n");
