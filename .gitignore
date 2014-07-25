@@ -2,4 +2,4 @@
 *.o
 bin
 .cproject
-*project
+.project

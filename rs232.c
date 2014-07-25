@@ -34,8 +34,9 @@
 /* For more info and how to use this library, visit: http://www.teuniz.net/RS-232/ */
 
 #include "rs232.h"
-#include <string.h>
+#include "system.h"
 
+#define BUFSIZE 64
 #ifdef __linux__   /* Linux */
 
 int Cport[30],

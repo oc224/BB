@@ -2,6 +2,7 @@
 #include "rs232.h"
 #include "system.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #define BUFSIZE 128
@@ -11,7 +12,6 @@ a_modem modem;
 
 int a_modem_open() {
 	//open serial port, go to command mode, issue at (attention), then check response
-	char buf[BUFSIZE];
 	if (RS232_OpenComport(a_modem_dev_no, a_modem_serial_baudrate)) {
 		printf("Acoustic modem, Fail to open.\n");
 		return FAIL;
@@ -80,7 +80,6 @@ int a_modem_play(char * filename) {
 	//play a wavform, store the tx time
 	char buf[BUFSIZE];
 	char buf2[BUFSIZE];
-	int delay = 0;
 	int n;
 	a_modem_clear_io_buffer();
 // play
@@ -90,7 +89,8 @@ int a_modem_play(char * filename) {
 		return FAIL;
 	}
 	if (a_modem_wait_ack("buffering", SERIAL_TIMEOUT) == FAIL) {
-		fprintf(stderr, "A_modem, failt to play waveform\n");
+		fprintf(stderr, "A_modem, fail to play waveform\n");
+		return FAIL;
 	}
 // get time stamp
 	n = a_modem_wait_info("tx", 5000, buf, BUFSIZE); //TODO play command have a variable buffer time
@@ -110,25 +110,43 @@ int a_modem_play(char * filename) {
 int a_modem_record(int duration) {
 // record waveform, store rx info as well.
 	char buf[BUFSIZE], buf2[BUFSIZE];
+	char logname[32];
+	a_modem_clear_io_buffer();
+	/*record on*/
 	RS232_SendBuf(a_modem_dev_no, "record on\r", 10);
-	if (a_modem_wait_info("recorder on", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
+/*	if (a_modem_wait_ack("ok", SERIAL_TIMEOUT) == FAIL)
+		fprintf(stderr, "A_modem, record msg (ok) missing\n");*/
+/*	if (a_modem_wait_info("at", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
 		fprintf(stderr, "A_modem, record msg (...recorder on...) missing\n");
 	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
-	if (a_modem_wait_ack("ok", SERIAL_TIMEOUT) == FAIL)
-		fprintf(stderr, "A_modem, record msg (ok) missing\n");
-	if (a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
+	system(buf2);*/
+
+	usleep(duration * 1000); //TODO int overflow?
+	/*record off*/
+	RS232_SendBuf(a_modem_dev_no, "\r", 1);
+	RS232_SendBuf(a_modem_dev_no, "record off\r", 11);
+
+	/* get rx filename*/
+/*	if (a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
 		fprintf(stderr, "A_modem, record msg (filename.wav) missing\n");
 	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
-	usleep(duration * 1000); //TODO int overflow?
-	RS232_SendBuf(a_modem_dev_no, "record off\r", 11);
-	if (a_modem_wait_info("recorder off", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
+	system(buf2);*/
+
+/*	if (a_modem_wait_info("off at", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
 		fprintf(stderr, "A_modem, record msg (...recorder off...) missing\n");
 	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
-	if (a_modem_wait_ack("ok", SERIAL_TIMEOUT) == FAIL)
-		fprintf(stderr, "A_modem, record msg (ok) missing\n");
+	system(buf2);*/
+/*	if (a_modem_wait_ack("ok", SERIAL_TIMEOUT) == FAIL)
+		fprintf(stderr, "A_modem, record msg (ok) missing\n");*/
+	/*get log name*/
+	RS232_SendBuf(a_modem_dev_no, "\r", 1);
 	if (a_modem_wait_info("log", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
 		fprintf(stderr, "A_modem, record msg (filename.log) missing\n");
-	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
+	sscanf(buf,"%*s log file %s",logname);
+	printf("log name :%s\n",logname);
+	sprintf(buf2, "echo '%s' >> RXLOG.TXT",logname+4);
+	system(buf2);
+
 	return SUCCESS;
 }
 
@@ -259,5 +277,10 @@ void a_modem_status_show() {
 
 int a_modem_prob(a_network* status) {
 	// get atxn atrn info
+	return SUCCESS;
+}
+
+int a_modem_upload_file(const char *fname){
+
 	return SUCCESS;
 }

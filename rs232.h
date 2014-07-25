@@ -52,8 +52,6 @@ extern "C" {
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
-#include "system.h"
-#define BUFSIZE 128
 #else
 
 #include <windows.h>

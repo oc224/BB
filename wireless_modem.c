@@ -6,6 +6,7 @@
 #include "wireless_modem.h"
 #include "rs232.h"
 #include "system.h"
+#define BUFSIZE 64
 
 
 static w_modem w_modem_info;

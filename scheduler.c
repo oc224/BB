@@ -3,9 +3,12 @@
 #include "system.h"
 #include <string.h>
 #include "acoustic_modem.h"
+#include "scheduler.h"
 #define BUFSIZE 128
+
 static schedule modem_schedule;
-extern this_node t_node;
+node_cfg t_node;
+
 int scheduler_init(){
 	modem_schedule.n_task=0;
 	return SUCCESS;
@@ -28,20 +31,23 @@ void scheduler_task_show(){
 
 int scheduler_task_add(char *cfg_msg){
 	char type_task[16];
+	char arg[128];
+	// pointer
+	task *new_task=(task*)malloc(sizeof(task));
 	if (modem_schedule.n_task==0){//first task
-		modem_schedule.p_this=(task*)malloc(sizeof(task));
-		modem_schedule.p_head=modem_schedule.p_this;
-		modem_schedule.p_head->next_task=modem_schedule.p_this;
-		modem_schedule.p_head->prev_task=modem_schedule.p_this;
+		modem_schedule.p_this=new_task;
+		modem_schedule.p_head=new_task;
+		new_task->next_task=new_task;
+		new_task->prev_task=new_task;
 	} else{
-		modem_schedule.p_this->next_task=(task*)malloc(sizeof(task));
-		modem_schedule.p_this->next_task->prev_task=modem_schedule.p_this;
-		modem_schedule.p_this=modem_schedule.p_this->next_task;
-		modem_schedule.p_this->next_task=modem_schedule.p_head;
-		modem_schedule.p_head->prev_task=modem_schedule.p_this;
+		modem_schedule.p_this->next_task=new_task;
+		new_task->prev_task=(task *)modem_schedule.p_this;
+		new_task->next_task=modem_schedule.p_head;
+		modem_schedule.p_head->prev_task=new_task;
+		modem_schedule.p_this=new_task;
 	}
 	modem_schedule.n_task++;
-	sscanf(cfg_msg,"%s %d %s",type_task,modem_schedule.p_this->duration,modem_schedule.p_this->arg);
+	sscanf(cfg_msg,"%s %d %s",type_task,&modem_schedule.p_this->duration,arg);
 	if (strcasestr("play",type_task)!=NULL){
 		modem_schedule.p_this->this_task=PLAY;
 	}else if (strcasestr("record",type_task)!=NULL) {
@@ -49,12 +55,12 @@ int scheduler_task_add(char *cfg_msg){
 	}else if (strcasestr("sleep",type_task)!=NULL){
 		modem_schedule.p_this->this_task=SLEEP;
 	}
+	modem_schedule.p_this->arg=strdup(arg);
 	return SUCCESS;
 }
-scheduler_read(char *filename){
+int scheduler_read(char *filename){
 	FILE *fp;
 	char buf[BUFSIZE];
-	char type_task[16];
 	int is_match;
 	fp=fopen(filename,"r");
 	if (fp==NULL){
@@ -97,5 +103,10 @@ void scheduler_exce(){
 	// book next task
 
 }
-scheduler_open();
-scheduler_close();
+int scheduler_open(){
+
+	return SUCCESS;
+}
+int scheduler_close(){
+	return SUCCESS;
+}

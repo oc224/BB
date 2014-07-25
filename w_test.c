@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include "wireless_modem.h"
 /*
 int w_modem_open(int baudrate);//enetering command mode
 int w_modem_get_info();// get wireless modem info, addr...etc
@@ -7,7 +7,7 @@ void w_modem_info_show();// show info.
 void w_modem_close();// quit command mode
 int w_modem_connect(int dest_addr);// connect to a given node
 */
-void main(){
+int main(){
 	printf("!w_test\n");
 
 /*	printf("!open\n");
@@ -21,6 +21,6 @@ void main(){
 
 	printf("!show info\n");
 	w_modem_info_show();
-
+return 0;
 
 }

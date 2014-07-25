@@ -35,6 +35,13 @@ int main() {
 
 	a_modem_open();
 
+	//record
+	printf("!record\n");
+	a_modem_record(1000);
+	printf("check RX\n");
+	printf("\n");
+
+
 //wait ack
 	a_modem_clear_io_buffer();
 	printf("!wait timeout\n");
@@ -57,21 +64,14 @@ int main() {
 	printf("!set devel configs\n");
 	a_modem_set_devel_configs();
 	printf("wait ack\n");
-	n = a_modem_wait_ack("config", 1000);
-	printf("ack=%d, should be 1\n", n);
 	printf("\n");
 
 // play
 	printf("!play wavform\n");
-	a_modem_play("lfm_data_t3_l1.wav");
+	a_modem_play("lfm_data_t1_l1.wav");
 	printf("should hear sound\n");
 	printf("\n");
 
-	//record
-	printf("!record\n");
-	a_modem_record(1000);
-	printf("check RX\n");
-	printf("\n");
 
 // is clock sync
 /*	printf("!sync test\n");
@@ -82,7 +82,6 @@ int main() {
 	printf("\n");*/
 
 // get status
-	a_modem_wait_ack("ok",2000);
 	printf("!status get\n");
 	a_modem_status();
 	printf("\n");
