@@ -33,3 +33,4 @@ int a_modem_status(); // get status (internal temp, pwr cond...) fill struct a_m
 int a_modem_sync_clock_gps();
 int a_modem_sync_time_gps();
 void a_modem_status_show();
+int a_modem_upload_file(const char *fname);

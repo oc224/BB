@@ -21,7 +21,6 @@ int main() {
 //	int a_modem_set_devel_configs();// set the preferable configs for devel stage, tx pwr...//ok
 //	int a_modem_status();//ok
 //	void a_modem_status_show();//ok
-	int n;
 	printf("!!acoustic modem check\n");
 // open
 	printf("!open\n");
@@ -35,11 +34,21 @@ int main() {
 
 	a_modem_open();
 
+	//upload file
+	printf("!upload file\n");
+	a_modem_upload_file("25080801.WAV");
+	printf("\n");
+
+	// close
+		a_modem_close();
+		return 0;
 	//record
 	printf("!record\n");
 	a_modem_record(1000);
 	printf("check RX\n");
 	printf("\n");
+
+
 
 
 //wait ack
@@ -102,7 +111,5 @@ int main() {
 	 else printf("not sync\n");
 	 printf("\n");*/
 
-// close
-	a_modem_close();
-	return 0;
+
 }

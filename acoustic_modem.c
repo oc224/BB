@@ -281,6 +281,51 @@ int a_modem_prob(a_network* status) {
 }
 
 int a_modem_upload_file(const char *fname){
+	char buf[BUFSIZE];
+	int ret;
+	int n_file;
+	//check for existence
+	sprintf(buf,"ls -l /sd/%s\r",fname);
+	RS232_SendBuf(a_modem_dev_no,buf,strlen(buf));
+	a_modem_wait_info("total",SERIAL_TIMEOUT,buf,BUFSIZE);
+	sscanf(buf,"total of %d file",&n_file);
+	if (n_file==0){
+		printf("file not exist\n");
+		return FAIL;
+	}
+	// copy
+	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
+	a_modem_clear_io_buffer();
+	RS232_SendBuf(a_modem_dev_no,buf,strlen(buf));
+	/*if (a_modem_wait_ack("error",SERIAL_TIMEOUT)==SUCCESS){
+		printf("fail to copy file from /ffs to /sd\n");
+		return FAIL;
+	}*/
+	// wait for the copy
+	if (a_modem_wait_ack("ok",60000)==FAIL){//TODO estimate time, proper value
+		printf("copy file time out\r");
+		return FAIL;
+	}
 
+	// issue ymodem send (sb)
+	sprintf(buf,"sb /ffs/%s\r",fname);
+	RS232_SendBuf(a_modem_dev_no,buf,strlen(buf));
+	a_modem_close();
+	// rb
+	sprintf(buf,"rb -vv >%s<%s",a_modem_dev_path,a_modem_dev_path);
+	ret=system(buf);
+	printf("rb return %d\n",ret);
+	//open
+	a_modem_open();
+	if (ret!=0){
+		printf("fail to use y modem protocol\n");
+		return FAIL;
+	}
+	// delete old files
+	RS232_SendBuf(a_modem_dev_no,"\r",1);
+	sprintf(buf,"rm /ffs/%s\r",fname);
+	RS232_SendBuf(a_modem_dev_no,buf,strlen(buf));
+	sprintf(buf,"rm /sd/%s\r",fname);
+	RS232_SendBuf(a_modem_dev_no,buf,strlen(buf));
 	return SUCCESS;
 }

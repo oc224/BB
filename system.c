@@ -1,25 +1,36 @@
 #include "system.h"
 #include <stdio.h>
-
+#include "string.h"
 node_cfg t_node;
-int id_read(){
-	//see id of this node
+
+int system_cfg_read(){
+	//see cfg of this node
 FILE *fp;
+char name[32];
+memset(name,0,32);
 int rt=SUCCESS;
-fp=fopen("./config/this_node.txt","r");
+fp=fopen(SYS_CFG_PATH,"r");
 if (fp==NULL){
 	printf("fail to read this_node.txt config file\n");
-	return FAIL;
+	rt=FAIL;
 }
-if (fscanf(fp,"name %s",t_node.name)<1){
+if (fscanf(fp,"name %s",name)<1){
 	printf("fail to read this_node.txt (name)\n");
 	rt=FAIL;
 }
+t_node.name=strdup(name);
 fclose(fp);
 return rt;
 }
 
-int debug_msg_dump(char *msg){
+void system_cfg_show(){
+	//show cfg of this node
+	printf("this node info\n");
+	printf("name : %s\n",t_node.name);
+}
+
+int system_msg_dump(char *msg){
+	//dump debug msg to text file
 	FILE *fp;
 	fp=fopen(DEBUG_MSG_PATH,"wa");
 	if (fp==NULL){

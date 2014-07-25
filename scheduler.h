@@ -26,7 +26,10 @@ typedef struct{
 	task *p_this;
 } schedule;
 
-
+int scheduler_init();
+void scheduler_task_show();
+int scheduler_task_add(char *cfg_msg);
+int scheduler_read(char *filename);
 
 
 #endif /* SCHEDULER_H_ */

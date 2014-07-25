@@ -13,13 +13,14 @@ int scheduler_init(){
 	modem_schedule.n_task=0;
 	return SUCCESS;
 }
+
 void scheduler_task_show(){
 	int i;
 	task *prev;
 	task *next;
 	next=modem_schedule.p_head;
 	printf("---------------\n");
-	printf("%d task\n",modem_schedule.n_task);
+	printf("%d tasks\n",modem_schedule.n_task);
 	printf("index type duration arg\n");
 	for (i=0;i<modem_schedule.n_task;i++){
 		printf("%d %d %d %s\n",next->index,next->this_task,next->duration,next->arg);
@@ -32,6 +33,8 @@ void scheduler_task_show(){
 int scheduler_task_add(char *cfg_msg){
 	char type_task[16];
 	char arg[128];
+	memset(arg,0,128);
+	//printf("debug task add : %s\n",cfg_msg);
 	// pointer
 	task *new_task=(task*)malloc(sizeof(task));
 	if (modem_schedule.n_task==0){//first task
@@ -48,20 +51,23 @@ int scheduler_task_add(char *cfg_msg){
 	}
 	modem_schedule.n_task++;
 	sscanf(cfg_msg,"%s %d %s",type_task,&modem_schedule.p_this->duration,arg);
-	if (strcasestr("play",type_task)!=NULL){
+	if (strcasestr(type_task,"PLAY")!=NULL){
 		modem_schedule.p_this->this_task=PLAY;
-	}else if (strcasestr("record",type_task)!=NULL) {
+	}else if (strcasestr(type_task,"record")!=NULL) {
 		modem_schedule.p_this->this_task=RECORD;
-	}else if (strcasestr("sleep",type_task)!=NULL){
+	}else if (strcasestr(type_task,"sleep")!=NULL){
 		modem_schedule.p_this->this_task=SLEEP;
 	}
 	modem_schedule.p_this->arg=strdup(arg);
+	//printf("debug ,arg:%s\n",arg);
+	modem_schedule.p_this->index=modem_schedule.n_task;
 	return SUCCESS;
 }
+
 int scheduler_read(char *filename){
 	FILE *fp;
 	char buf[BUFSIZE];
-	int is_match;
+	int is_match=0;
 	fp=fopen(filename,"r");
 	if (fp==NULL){
 		printf("fail to read schedule file\n");
@@ -73,19 +79,22 @@ int scheduler_read(char *filename){
 			printf("fail to find the corresponding script\n");
 			return FAIL;
 		}
-		is_match=strcasestr(t_node.name,buf);
+		is_match=strcasestr(buf,t_node.name);//TODO
 	}while(is_match==NULL);
 	//actually read
+	while(1){
 	fgets(buf,BUFSIZE,fp);
-	if (strstr("}",buf)==NULL){//continue to read
+	if (strstr(buf,"}")==NULL){//continue to read
 		scheduler_task_add(buf);
 	}else{//end
 		printf("read script finish\n");
 		scheduler_task_show();
 		return SUCCESS;
 	}
+	}
 return FAIL;
 }
+
 void scheduler_exce(){
 	// do this task
 	switch (modem_schedule.p_this->this_task){
@@ -103,10 +112,12 @@ void scheduler_exce(){
 	// book next task
 
 }
+
 int scheduler_open(){
 
 	return SUCCESS;
 }
+
 int scheduler_close(){
 	return SUCCESS;
 }

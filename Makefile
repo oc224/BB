@@ -1,7 +1,7 @@
 CC=arm-linux-gnueabi-gcc
 CFLAGS= -march=armv7-a -mcpu=cortex-a8 -mfloat-abi=soft -Wall
 
-all:a_modem_test rs232_test w_test scheduler.o system.o
+all:a_modem_test rs232_test w_test scheduler.o system.o test_exp
 rs232.o:rs232.c
 	$(CC) $(CFLAGS) -c rs232.c
 acoustic_modem.o:acoustic_modem.c acoustic_modem.h
@@ -25,11 +25,15 @@ system.o:system.c
 	$(CC) $(CFLAGS) -c system.c
 scheduler.o:scheduler.c
 	$(CC) $(CFLAGS) -c scheduler.c
-
+test_exp.o:test_exp.c
+	$(CC) $(CFLAGS) -c test_exp.c
+test_exp:scheduler.o test_exp.o acoustic_modem.o rs232.o system.o
+	$(CC) $(CFLAGS) -o ./bin/test_exp scheduler.o test_exp.o acoustic_modem.o rs232.o system.o
 clean:
 	rm -f *.o 
 run:
 	
 deploy:
 	scp ./bin/* root@charlie:~/.
-	scp ./bin/* root@dylan:~/.
+#	scp ./bin/* root@dylan:~/.
+	scp -r ./config root@charlie:~/
