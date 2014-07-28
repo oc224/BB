@@ -140,7 +140,7 @@ int scheduler_read(char *filename) {
 }
 
 void scheduler_exce(int sig, siginfo_t *si, void *uc) {
-	timer_t *tidp;
+/*	timer_t *tidp;
 	           int or;
 
 	           tidp = si->si_value.sival_ptr;
@@ -152,36 +152,51 @@ void scheduler_exce(int sig, siginfo_t *si, void *uc) {
 	           if (or == -1)
 	               errExit("timer_getoverrun");
 	           else
-	               printf("    overrun count = %d\n", or);
+	               printf("    overrun count = %d\n", or);*/
+	//timer_t now;
+	//time(&now);
+	//system_msg_dump("start");
+	//system_msg_dump(ctime(&now));
 
 
 	// do this task
-    printf("task : %d\n",modem_schedule.p_this->index);
+    //printf("task : %d\n",modem_schedule.p_this->index);
 	switch (modem_schedule.p_this->this_task) {
 	case PLAY:
-		printf("debug, amodem play\n");
-		//a_modem_play(modem_schedule.p_this->arg);
+		//printf("debug, amodem play\n");
+		a_modem_play(modem_schedule.p_this->arg);
 		break;
 	case RECORD:
-		printf("debug, amodem record\n");
-		sleep(modem_schedule.p_this->duration);
-		//a_modem_record(modem_schedule.p_this->duration);
+		//printf("debug, amodem record\n");
+		//usleep(modem_schedule.p_this->duration*1000+1000000);
+		a_modem_record(modem_schedule.p_this->duration);
 		break;
 	case SLEEP:
-		printf("debug, amodem sleep\n");
+		//printf("debug, amodem sleep\n");
 		break;
 	default:
 		break;
 	}
 
 	// book next task
+	int carry=0;
 	its.it_interval.tv_nsec=0;
 	its.it_interval.tv_sec=0;
-	its.it_value.tv_nsec=0;
-	its.it_value.tv_sec+=modem_schedule.p_this->duration;
+	its.it_value.tv_nsec+=(modem_schedule.p_this->duration%1000)*1000000;
+	if (its.it_value.tv_nsec>=1000000000){
+		//printf("carry\n");
+		its.it_value.tv_nsec+=-1000000000;
+		carry=1;
+	}
+	its.it_value.tv_sec+=modem_schedule.p_this->duration/1000+carry;
+	//printf("%ld %ld\n",its.it_value.tv_sec,its.it_value.tv_nsec);
     if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
          errExit("timer_settime");
 	modem_schedule.p_this=modem_schedule.p_this->next_task;
+	//time(&now);
+
+	//system_msg_dump("stop");
+	//system_msg_dump(ctime(&now));
 }
 
 int scheduler_start(int hh,int mm, int ss) {
@@ -195,13 +210,14 @@ int scheduler_start(int hh,int mm, int ss) {
 	start_time.tm_hour=hh;start_time.tm_min=mm;start_time.tm_sec=ss;
 	time(&now);
 	seconds=difftime(mktime(&start_time),now);
+	//seconds=2;
 
 
 	if (seconds<1){
 		printf("error, target time has passed\n");
 		return FAIL;
 	}
-	printf("%d seconds left\n",seconds);
+	printf("%ld seconds left\n",seconds);
 
 	/*set the first timer interrupt*/
 	clock_gettime(CLOCK_REALTIME,&now_clock);

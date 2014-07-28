@@ -1,10 +1,13 @@
 Anderson{
-play 5 /ffs/lfm_data_t3_l1.wav
-record 5
-sleep 5
+play 5000 lfm_data_t1_l1.wav
+record 5000
+sleep 5000
 }
 Bob{
-play 2 /ffs/lfm_data_t3_l1.wav
-sleep 6
-record 4
+play 2000 lfm_data_t1_l1.wav
+sleep 8000
+}
+Charlie{
+record 500
+sleep 9500
 }

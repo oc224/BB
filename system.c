@@ -32,12 +32,13 @@ void system_cfg_show(){
 int system_msg_dump(char *msg){
 	//dump debug msg to text file
 	FILE *fp;
-	fp=fopen(DEBUG_MSG_PATH,"wa");
+	fp=fopen(DEBUG_MSG_PATH,"a");
 	if (fp==NULL){
 		printf("fail to open debug.txt\n");
 		return FAIL;
 	}
 	fputs(msg,fp);
+	fputs("\n",fp);
 	fclose(fp);
 	return SUCCESS;
 }

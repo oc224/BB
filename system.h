@@ -1,7 +1,8 @@
 #define FAIL -1
 #define SUCCESS 0
-#define DEBUG_MSG_PATH "./Log/debug.txt"
-#define SYS_CFG_PATH "./config/this_node.txt"
+#define DEBUG_MSG_PATH "../log/debug.txt"
+#define SYS_CFG_PATH "../config/this_node.txt"
+#define DEFAULT_SCRIPT "../config/schedule.txt"
 
 typedef struct{
 	char *name;
