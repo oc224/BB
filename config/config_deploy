@@ -1,6 +1,6 @@
 #config about ip
 # name w_unit_addr w_net_addr a_unit_addr a_net_addr ppp_ip
-anderson	11	10	11	10	10.0.0.11
-bob	12	10	12	10	10.0.0.12
-charlie	13	10	13	10	10.0.0.13
-dylan	14	10	14	10	10.0.0.14
+Anderson	11	10	11	10	10.0.0.11
+Bob	12	10	12	10	10.0.0.12
+Charlie	13	10	13	10	10.0.0.13
+Dylan	14	10	14	10	10.0.0.14

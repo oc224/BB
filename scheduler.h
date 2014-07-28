@@ -7,6 +7,8 @@
 
 #ifndef SCHEDULER_H_
 #define SCHEDULER_H_
+
+#include <signal.h>
 typedef enum{
 	PLAY,RECORD,SLEEP
 }type_task;
@@ -30,6 +32,8 @@ int scheduler_init();
 void scheduler_task_show();
 int scheduler_task_add(char *cfg_msg);
 int scheduler_read(char *filename);
+void scheduler_exce(int sig, siginfo_t *si, void *uc);
+int scheduler_start(int hh,int mm, int ss);
 
 
 #endif /* SCHEDULER_H_ */

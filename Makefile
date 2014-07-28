@@ -1,5 +1,6 @@
 CC=arm-linux-gnueabi-gcc
-CFLAGS= -march=armv7-a -mcpu=cortex-a8 -mfloat-abi=soft -Wall
+#CC=arm-linux-gnueabihf-gcc-4.8
+CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 
 all:a_modem_test rs232_test w_test scheduler.o system.o test_exp
 rs232.o:rs232.c
@@ -24,11 +25,11 @@ w_test:w_test.o wireless_modem.o rs232.o
 system.o:system.c
 	$(CC) $(CFLAGS) -c system.c
 scheduler.o:scheduler.c
-	$(CC) $(CFLAGS) -c scheduler.c
+	$(CC) $(CFLAGS) -c -lrt scheduler.c 
 test_exp.o:test_exp.c
-	$(CC) $(CFLAGS) -c test_exp.c
+	$(CC) $(CFLAGS) -c -lrt test_exp.c 
 test_exp:scheduler.o test_exp.o acoustic_modem.o rs232.o system.o
-	$(CC) $(CFLAGS) -o ./bin/test_exp scheduler.o test_exp.o acoustic_modem.o rs232.o system.o
+	$(CC) $(CFLAGS) -o ./bin/test_exp scheduler.o test_exp.o acoustic_modem.o rs232.o system.o -lrt
 clean:
 	rm -f *.o 
 run:

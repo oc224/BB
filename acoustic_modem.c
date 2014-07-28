@@ -281,6 +281,7 @@ int a_modem_prob(a_network* status) {
 }
 
 int a_modem_upload_file(const char *fname){
+	//upload a file in modem /sd/ directory
 	char buf[BUFSIZE];
 	int ret;
 	int n_file;
