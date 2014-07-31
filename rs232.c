@@ -35,6 +35,7 @@
 
 #include "rs232.h"
 #include "system.h"
+#include <stdlib.h>
 
 #define BUFSIZE 64
 #ifdef __linux__   /* Linux */
@@ -178,10 +179,11 @@ inline void RS232_Flush(int comport_number) {
 int RS232_wait_info(int comport_number,char *key_word,int timeout,char *info,int info_size) {
 // output string containing key word
 	int n;
-	char buf[BUFSIZE];
+	char *buf;
 	int delay=0;
-	while(delay<timeout) {
-		n=RS232_PollComport(comport_number,buf,BUFSIZE);
+	buf=(char*)malloc(sizeof(char)*info_size);
+	while(delay<timeout) {//before timeout
+		n=RS232_PollComport(comport_number,buf,info_size);
 		if (n<1) {
 			delay++;
 		} else {

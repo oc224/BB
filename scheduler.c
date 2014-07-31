@@ -125,16 +125,14 @@ int scheduler_read(char *filename) {
 		is_match = strcasestr(buf, t_node.name);	//TODO
 	} while (is_match == NULL);
 	//actually read
-	while (1) {
-		fgets(buf, BUFSIZE, fp);
-		if (strstr(buf, "}") == NULL) {	//continue to read
-			scheduler_task_add(buf);
-		} else {	//end
+	while (fgets(buf, BUFSIZE, fp)!=NULL) {
+		if (strstr(buf, "}") != NULL) {//end
 			printf("read script finish\n");
 			modem_schedule.p_this=modem_schedule.p_head;
 			scheduler_task_show();
 			return SUCCESS;
 		}
+		if (strlen(buf)>1)scheduler_task_add(buf);
 	}
 	return FAIL;
 }

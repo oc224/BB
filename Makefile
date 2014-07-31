@@ -2,7 +2,7 @@ CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 
-all:a_modem_test rs232_test w_test exp
+all:a_modem_test rs232_test w_test exp data_upload connect
 rs232.o:rs232.c
 	$(CC) $(CFLAGS) -c rs232.c
 acoustic_modem.o:acoustic_modem.c acoustic_modem.h
@@ -30,11 +30,20 @@ exp.o:exp.c
 	$(CC) $(CFLAGS) -c -lrt exp.c 
 exp:scheduler.o exp.o acoustic_modem.o rs232.o system.o
 	$(CC) $(CFLAGS) -o ./bin/exp scheduler.o exp.o acoustic_modem.o rs232.o system.o -lrt
+data_upload.o:data_upload.c
+	$(CC) $(CFLAGS) -c data_upload.c
+data_upload:data_upload.o acoustic_modem.o rs232.o
+	$(CC) $(CFLAGS) -o ./bin/data_upload data_upload.o acoustic_modem.o rs232.o
+connect.o:connect.c
+	$(CC) $(CFLAGS) -c connect.c
+connect:connect.o wireless_modem.o rs232.o system.o connect.o
+	$(CC) $(CFLAGS) -o ./bin/connect wireless_modem.o rs232.o system.o connect.o
 clean:
 	rm -f *.o 
 run:
 	
 deploy:
 	scp ./bin/* root@charlie:~/bin/.
-#	scp ./bin/* root@dylan:~/.
+	scp ./bin/* root@dylan:~/bin/.
 	scp -r ./config/* root@charlie:~/config/.
+	scp -r ./config/* root@dylan:~/config/.

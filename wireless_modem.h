@@ -20,4 +20,4 @@ int w_modem_open();//enetering command mode
 int w_modem_info_get();// get wireless modem info, addr...etc
 void w_modem_info_show();// show info.
 int w_modem_close();// quit command mode
-int w_modem_connect(int dest_addr);// connect to a given node
+int w_modem_connect(const char *);// connect to a given node

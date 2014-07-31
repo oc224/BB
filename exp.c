@@ -16,15 +16,10 @@ int main(int argc,char* argv[]){
 
 	int hh,mm,ss;
 	char *fname;
-	if (argc>2){
-		fname=strdup(argv[2]);
-	}else{
-		fname=DEFAULT_SCRIPT;
-	}
 	struct tm start_time;
 	time_t now;
 	time(&now);
-	if (argc>1){
+	if (argc>2){
 		sscanf(argv[1],"%d:%d:%d",&hh,&mm,&ss);
 		start_time.tm_hour=hh;
 		start_time.tm_min=mm;
@@ -33,6 +28,12 @@ int main(int argc,char* argv[]){
 		start_time=*localtime(&now);
 		start_time.tm_sec+=5;
 	}
+	if (argc>2){
+		fname=strdup(argv[2]);
+	}else{
+		fname=DEFAULT_SCRIPT;
+	}
+
 
 	printf("script file : %s\n",fname);
 	printf("start time : %2d:%2d:%2d\n ",start_time.tm_hour,start_time.tm_min,start_time.tm_sec);

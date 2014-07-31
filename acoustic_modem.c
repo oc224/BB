@@ -6,7 +6,12 @@
 #include <string.h>
 #include <unistd.h>
 #define BUFSIZE 128
-#define SERIAL_TIMEOUT 1000
+#define SERIAL_TIMEOUT 2000
+#define TX_LOG "echo $(date -Ru) >> /home/root/log/TXLOG.TXT"
+#define TX_PATH "/home/root/log/TXLOG.TXT"
+#define RX_LOG "echo $(date -Ru) >> /home/root/log/RXLOG.TXT"
+#define RX_PATH "/home/root/log/RXLOG.TXT"
+#define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2"
 
 a_modem modem;
 
@@ -18,12 +23,12 @@ int a_modem_open() {
 	}
 // ensure command mode
 	RS232_SendBuf(a_modem_dev_no, "+++\r", 4);
-// detect modem response
+/*// detect modem response
 	RS232_SendBuf(a_modem_dev_no, "at\r", 3);
 	if (a_modem_wait_ack("OK", SERIAL_TIMEOUT) == FAIL) {
 		printf("A_modem, fail to open, modem no response\n");
 		return FAIL;
-	}
+	}*/
 	return SUCCESS;
 }
 
@@ -97,9 +102,9 @@ int a_modem_play(char * filename) {
 	if (n) {
 		buf[n - 1] = 0; //remove carriage return
 		printf("info : %s\n", buf);
-		sprintf(buf2, "echo '%s,%s' >> TXLOG.TXT", filename, buf);
+		sprintf(buf2, "echo '%s,%s' >> %s", filename, buf,TX_PATH);
 		system(buf2); //TODO store result using graceful way
-		system("echo $(date -Ru) >> TXLOG.TXT");
+		system(TX_LOG);
 		return SUCCESS;
 	} else {
 		printf("A_modem, fail to get TX time\n");
@@ -140,13 +145,13 @@ int a_modem_record(int duration) {
 		fprintf(stderr, "A_modem, record msg (ok) missing\n");*/
 	/*get log name*/
 	RS232_SendBuf(a_modem_dev_no, "\r", 1);
-	if (a_modem_wait_info("log", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
+	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
 		fprintf(stderr, "A_modem, record msg (filename.log) missing\n");
 	sscanf(buf,"%*s log file %s",logname);
 	printf("log name :%s\n",logname);
-	sprintf(buf2, "echo '%s' >> RXLOG.TXT",logname+4);
+	sprintf(buf2, "echo '%s' >> %s",logname+4,RX_PATH);
+	system(RX_LOG);
 	system(buf2);
-
 	return SUCCESS;
 }
 
@@ -157,7 +162,7 @@ int a_modem_sync_time_gps() {
 	RS232_SendBuf(a_modem_dev_no, "gpsd\r", 5);
 	a_modem_close();
 	sleep(1);
-	system("gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2");
+	system(GPSPIPE);
 	sleep(5);
 	a_modem_open();
 	a_modem_clear_io_buffer();
@@ -167,8 +172,8 @@ int a_modem_sync_time_gps() {
 	sprintf(buf2, "echo '%s' >> AMODEM.TXT", buf);
 	system(buf2);
 	RS232_SendBuf(a_modem_dev_no, "date -store\r", 12);
-	RS232_SendBuf(a_modem_dev_no, "@latituder\r", 11);
-	RS232_SendBuf(a_modem_dev_no, "@longitude\r", 11);
+	//RS232_SendBuf(a_modem_dev_no, "@latituder\r", 11);
+	//RS232_SendBuf(a_modem_dev_no, "@longitude\r", 11);
 	//TODO check
 	return SUCCESS;
 }
@@ -285,18 +290,22 @@ int a_modem_upload_file(const char *fname){
 	char buf[BUFSIZE];
 	int ret;
 	int n_file;
+	memset(buf,0,BUFSIZE);
 	//check for existence
 	sprintf(buf,"ls -l /sd/%s\r",fname);
 	RS232_SendBuf(a_modem_dev_no,buf,strlen(buf));
-	a_modem_wait_info("total",SERIAL_TIMEOUT,buf,BUFSIZE);
-	sscanf(buf,"total of %d file",&n_file);
+	if (a_modem_wait_info("total",SERIAL_TIMEOUT,buf,BUFSIZE)==FAIL){
+		fprintf(stderr,"modem timeout\n");
+		return FAIL;
+	}
+	sscanf(buf,"total of %d file",&n_file);//TODO mem fix
 	if (n_file==0){
 		printf("file not exist\n");
 		return FAIL;
 	}
 	// copy
-	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
 	a_modem_clear_io_buffer();
+	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
 	RS232_SendBuf(a_modem_dev_no,buf,strlen(buf));
 	/*if (a_modem_wait_ack("error",SERIAL_TIMEOUT)==SUCCESS){
 		printf("fail to copy file from /ffs to /sd\n");
@@ -307,7 +316,6 @@ int a_modem_upload_file(const char *fname){
 		printf("copy file time out\r");
 		return FAIL;
 	}
-
 	// issue ymodem send (sb)
 	sprintf(buf,"sb /ffs/%s\r",fname);
 	RS232_SendBuf(a_modem_dev_no,buf,strlen(buf));

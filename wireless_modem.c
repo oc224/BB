@@ -150,7 +150,7 @@ int w_modem_close() {
 	return SUCCESS;
 }
 
-int w_modem_connect(int dest_addr) {
+int w_modem_connect(const char* dest_addr) {
 	// connect to a given node
 	char buf[BUFSIZE];
 	if (w_modem_open()==FAIL){
@@ -158,19 +158,18 @@ int w_modem_connect(int dest_addr) {
 		return FAIL;
 	}
 	//NET ADDR
-	sprintf(buf, "ats140=%d\r", dest_addr);
+	sprintf(buf, "ats140=%s\r", dest_addr);
 	RS232_SendBuf(w_modem_dev_no, buf, strlen(buf));
 	if (RS232_wait_ack(w_modem_dev_no,"OK",w_modem_default_timeout)==FAIL){
 		printf("W_modem, fail to set network addr\n");
 		return FAIL;
 	}
 	//DEST ADDR
-	sprintf(buf, "ats104=%d\r", dest_addr);
+	sprintf(buf, "ats104=%s\r", dest_addr);
 	RS232_SendBuf(w_modem_dev_no, buf, strlen(buf));
 	if (RS232_wait_ack(w_modem_dev_no,"OK",w_modem_default_timeout)==FAIL){
 		printf("W_modem, fail to set dest addr\n");
 		return FAIL;
 	}
-	w_modem_close();
 	return SUCCESS;
 }
