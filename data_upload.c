@@ -18,7 +18,6 @@ int main(int argc,char *argv[]){
 		printf("please provide file list text file.\n");
 		return -1;
 	}
-
 	a_modem_open();
 
 	fp=fopen(argv[1],"r");
@@ -38,7 +37,7 @@ int main(int argc,char *argv[]){
 		printf("done \n");
 		sleep(1);
 	}
-
+	a_modem_close();
 	return 0;
 }
 

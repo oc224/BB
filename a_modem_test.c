@@ -33,6 +33,10 @@ int main() {
 	printf("\n");
 
 	a_modem_open();
+	printf("!play smart\n");
+	a_modem_play_smart("lfm_data_t1_l1.wav",500);
+	printf("done");
+	return 0;
 
 	//upload file
 	printf("!upload file\n");

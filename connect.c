@@ -51,6 +51,7 @@ int main(int argc,char *argv[]){
 		return FAIL;
 	}
 
+
 	system_node_lookup(argv[1],&dest_node);
 	w_modem_open();
 	w_modem_connect(dest_node.w_add);

@@ -5,13 +5,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define BUFSIZE 128
+#define BUFSIZE 256
 #define SERIAL_TIMEOUT 2000
 #define TX_LOG "echo $(date -Ru) >> /home/root/log/TXLOG.TXT"
 #define TX_PATH "/home/root/log/TXLOG.TXT"
 #define RX_LOG "echo $(date -Ru) >> /home/root/log/RXLOG.TXT"
 #define RX_PATH "/home/root/log/RXLOG.TXT"
 #define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2"
+#define RECORD_ON "reon"
+#define ONLINE_COMMAND 2
 
 a_modem modem;
 
@@ -102,6 +104,75 @@ int a_modem_play(char * filename) {
 	if (n) {
 		buf[n - 1] = 0; //remove carriage return
 		printf("info : %s\n", buf);
+		sprintf(buf2, "echo '%s,%s' >> %s", filename, buf,TX_PATH);
+		system(buf2); //TODO store result using graceful way
+		system(TX_LOG);
+		return SUCCESS;
+	} else {
+		printf("A_modem, fail to get TX time\n");
+		return FAIL;
+	}
+}
+
+inline void a_modem_puts(const char*msg){
+	// write a line to serial port
+	return RS232_cputs(a_modem_dev_no,msg);
+}
+
+inline int a_modem_gets(char* buf,int size){
+	// read a line from serial port
+	return RS232_PollComport(a_modem_dev_no,buf,size);
+
+}
+
+int a_modem_msg_send(const char*msg){
+	// write msg acoustically to remotes modem
+	a_modem_puts("ato\r");
+	if (a_modem_wait_ack("connect",SERIAL_TIMEOUT)==FAIL){
+		fprintf(stderr,"fail to enter online mode\n");
+		return FAIL;
+	}
+	a_modem_puts(msg);
+	if (a_modem_wait_ack("forwarding",SERIAL_TIMEOUT)==FAIL){
+		fprintf(stderr,"fail to forward msg\n");
+		return FAIL;
+	}
+	//usleep(1000000);
+	sleep(ONLINE_COMMAND);
+	a_modem_puts("+++");//TODO simple way to confirm we are in command mode
+	usleep(300000);
+/*	if (a_modem_wait_ack("user",SERIAL_TIMEOUT)==FAIL){
+		fprintf(stderr,"fail to enter command mode\n");
+		return FAIL;
+	}*/
+	return SUCCESS;
+}
+int a_modem_play_smart(char * filename,int mili_sec) {
+	//play a wavform, store the tx time
+	char buf[BUFSIZE];
+	char buf2[BUFSIZE];
+	int n;
+	a_modem_clear_io_buffer();
+	// tell remote modem to record on
+	sprintf(buf,"%s %d",RECORD_ON,mili_sec);
+	if (a_modem_msg_send(buf)==FAIL){
+		return FAIL;
+	}
+
+// play
+	sprintf(buf, "play /ffs/%s\r", filename); //use strcat instead?
+	a_modem_puts(buf);
+
+	if (a_modem_wait_ack("buffering", SERIAL_TIMEOUT) == FAIL) {
+		fprintf(stderr, "A_modem, fail to play waveform\n");
+		return FAIL;
+	}
+// get time stamp, store it, send it.
+	n = a_modem_wait_info("tx", 5000, buf, BUFSIZE); //TODO play command have a variable buffer time
+	if (n) {
+		buf[n - 1] = 0; //remove carriage return
+		printf("info : %s\n", buf);
+		a_modem_msg_send(buf);
 		sprintf(buf2, "echo '%s,%s' >> %s", filename, buf,TX_PATH);
 		system(buf2); //TODO store result using graceful way
 		system(TX_LOG);

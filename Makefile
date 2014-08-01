@@ -45,5 +45,5 @@ run:
 deploy:
 	scp ./bin/* root@charlie:~/bin/.
 	scp ./bin/* root@dylan:~/bin/.
-	scp -r ./config/* root@charlie:~/config/.
-	scp -r ./config/* root@dylan:~/config/.
+	#scp -r ./config/* root@charlie:~/config/.
+	#scp -r ./config/* root@dylan:~/config/.

@@ -34,3 +34,7 @@ int a_modem_sync_clock_gps();
 int a_modem_sync_time_gps();
 void a_modem_status_show();
 int a_modem_upload_file(const char *fname);
+int a_modem_play_smart(char * filename,int mili_sec);
+int a_modem_msg_send(const char*msg);
+inline int a_modem_gets(char* buf,int size);
+inline void a_modem_puts(const char*msg);
