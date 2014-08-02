@@ -22,35 +22,41 @@ int main() {
 //	int a_modem_status();//ok
 //	void a_modem_status_show();//ok
 	printf("!!acoustic modem check\n");
+	a_modem_init();
+
+
 // open
 	printf("!open\n");
 	a_modem_open();
 	printf("\n");
 
+	printf("!play smart\n");
+	a_modem_play_smart("lfm_data_t1_l1.wav",500);
+	printf("done\n\n");
+
 // close
 	printf("!close\n");
 	a_modem_close();
 	printf("\n");
-
-	a_modem_open();
-	printf("!play smart\n");
-	a_modem_play_smart("lfm_data_t1_l1.wav",500);
-	printf("done\n");
 	return 0;
 
-	//upload file
-	printf("!upload file\n");
-	a_modem_upload_file("25080801.WAV");
-	printf("\n");
 
-	// close
-		a_modem_close();
-		return 0;
-	//record
-	printf("!record\n");
-	a_modem_record(1000);
-	printf("check RX\n");
-	printf("\n");
+
+	a_modem_open();
+
+
+	// play
+		printf("!play wavform\n");
+		a_modem_play("lfm_data_t1_l1.wav");
+		printf("should hear sound\n");
+		printf("\n");
+
+
+
+	return 0;
+
+
+
 
 
 
@@ -58,6 +64,7 @@ int main() {
 //wait ack
 	a_modem_clear_io_buffer();
 	printf("!wait timeout\n");
+	a_modem_puts("at\r");
 	a_modem_wait_ack("OK", 2000);
 	printf("Should not be blocking..\n");
 	printf("\n");
@@ -73,17 +80,19 @@ int main() {
 	printf("Should got response\n");
 	printf("\n");
 
+	//record
+	printf("!record\n");
+	a_modem_record(1000);
+	printf("check RX\n");
+	printf("\n");
+
 // set devel configs
 	printf("!set devel configs\n");
 	a_modem_set_devel_configs();
 	printf("wait ack\n");
 	printf("\n");
 
-// play
-	printf("!play wavform\n");
-	a_modem_play("lfm_data_t1_l1.wav");
-	printf("should hear sound\n");
-	printf("\n");
+
 
 
 // is clock sync
@@ -103,7 +112,7 @@ int main() {
 	printf("!show status\n");
 	a_modem_status_show();
 	printf("\n");
-
+	a_modem_msg_show();
 // sync gps
 	/*printf("!sync gps\n");
 	 a_modem_sync_gps();
@@ -114,6 +123,13 @@ int main() {
 	 if (a_modem_is_clock_Sync(10,3))printf("sync.\n");
 	 else printf("not sync\n");
 	 printf("\n");*/
+	// close
+
+	/*	//upload file
+		printf("!upload file\n");
+		a_modem_upload_file("25080801.WAV");
+		printf("\n");*/
+
 
 
 }
