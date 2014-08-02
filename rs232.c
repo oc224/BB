@@ -37,7 +37,9 @@
 #include "system.h"
 #include <stdlib.h>
 
-#define BUFSIZE 64
+//TODO TIMEOUT BUSYWAITING
+
+#define BUFSIZE 256
 #ifdef __linux__   /* Linux */
 
 int Cport[30],

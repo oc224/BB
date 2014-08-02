@@ -35,7 +35,7 @@ int main() {
 	a_modem_open();
 	printf("!play smart\n");
 	a_modem_play_smart("lfm_data_t1_l1.wav",500);
-	printf("done");
+	printf("done\n");
 	return 0;
 
 	//upload file
