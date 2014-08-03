@@ -10,7 +10,7 @@
 #define BUFSIZE 128
 
 static schedule modem_schedule;
-node_cfg t_node;
+this_node t_node;
 
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN
@@ -22,7 +22,7 @@ static struct itimerspec its;
 int scheduler_init() {
 
 	struct sigevent sev;
-	sigset_t mask;
+	//sigset_t mask;
 	struct sigaction sa;
 
 	/* Establish handler for timer signal */
