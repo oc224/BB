@@ -249,6 +249,7 @@ int a_modem_slave(){
 			dur=atoi(buf2);
 			printf("rec %d\n",dur);
 			a_modem_record(dur);//TODO perhaps sleep a little
+
 			sleep(1);
 			a_modem_play_smart("lfm_data_t3_l1.wav",500);
 			a_modem_msg_show();
