@@ -1,7 +1,6 @@
 *~
 *.o
-bin/
+bin/*
 .cproject
 .project
-*.cproject
 *.project
