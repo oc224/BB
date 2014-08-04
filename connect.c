@@ -15,6 +15,8 @@
 #define PPP_TIMEOUT 5
 #define NET_PATH "/proc/net/route"
 
+extern this_node t_node;
+
 int ppp_wait(int timeout){
 	FILE *fp;
 	char buf[BUFSIZE];
@@ -45,18 +47,22 @@ int ppp(const char *dest_ip){
 }
 
 int main(int argc,char *argv[]){
-	node dest_node;
+	node *dest_node;
+	int i;
 	if (argc<2){
 		fprintf(stderr,"please provide dest name\n");
 		return FAIL;
 	}
-
-
-	system_node_lookup(argv[1],&dest_node);
+	i=system_cfg_find(argv[1]);
+	if (i==FAIL){
+		printf("unidentify name\n");
+		return FAIL;
+	}
+	dest_node=t_node.nodes[i];
 	w_modem_open();
-	w_modem_connect(dest_node.w_add);
+	w_modem_connect(dest_node->a_add);
 	w_modem_close();
-	ppp(dest_node.ppp_ip);
+	ppp(dest_node->ppp_ip);
 	if (ppp_wait(PPP_TIMEOUT)==FAIL){
 		fprintf(stderr,"ppp timeout\n");
 		return FAIL;
