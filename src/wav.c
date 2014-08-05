@@ -48,14 +48,17 @@ printf("length = %ld \n",t_wav->length);
 }
 
 int wav_read(wav* t_wav,fftw_complex *dest,int L){
-//read at most N samples to fftw_complex
+//read N samples to fftw_complex zero pading
 int i;
 int16_t data[2];
 
 for (i=0;i<L;i++){
 if (fread(data,2,2,FP)<2)break;
 dest[i][0]=(double)data[0];dest[i][1]=(double)data[1];
-printf("%d %4.4f %4.4f \n",i,dest[i][0],dest[i][1]);
+//printf("%d %4.4f %4.4f \n",i,dest[i][0],dest[i][1]);
+}
+for (;i<L;i++){
+dest[i][0]=(double)0;dest[i][1]=(double)0;
 }
 
 return i;

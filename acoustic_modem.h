@@ -25,10 +25,6 @@ typedef struct {
 typedef struct {
 } a_network;
 
-typedef enum{
-	REC,REC_PLY,TX
-}a_modem_command;
-
 typedef struct{
 	char* text[LIST_SIZE];
 	int i;

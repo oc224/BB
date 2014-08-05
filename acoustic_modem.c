@@ -15,7 +15,7 @@
 #define ONLINE_COMMAND 2
 #define WAIT_INTVAL 100000
 #define N_ITER_DIV (WAIT_INTVAL/1000)
-
+#define COMMAND_DELAY 300000
 
 a_modem modem;
 a_modem_msg msg;
@@ -27,6 +27,7 @@ int a_modem_msg_add(char *msg_str){
 	msg.text[msg.i]=strdup(msg_str);
 	return SUCCESS;
 }
+
 void a_modem_msg_show(){
 	int i;
 	printf("MSG LIST\n");
@@ -44,6 +45,7 @@ int a_modem_init(){
 	modem.latest_rx_fname[0]=0;
 	return SUCCESS;
 }
+
 int a_modem_open() {
 	//open serial port, go to command mode, issue at (attention), then check response
 	if (RS232_OpenComport(a_modem_dev_no, a_modem_serial_baudrate)) {
@@ -185,10 +187,11 @@ int a_modem_msg_send(const char*msg){
 	sleep(ONLINE_COMMAND);
 
 	a_modem_puts("+++\r");//TODO simple way to confirm we are in command mode
-	usleep(300000);
+	usleep(COMMAND_DELAY);
 	return SUCCESS;
 }
 
+/*
 int a_modem_play_smart(char * filename,int mili_sec) {
 	//play a wavform, store the tx time
 	//TODO check is clock sync
@@ -224,7 +227,8 @@ int a_modem_play_smart(char * filename,int mili_sec) {
 		return FAIL;
 	}
 }
-
+*/
+/*
 int a_modem_slave(){
 	char buf[BUFSIZE];
 	char buf2[BUFSIZE];
@@ -260,15 +264,15 @@ int a_modem_slave(){
 	}
 	return SUCCESS;
 }
-
+*/
 int a_modem_record(int duration) {
 // record waveform, store rx info as well.
 	char buf[BUFSIZE], buf2[BUFSIZE];
 	char logname[32];
-
+	int n;
 	/*record on*/
 	modem.latest_rx_fname[0]=0;
-	a_modem_puts("\r");
+	//a_modem_puts("\r");
 	a_modem_puts("record on\r");
 
 /*	if (a_modem_wait_ack("ok", SERIAL_TIMEOUT) == FAIL)
@@ -282,15 +286,18 @@ int a_modem_record(int duration) {
 	usleep(duration * 1000); //TODO int overflow?
 
 	/*record off*/
-	a_modem_puts("\r");
+	//a_modem_puts("\r");
 	a_modem_puts( "record off\r");
 
 	/* get rx filename*/
-/*	if (a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
+	if ((n=a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE))){
+	buf[n-1]=0;
+	sprintf(buf2, "echo '%s' >> %s", buf,RX_PATH);
+	system(buf2);
+	a_modem_puts("\r");
+	}else{
 		fprintf(stderr, "A_modem, record msg (filename.wav) missing\n");
-	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
-	system(buf2);*/
-
+	}
 /*	if (a_modem_wait_info("off at", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
 		fprintf(stderr, "A_modem, record msg (...recorder off...) missing\n");
 	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
@@ -299,8 +306,8 @@ int a_modem_record(int duration) {
 		fprintf(stderr, "A_modem, record msg (ok) missing\n");*/
 
 	/*get log name*/
-	a_modem_puts("\r");
-	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE) == SUCCESS){
+	//a_modem_puts("\r");
+	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)){
 	sscanf(buf,"%*s log file %s",logname);
 	printf("log name :%s\n",logname);
 	sprintf(buf2, "echo '%s' >> %s",logname+4,RX_PATH);
@@ -309,6 +316,7 @@ int a_modem_record(int duration) {
 	strcpy(modem.latest_rx_fname,logname+4);
 	return SUCCESS;
 	}else{
+	printf("debug : %s\n",buf);
 	fprintf(stderr, "A_modem, record msg (filename.log) missing\n");
 	return FAIL;
 	}

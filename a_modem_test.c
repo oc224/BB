@@ -25,41 +25,24 @@ int main() {
 	a_modem_init();
 
 
-// open
+	// open
 	printf("!open\n");
 	a_modem_open();
 	printf("\n");
 
-	printf("!play smart\n");
-	a_modem_play_smart("lfm_data_t1_l1.wav",500);
-	printf("done\n\n");
 
-// close
+	// close
 	printf("!close\n");
 	a_modem_close();
 	printf("\n");
-	return 0;
-
-
-
 	a_modem_open();
 
 
 	// play
-		printf("!play wavform\n");
-		a_modem_play("lfm_data_t1_l1.wav");
-		printf("should hear sound\n");
-		printf("\n");
-
-
-
-	return 0;
-
-
-
-
-
-
+	printf("!play wavform\n");
+	a_modem_play("lfm_data_t1_l1.wav");
+	printf("should hear sound\n");
+	printf("\n");
 
 //wait ack
 	a_modem_clear_io_buffer();
@@ -85,8 +68,9 @@ int main() {
 	a_modem_record(1000);
 	printf("check RX\n");
 	printf("\n");
+	a_modem_msg_show();
 
-// set devel configs
+	// set devel configs
 	printf("!set devel configs\n");
 	a_modem_set_devel_configs();
 	printf("wait ack\n");
@@ -112,7 +96,11 @@ int main() {
 	printf("!show status\n");
 	a_modem_status_show();
 	printf("\n");
+
+//show msg list
+	printf("!show msg list\n");
 	a_modem_msg_show();
+	printf("\n");
 // sync gps
 	/*printf("!sync gps\n");
 	 a_modem_sync_gps();
@@ -129,7 +117,7 @@ int main() {
 		printf("!upload file\n");
 		a_modem_upload_file("25080801.WAV");
 		printf("\n");*/
-
-
+a_modem_close();
+return 0;
 
 }

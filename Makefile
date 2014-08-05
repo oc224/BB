@@ -2,7 +2,7 @@ CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 
-all:a_modem_test rs232_test w_test exp data_upload connect a_slave
+all:a_modem_test rs232_test data_upload slave master
 rs232.o:rs232.c
 	$(CC) $(CFLAGS) -c rs232.c
 acoustic_modem.o:acoustic_modem.c acoustic_modem.h
@@ -38,10 +38,18 @@ connect.o:connect.c
 	$(CC) $(CFLAGS) -c connect.c
 connect:connect.o wireless_modem.o rs232.o system.o connect.o
 	$(CC) $(CFLAGS) -o ./bin/connect wireless_modem.o rs232.o system.o connect.o
-a_slave:a_modem_slave.o rs232.o acoustic_modem.o
-	$(CC) $(CFLAGS) -o ./bin/a_slave a_modem_slave.o rs232.o acoustic_modem.o
+slave:slave.o rs232.o acoustic_modem.o
+	$(CC) $(CFLAGS) -o ./bin/slave slave.o rs232.o acoustic_modem.o
+slave.o:slave.c
+	$(CC) $(CFLAGS) -c slave.c
+master:master.o acoustic_modem.o rs232.o
+	$(CC) $(CFLAGS) -o ./bin/master master.o acoustic_modem.o rs232.o
+master.o:master.c
+	$(CC) $(CLFAGS) -c master.c
+
 clean:
-	rm -f *.o 
+	rm -f *.o
+	rm ./bin/* 
 run:
 	
 deploy:
