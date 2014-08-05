@@ -1,24 +1,56 @@
+#include "system.h"
+#include "acoustic_modem.h"
 #include <stdio.h>
 #include <string.h>
 #define BUFSIZE 128
 
-int id_command(char* str){
-	int command;
-	//printf("debug: %s\n",str);
-	if (strstr(str,"exp"))command=0;
-	else if (strstr(str,"prob"))command=1;
-	else if (strstr(str,"status"))command=2;
-	printf("debug :%d\n",command);
-	return 0;
+typedef enum{
+	TALK,INIT,PROB
+}command;
+
+int wait_command_user(){
+	int ret;
+	static int cnt=1;
+	char buf[BUFSIZE];
+
+	/*console prompt*/
+	fprintf(stdout,"master<%d>:",cnt);
+	fgets(buf,BUFSIZE,stdin);
+
+	/*decode*/
+	if (strstr(buf,"talk"))ret=TALK;
+	else if (strstr(buf,"init"))ret=INIT;
+	else if (strstr(buf,"prob"))ret=PROB;
+	else ret=-1;
+	
+	/*return*/
+	if (ret>=0)cnt++;
+	return ret;
+
 }
+
+
 int main(){
-int cnt=1;
-char i_buf[BUFSIZE];
+command t_cmd;
 while (1){
-fprintf(stdout,"master<%d>:",cnt);
-fgets(i_buf,BUFSIZE,stdin);
-id_command(i_buf);
-cnt++;
+t_cmd=wait_command_user();
+printf("cmd = %d\n",t_cmd);
+switch (t_cmd){
+case TALK:
+//DO TALK
+break;
+case INIT:
+//DO INIT
+break;
+case PROB:
+//DO PROB
+break;
+default:
+break;
+}
+
+
+
 
 }
 return 0;
