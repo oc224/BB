@@ -20,7 +20,6 @@
 a_modem modem;
 a_modem_msg msg;
 
-
 int a_modem_msg_add(char *msg_str){
 	if (msg.i<(LIST_SIZE-1))msg.i++;
 	else	msg.i=0;
@@ -257,7 +256,6 @@ int a_modem_slave(){
 		default:
 			printf("unknown command\n");
 			break;
-
 		}
 	}
 	return SUCCESS;
