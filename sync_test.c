@@ -20,8 +20,8 @@ int main()
 	{
 		//for (j=0; j<128; j++)
 			//buf[j] = 0;
-		if (a_modem_gets(buf,128) > 0)
-			printf("%s",buf);
+		a_modem_gets(buf,128);
+		printf("%s",buf);
 	}
 	a_modem_close();
 	return 0;
