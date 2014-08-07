@@ -54,6 +54,16 @@ run:
 	
 deploy:
 	scp ./bin/* root@charlie:~/bin/.
-	scp ./bin/* root@dylan:~/bin/.
+	#scp ./bin/* root@dylan:~/bin/.
 	#scp -r ./config/* root@charlie:~/config/.
 	#scp -r ./config/* root@dylan:~/config/.
+
+test:sync_test
+rs232.o:rs232.c
+	$(CC) $(CFLAGS) -c rs232.c
+acoustic_modem.o:acoustic_modem.c
+	$(CC) $(CFLAGS) -c acoustic_modem.c
+sync_test.o:sync_test.c
+	$(CC) $(CFLAGS) -c sync_test.c
+sync_test:rs232.o acoustic_modem.o sync_test.o
+	$(CC) $(CFLAGS) -o ./bin/sync_test rs232.o acoustic_modem.o sync_test.o

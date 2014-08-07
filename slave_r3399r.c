@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include "system.h"
 #include "acoustic_modem.h"
+#include "MS_sleep_time.h"
 #define BUFSIZE 128
 #define TIMEOUT 2000
 
@@ -16,7 +18,7 @@ int wait_command_master(){
 	
 	while(1) //wait until command
 	{
-		if (a_modem_wait_info("DATA",TIMEOUT,buf,BUFSIZE) == SUCCESS)
+		if (a_modem_wait_info("DATA",TIMEOUT,buf,BUFSIZE) >= 0)
 			break;
 	}
 
@@ -42,10 +44,13 @@ int main()
 		switch (t_cmd)
 		{
 		case TALK: //DO TALK
-			a_modem_record(5000);
-			a_modem_wait_info("WAV",TIMEOUT, buf, BUFSIZE);
+			a_modem_record(Record_time*1000);
+			a_modem_wait_info("@",TIMEOUT, buf, BUFSIZE);
 			a_modem_msg_send(buf);
-
+			sleep(WAIT_then_PLAY);
+			a_modem_play("lfm_data_t3_l10.wav"); // in this case, Slave is Dylan
+			sleep(Record_time-WAIT_then_PLAY);
+			a_modem_msg_send(modem.latest_tx_stamp);
 			break;
 
 		case INIT:

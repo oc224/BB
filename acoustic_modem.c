@@ -266,9 +266,10 @@ int a_modem_slave(){
 }
 */
 int a_modem_record(int duration) {
-// record waveform, store rx info as well.
+// record waveform, store rx info as well.duration is in milliseconds
 	char buf[BUFSIZE], buf2[BUFSIZE];
 	char logname[32];
+//	char RXtime;
 	int n;
 	/*record on*/
 	modem.latest_rx_fname[0]=0;
@@ -314,6 +315,14 @@ int a_modem_record(int duration) {
 	system(buf2);
 	system(RX_LOG);
 	strcpy(modem.latest_rx_fname,logname+4);
+
+	// get RX time
+	sprintf(buf,"cat /sd/%s\r",modem.latest_rx_fname);
+	a_modem_puts(buf);
+//	a_modem_wait_info("WAV",4*SERIAL_TIMEOUT, buf, BUFSIZE);
+//	sscanf(buf, "%*s @ %s > %*s",RXtime);
+//	printf("RX: %s\n", RXtime);
+
 	return SUCCESS;
 	}else{
 	printf("debug : %s\n",buf);
@@ -364,6 +373,37 @@ int a_modem_sync_clock_gps() {
 	return SUCCESS;
 }
 
+int a_modem_sync_status() {
+	// to check if modem is sync
+	char buf[BUFSIZE];
+	int n, delay = 0, Niter=2000/N_ITER_DIV;;
+
+	a_modem_puts("sync\r");
+
+	while(delay<Niter) { //before timeout
+		n=a_modem_gets(buf,BUFSIZE);
+		if (n<1)
+			delay++;
+		else {
+			buf[n]=0;
+			if (n<BUFSIZE) {
+				if (strcasestr(buf,"eA")) {
+					a_modem_gets(buf,BUFSIZE);
+					printf("sync status is: %s",buf);
+					return n;
+				}
+			} else {
+				printf("can get the info of sync\n");
+				return FAIL;
+			}
+		}
+		usleep(WAIT_INTVAL);
+	}
+	// timeout
+	printf("info timeout\n");
+	return FAIL;
+}
+
 int a_modem_is_clock_Sync(int samp_interval, int N_retry) {
 	//check if clock sync (regardless of clock source), samp_interval (sec)
 	//TODO update a_modem struct as well
@@ -391,7 +431,7 @@ inline int a_modem_wait_info(char *key_word, int timeout, char *info,
 		int info_size) {
 	//wait and get for the expecting info, timeout in milliseconds
 	int n;
-		char *buf=(char*)malloc(sizeof(char)*info_size);
+		char *buf=(char*)malloc(sizeof(char) *info_size);
 		int delay=0;
 		int Niter=timeout/N_ITER_DIV;
 		while(delay<Niter) {//before timeout
@@ -406,7 +446,7 @@ inline int a_modem_wait_info(char *key_word, int timeout, char *info,
 						return n;
 					}
 				} else {
-					printf("info_size to small\n");
+					printf("info_size too small\n");
 					return FAIL;
 				}
 			}

@@ -43,7 +43,7 @@ inline int a_modem_wait_info(char *key_word, int timeout, char *info,int info_si
 int a_modem_wait_msg(char *buf,int size);
 
 int a_modem_play(char * filename);
-int a_modem_play_smart(char * filename,int mili_sec);
+//int a_modem_play_smart(char * filename,int mili_sec);
 int a_modem_record(int duration_mili);
 
 int a_modem_prob(); // get atxn atrn info
@@ -58,6 +58,7 @@ int a_modem_set_devel_configs(); // set the preferable configs for devel stage, 
 int a_modem_sync_clock_gps();
 int a_modem_sync_time_gps();
 int a_modem_is_clock_Sync(int samp_interval, int N_retry);
+int a_modem_sync_status();
 
 int a_modem_upload_file(const char *fname);
 int a_modem_msg_send(const char*msg);
