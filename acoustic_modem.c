@@ -389,7 +389,7 @@ int a_modem_sync_status() {
 			if (n<BUFSIZE) {
 				if (strcasestr(buf,"eA")) {
 					a_modem_gets(buf,BUFSIZE);
-					printf("sync status is: %s",buf);
+					printf("sync status is: 	%s",buf);
 					return n;
 				}
 			} else {
