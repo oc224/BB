@@ -5,20 +5,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define BUFSIZE 256
-#define SERIAL_TIMEOUT 2000
+#define BUFSIZE 256/*default size for buffer*/
+#define SERIAL_TIMEOUT 2000/*default timeout for reading modem*/
 #define TX_LOG "echo $(date -Ru) >> /home/root/log/TXLOG.TXT"
 #define TX_PATH "/home/root/log/TXLOG.TXT"
 #define RX_LOG "echo $(date -Ru) >> /home/root/log/RXLOG.TXT"
 #define RX_PATH "/home/root/log/RXLOG.TXT"
-#define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2"
-#define ONLINE_COMMAND 2
-#define WAIT_INTVAL 100000
+#define AMODEM_PATH "/home/root/log/AMODEM.TXT"
+#define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
+#define ONLINE_COMMAND 2 /*Time it takes from online mode to command mode*/
+#define WAIT_INTVAL 100000 /*inteval time for reading serial port*/
 #define N_ITER_DIV (WAIT_INTVAL/1000)
-#define COMMAND_DELAY 300000
-
-a_modem modem;
-a_modem_msg msg;
+#define COMMAND_DELAY 300000 /*Latency of entering command mode*/
+#define GPSPIPE_TIME 10 /*seconds that gpspipe feed modem*/
+a_modem modem;/*a struct that contains the status of modem or some useful information*/
+a_modem_msg msg;/*a list that contains latest msg from modem*/
 
 int a_modem_msg_add(char *msg_str){
 	if (msg.i<(LIST_SIZE-1))msg.i++;
@@ -307,7 +308,6 @@ int a_modem_record(int duration) {
 		fprintf(stderr, "A_modem, record msg (ok) missing\n");*/
 
 	/*get log name*/
-	//a_modem_puts("\r");
 	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)){
 	sscanf(buf,"%*s log file %s",logname);
 	printf("log name :%s\n",logname);
@@ -332,20 +332,20 @@ int a_modem_record(int duration) {
 }
 
 int a_modem_sync_time_gps() {
-	// sync modem date&time
+	/* sync modem date&time with gps NMEA msg (GPGGA)*/
 	char buf[BUFSIZE];
 	char buf2[BUFSIZE];
 	a_modem_puts("gpsd\r");
 	a_modem_close();
 	sleep(1);
 	system(GPSPIPE);
-	sleep(5);
+	sleep(GPSPIPE_TIME);
 	a_modem_open();
 	a_modem_clear_io_buffer();
 	// simple test
 	a_modem_puts("date\r");
 	a_modem_wait_info("2014", SERIAL_TIMEOUT, buf, BUFSIZE);
-	sprintf(buf2, "echo '%s' >> AMODEM.TXT", buf);
+	sprintf(buf2, "echo '%s' >> %s", buf,AMODEM_PATH);
 	system(buf2);//SYSTEM DUMP
 	a_modem_puts("date -store");
 	//TODO check
@@ -375,6 +375,7 @@ int a_modem_sync_clock_gps() {
 
 int a_modem_sync_status() {
 	// to check if modem is sync
+	//good job
 	char buf[BUFSIZE];
 	int n, delay = 0, Niter=2000/N_ITER_DIV;;
 
@@ -385,7 +386,6 @@ int a_modem_sync_status() {
 		if (n<1)
 			delay++;
 		else {
-			buf[n]=0;
 			if (n<BUFSIZE) {
 				if (strcasestr(buf,"eA")) {
 					a_modem_gets(buf,BUFSIZE);
@@ -406,7 +406,6 @@ int a_modem_sync_status() {
 
 int a_modem_is_clock_Sync(int samp_interval, int N_retry) {
 	//check if clock sync (regardless of clock source), samp_interval (sec)
-	//TODO update a_modem struct as well
 	int i;
 	// input check
 	a_modem_clear_io_buffer();
@@ -418,10 +417,12 @@ int a_modem_is_clock_Sync(int samp_interval, int N_retry) {
 	for (i = 0; i < N_retry; i++) {
 		a_modem_puts("sync\r");
 		if (a_modem_wait_ack("synchronized", SERIAL_TIMEOUT)) {
+			modem.sync_state=SYNC;
 			return SUCCESS;
 		}
 		sleep(samp_interval);
 	}
+	modem.syn_state=NOT_SYNC;
 	printf("a_modem, sync time out\n");
 	return FAIL;
 }
@@ -429,7 +430,10 @@ int a_modem_is_clock_Sync(int samp_interval, int N_retry) {
 
 inline int a_modem_wait_info(char *key_word, int timeout, char *info,
 		int info_size) {
-	//wait and get for the expecting info, timeout in milliseconds
+	/*block until key_word prompt or timout(miliseconds), if key_word prompt, 
+	store that line contained key_word to info, the output info is a string
+	(end with a NULL char)
+	*/
 	int n;
 		char *buf=(char*)malloc(sizeof(char) *info_size);
 		int delay=0;
@@ -458,7 +462,7 @@ inline int a_modem_wait_info(char *key_word, int timeout, char *info,
 }
 
 inline int a_modem_wait_ack(char *ack_msg, int timeout) {
-	//block until either ack_msg shows or timeout, timeout in milliseconds
+	/*block until either ack_msg shows or timeout (in miliseconds)	*/
 	int n;
 	char buf[BUFSIZE];
 	int delay=0;
@@ -514,12 +518,22 @@ int a_modem_status() {
 }
 
 void a_modem_status_show() {
-	//show modem status
+	//show modem status stored in a_modem struct
 	printf("Board Temp = %f\n", modem.board_temp);
 	printf("Modem battery = %f\n", modem.mdm_bat);
 	printf("Power = %f\n", modem.dsp_bat);
 	printf("RTC battery = %f", modem.rtc_bat);
-	//TODO sync state
+	switch (modem.sync_state){
+	case SYNC:
+		printf("sync.\n");
+	break;
+	case NOT_SYNC:
+		printf("not sync\n");
+	break;
+	default:
+		printf("unknown state\n");
+	break;
+	}
 }
 
 int a_modem_prob(a_network* status) {
@@ -528,7 +542,8 @@ int a_modem_prob(a_network* status) {
 }
 
 int a_modem_upload_file(const char *fname){
-	//upload a file in modem /sd/ directory
+	/*upload a file in modem /sd/ directory to current path
+	then remove the file*/
 	char buf[BUFSIZE];
 	int ret;
 	int n_file;
@@ -549,8 +564,13 @@ int a_modem_upload_file(const char *fname){
 	a_modem_clear_io_buffer();
 	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
 	a_modem_puts(buf);
-	//TODO check if error
-	//TODO check 'error' or 'ok'
+	sleep(1);
+	buf[0]=0;
+	a_modem_gets(buf);
+	if (strcasestr(buf,"ok")!=NULL){
+		fprintf(stderr,"fail to copy files in a modem\n");
+		return FAIL;
+	}
 	// wait for the copy
 	if (a_modem_wait_ack("ok",60000)==FAIL){//TODO estimate time, proper value
 		printf("copy file time out\r");
@@ -562,7 +582,7 @@ int a_modem_upload_file(const char *fname){
 	a_modem_close();
 	// rb
 	sprintf(buf,"rb -vv >%s<%s",a_modem_dev_path,a_modem_dev_path);
-	ret=system(buf);
+	ret=system(buf);//SET PWD TO BE SPECIFIC PATH
 	printf("rb return %d\n",ret);
 	//open
 	a_modem_open();
