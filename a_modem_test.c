@@ -24,6 +24,8 @@ int main() {
 	printf("!!acoustic modem check\n");
 	a_modem_init();
 
+	a_modem_msg_show(&msg);
+	a_modem_msg_show(&msg_remote);
 
 	// open
 	printf("!open\n");

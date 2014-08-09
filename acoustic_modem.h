@@ -3,7 +3,7 @@
 #define a_modem_dev_path "/dev/ttyUSB2"
 #define LIST_SIZE 16
 #define TX_SIZE 32
-
+#define OFFSET_LIST(now,offset); (now+LIST_SIZE+offset)%LIST_SIZE
 #include "stdio.h"
 typedef enum {
 	NOT_SYNC, QUALIFY, SYNC
@@ -27,26 +27,24 @@ typedef struct {
 
 typedef struct{
 	char* text[LIST_SIZE];
-	int i;
-	char* wanted;
+	int i;/*point to latest msg aka text[i] is latest msg*/
+	int N_unread;/*number of unread msg*/
 }a_modem_msg;
 
 int a_modem_init();
 int a_modem_open();
 inline void a_modem_close();
 
-void a_modem_msg_show();
-int a_modem_msg_add(char *msg_str);
+void a_modem_msg_show(a_modem_msg *);
+int a_modem_msg_add(a_modem_msg*,char *msg_str);
 
 inline int a_modem_wait_ack(char *ack_msg, int timeout_mili);
 inline int a_modem_wait_info(char *key_word, int timeout, char *info,int info_size);
-int a_modem_wait_msg(char *buf,int size);
+int a_modem_wait_remote(char*,int,int);
 
 int a_modem_play(char * filename);
-//int a_modem_play_smart(char * filename,int mili_sec);
 int a_modem_record(int duration_mili);
 
-int a_modem_prob(); // get atxn atrn info
 
 int a_modem_status(); // get status (internal temp, pwr cond...) fill struct a_modem
 void a_modem_status_show();
@@ -62,9 +60,6 @@ int a_modem_sync_status();
 
 int a_modem_upload_file(const char *fname);
 int a_modem_msg_send(const char*msg);
-
-int a_modem_slave();
-int a_modem_master();
 
 inline int a_modem_gets(char* buf,int size);
 inline int a_modem_puts(const char*msg);

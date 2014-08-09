@@ -17,6 +17,7 @@ typedef enum{
 
 int wait_command_user()
 {
+	/*return command (enum or integer)*/
 	int ret;
 	static int cnt=1;
 	char buf[BUFSIZE];
@@ -50,6 +51,7 @@ int main()
 	while (1)
 	{
 		printf("[0] TALK	[1] INIT	[2] PROB\n");
+		/*so you mean user can also enter the number rather than text?*/
 		t_cmd = wait_command_user();
 		if (t_cmd == -1)
 			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
@@ -58,9 +60,11 @@ int main()
 		switch (t_cmd)
 		{
 		case TALK: //DO TALK
-			a_modem_msg_send("talk");
+			sprintf(buf,"%d",TALK);
+			a_modem_msg_send(buf);//slave won't respond 'talk'
 			sleep(WAIT_then_PLAY);
-			a_modem_play("lfm_data_t1_l10.wav"); // in this case, Master is Charlie
+			//a_modem_play("lfm_data_t1_l10.wav"); // in this case, Master is Charlie
+			a_modem_play(modem.def_tx_wav);
 			printf("Master -> Slave %s\n", modem.latest_tx_stamp);
 			sprintf(buf3, "echo '%s\n' >> %s",modem.latest_tx_stamp,M2S_TXPATH);
 			system(buf3);

@@ -18,32 +18,70 @@
 #define N_ITER_DIV (WAIT_INTVAL/1000)
 #define COMMAND_DELAY 300000 /*Latency of entering command mode*/
 #define GPSPIPE_TIME 10 /*seconds that gpspipe feed modem*/
+#define WAIT_TXTIME 5000
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
-a_modem_msg msg;/*a list that contains latest msg from modem*/
+a_modem_msg msg,;/*a list that contains latest msg from (local) modem*/
+a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
-int a_modem_msg_add(char *msg_str){
-	if (msg.i<(LIST_SIZE-1))msg.i++;
-	else	msg.i=0;
-	free(msg.text[msg.i]);
-	msg.text[msg.i]=strdup(msg_str);
+int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str)
+	if (msg_list->i<(LIST_SIZE-1))
+	msg_list->i++;
+	else
+	msg_list->i=0;
+	msg_list->N_unread++;
+	free(msg_list->text[msg_list->i]);
+	msg_list->text[msg_list->i]=strdup(msg_str);
 	return SUCCESS;
 }
 
-void a_modem_msg_show(){
+int a_modem_wait_remote(char *buf,int bufsize,int timeout){
+/*read msg from remote list and store in buf until timeout (miliseconds)*/
+int delay=0,Niter=timout/N_ITER_DIV;
+char buf[BUFSIZE];
+while(delay<Niter){
+if (msg_remote.N_unread>0){/*read the oldest msg from remote msg list*/
+strcpy(buf,msg_remote.text[OFFSET_LIST(msg_remote.i,-msg_remote.N_unread+1)]);
+msg_remote.N_unread--;
+break;
+}
+a_modem_gets(buf,BUFSIZE);
+usleep(WAIT_INTVAL);
+delay++;
+}
+
+printf("wait remote timeout\n");
+return FAIL;
+}
+
+void a_modem_msg_show(a_modem_msg * list){
+	/*show msg list*/
 	int i;
 	printf("MSG LIST\n");
 	for (i=0;i<32;i++)printf("-");
 	printf("\n");
-	for (i=0;i<LIST_SIZE;i++)printf("%2d %s\n",i,msg.text[i]);
+	for (i=0;i<LIST_SIZE;i++)printf("%2d %s\n",i,list->text[i]);
 	printf("\n");
 }
 
 int a_modem_init(){
+	/*init the struct variable*/
 	int i;
 	msg.i=0;
-	for (i=0;i<LIST_SIZE;i++)msg.text[i]=strdup(" ");
+	msg_remote.i=0;
+	msg_remote.N_unread=0;
+	msg.N_unread=0;
+	for (i=0;i<LIST_SIZE;i++){
+	msg.text[i]=strdup(" ");
+	msg_remote.text[i]=strdup("");
+	}
 	modem.latest_tx_stamp[0]=0;
 	modem.latest_rx_fname[0]=0;
+	modem.def_tx_wav[0]=0;
+	modem.sync_state=NOT_SYNC;
+	modem.board_temp=0;
+	modem.dsp_bat=0;
+	modem.mdm_bat=0;
+	modem.rtc_bat=0;
 	return SUCCESS;
 }
 
@@ -131,7 +169,7 @@ int a_modem_play(char * filename) {
 		return FAIL;
 	}
 // get time stamp
-	n = a_modem_wait_info("tx", 5000, buf, BUFSIZE); //TODO play command have a variable buffer time
+	n = a_modem_wait_info("tx",WAIT_TXTIME, buf, BUFSIZE); //TODO play command have a variable buffer time
 	if (n) {
 		buf[n - 1] = 0; //remove carriage return
 		printf("info : %s\n", buf);
@@ -156,6 +194,7 @@ inline int a_modem_gets(char* buf,int size){
 	char dump[BUFSIZE];
 	int n;
 	n=RS232_PollComport(a_modem_dev_no,dump,BUFSIZE);
+	buf[0];/*make sure input buffer clear if this function fail*/
 	if (n<1){
 		buf[0]=0;
 		return FAIL;
@@ -165,16 +204,21 @@ inline int a_modem_gets(char* buf,int size){
 		dump[n]=0;
 		strcpy(buf,dump);
 
-		if (strstr(dump,"user")==NULL){
-		dump[n-1]=0;
-		a_modem_msg_add(dump);
-		}//TODO IF DATA -> store to another list
+		if (strstr(dump,"user")==NULL){/*useful info are stored*/
+		dump[n-1]=0;/*remove newline char*/
+			if (strstr(dump,"DATA")==NULL){
+			/*DATA only show with remote msg */
+				a_modem_msg_add(&msg,dump);
+			}else{
+				a_modem_msg_add(&msg_remote,dump);
+			}
+		}
 	}
 	return n;
 }
 
 int a_modem_msg_send(const char*msg){
-	// write msg acoustically to remotes modem
+	/* write msg acoustically to remote modems*/
 	a_modem_puts("ato\r");
 	if (a_modem_wait_ack("connect",SERIAL_TIMEOUT)==FAIL){
 		printf("fail to enter online mode\n");
@@ -187,85 +231,11 @@ int a_modem_msg_send(const char*msg){
 	}
 	sleep(ONLINE_COMMAND);
 
-	a_modem_puts("+++\r");//TODO simple way to confirm we are in command mode
+	a_modem_puts("+++\r");
 	usleep(COMMAND_DELAY);
 	return SUCCESS;
 }
 
-/*
-int a_modem_play_smart(char * filename,int mili_sec) {
-	//play a wavform, store the tx time
-	//TODO check is clock sync
-	char buf[BUFSIZE];
-	char buf2[BUFSIZE];
-	int n;
-	//a_modem_clear_io_buffer();
-	// tell remote modem to record on
-	sprintf(buf,"%d %d",REC_PLY,mili_sec);
-	if (a_modem_msg_send(buf)==FAIL){
-		return FAIL;
-	}
-// play
-	sprintf(buf, "play /ffs/%s\r", filename); //use strcat instead?
-	a_modem_puts(buf);
-	if (a_modem_wait_ack("buffering", SERIAL_TIMEOUT) == FAIL) {
-		fprintf(stderr, "A_modem, fail to play waveform\n");
-		return FAIL;
-	}
-// get time stamp, store it, send it.
-	n = a_modem_wait_info("tx", 5000, buf, BUFSIZE); //TODO play command have a variable buffer time
-	if (n) {
-		buf[n - 1] = 0; //remove carriage return
-		printf("info : %s\n", buf);
-		sprintf(buf2,"%d %s",TX,buf);
-		a_modem_msg_send(buf2);
-		sprintf(buf2, "echo '%s,%s' >> %s", filename, buf,TX_PATH);
-		system(buf2); //TODO store result using graceful way
-		system(TX_LOG);
-		return SUCCESS;
-	} else {
-		printf("A_modem, fail to get TX time\n");
-		return FAIL;
-	}
-}
-*/
-/*
-int a_modem_slave(){
-	char buf[BUFSIZE];
-	char buf2[BUFSIZE];
-	a_modem_command this_command;
-	int dur;
-	while(1){
-		if (a_modem_wait_info("DATA",SERIAL_TIMEOUT,buf,BUFSIZE)==FAIL)continue;
-		//if (sscanf(buf,"DATA(%*d):%s",buf2)<1)continue;
-		//printf("debug : %s\n",buf+11);
-		sscanf(buf+11,"%d %s",&this_command,buf2);
-		switch (this_command){
-		case REC:
-			dur=atoi(buf2);
-			printf("rec %d\n",dur);
-			a_modem_record(dur);
-			break;
-		case TX:
-			printf("tx %s\n",buf2);
-			break;
-		case REC_PLY:
-			dur=atoi(buf2);
-			printf("rec %d\n",dur);
-			a_modem_record(dur);//TODO perhaps sleep a little
-
-			sleep(1);
-			a_modem_play_smart("lfm_data_t3_l1.wav",500);
-			a_modem_msg_show();
-			break;
-		default:
-			printf("unknown command\n");
-			break;
-		}
-	}
-	return SUCCESS;
-}
-*/
 int a_modem_record(int duration) {
 // record waveform, store rx info as well.duration is in milliseconds
 	char buf[BUFSIZE], buf2[BUFSIZE];
@@ -435,30 +405,31 @@ inline int a_modem_wait_info(char *key_word, int timeout, char *info,
 	(end with a NULL char)
 	*/
 	int n;
-		char *buf=(char*)malloc(sizeof(char) *info_size);
-		int delay=0;
-		int Niter=timeout/N_ITER_DIV;
-		while(delay<Niter) {//before timeout
-			n=a_modem_gets(buf,info_size);
-			if (n<1) {
-				delay++;
-			} else {
-				buf[n]=0;
-				if (n<info_size) {
-					if (strcasestr(buf,key_word)) {
-						strcpy(info,buf); //copy msg
-						return n;
-					}
-				} else {
-					printf("info_size too small\n");
-					return FAIL;
+	char buf[BUFSIZE];
+	int delay=0;
+	int Niter=timeout/N_ITER_DIV;
+	info[0]=0;/*make sure input buffer clear when this funtion fail*/
+	while(delay<Niter) {//before timeout
+		n=a_modem_gets(buf,info_size);
+		if (n<1) {
+			delay++;
+		} else {
+			buf[n]=0;
+			if (n<info_size) {
+				if (strcasestr(buf,key_word)) {
+					strcpy(info,buf); //copy msg
+					return n;
 				}
+			} else {
+				printf("info_size too small\n");
+				return FAIL;
 			}
-			usleep(WAIT_INTVAL);
 		}
+		usleep(WAIT_INTVAL);
+	}
 	// timeout
-		printf("info timeout\n");
-		return FAIL;
+	printf("info timeout\n");
+	return FAIL;
 }
 
 inline int a_modem_wait_ack(char *ack_msg, int timeout) {
@@ -536,11 +507,6 @@ void a_modem_status_show() {
 	}
 }
 
-int a_modem_prob(a_network* status) {
-	// get atxn atrn info
-	return SUCCESS;
-}
-
 int a_modem_upload_file(const char *fname){
 	/*upload a file in modem /sd/ directory to current path
 	then remove the file*/
@@ -555,7 +521,7 @@ int a_modem_upload_file(const char *fname){
 		fprintf(stderr,"modem timeout\n");
 		return FAIL;
 	}
-	sscanf(buf,"total of %d file",&n_file);//TODO mem fix
+	sscanf(buf,"total of %d file",&n_file);
 	if (n_file==0){
 		printf("file not exist\n");
 		return FAIL;
@@ -598,4 +564,3 @@ int a_modem_upload_file(const char *fname){
 	a_modem_puts(buf);
 	return SUCCESS;
 }
-
