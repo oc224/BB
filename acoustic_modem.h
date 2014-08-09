@@ -14,12 +14,12 @@ typedef struct {
 	float dsp_bat;
 	float mdm_bat; // ref modem manual mdm_battery
 	float rtc_bat; // ref modem manual rtc_battery
-	a_modem_sync_state sync_stae; //synchronized or ...
+	a_modem_sync_state sync_stae; //TODOsynchronized or ...
 	char latest_tx_stamp[TX_SIZE];
 	char latest_rx_fname[TX_SIZE];
-	char def_tx_wav[TX_SIZE];
-	FILE *tx_p;
-	FILE *rx_p;
+	char def_tx_wav[TX_SIZE];//TODO
+	FILE *tx_p;//TODO
+	FILE *rx_p;//TODO
 } a_modem;
 
 typedef struct {
@@ -28,6 +28,7 @@ typedef struct {
 typedef struct{
 	char* text[LIST_SIZE];
 	int i;/*point to latest msg aka text[i] is latest msg*/
+	/*New text[i]>text[i-1]>...>text[i-N_unread+1]*/
 	int N_unread;/*number of unread msg*/
 }a_modem_msg;
 
