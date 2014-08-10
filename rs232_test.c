@@ -38,13 +38,11 @@ int main() {
 // ack
 	printf("!wait ack\n");
 	RS232_Flush(devno);
-	RS232_wait_ack(devno, "OK", 1000);
 	printf("\n");
 
 // info
 	printf("!wait info\n");
 	RS232_Flush(devno);
-	RS232_wait_info(devno, "TX", 1000, buf, BUFSIZE);
 	printf("\n");
 
 // close rs232

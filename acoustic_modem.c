@@ -19,11 +19,13 @@
 #define COMMAND_DELAY 300000 /*Latency of entering command mode*/
 #define GPSPIPE_TIME 10 /*seconds that gpspipe feed modem*/
 #define WAIT_TXTIME 5000
+
+
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
-a_modem_msg msg,;/*a list that contains latest msg from (local) modem*/
+a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
-int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str)
+int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str){
 	if (msg_list->i<(LIST_SIZE-1))
 	msg_list->i++;
 	else
@@ -36,8 +38,7 @@ int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str)
 
 int a_modem_wait_remote(char *buf,int bufsize,int timeout){
 /*read msg from remote list and store in buf until timeout (miliseconds)*/
-int delay=0,Niter=timout/N_ITER_DIV;
-char buf[BUFSIZE];
+int delay=0,Niter=timeout/N_ITER_DIV;
 while(delay<Niter){
 if (msg_remote.N_unread>0){/*read the oldest msg from remote msg list*/
 strcpy(buf,msg_remote.text[OFFSET_LIST(msg_remote.i,-msg_remote.N_unread+1)]);
@@ -194,7 +195,7 @@ inline int a_modem_gets(char* buf,int size){
 	char dump[BUFSIZE];
 	int n;
 	n=RS232_PollComport(a_modem_dev_no,dump,BUFSIZE);
-	buf[0];/*make sure input buffer clear if this function fail*/
+	buf[0]=0;/*make sure input buffer clear if this function fail*/
 	if (n<1){
 		buf[0]=0;
 		return FAIL;
@@ -392,7 +393,7 @@ int a_modem_is_clock_Sync(int samp_interval, int N_retry) {
 		}
 		sleep(samp_interval);
 	}
-	modem.syn_state=NOT_SYNC;
+	modem.sync_state=NOT_SYNC;
 	printf("a_modem, sync time out\n");
 	return FAIL;
 }
@@ -417,7 +418,7 @@ inline int a_modem_wait_info(char *key_word, int timeout, char *info,
 			buf[n]=0;
 			if (n<info_size) {
 				if (strcasestr(buf,key_word)) {
-					strcpy(info,buf); //copy msg
+					if (info!=NULL)strcpy(info,buf); //copy msg
 					return n;
 				}
 			} else {
@@ -432,8 +433,8 @@ inline int a_modem_wait_info(char *key_word, int timeout, char *info,
 	return FAIL;
 }
 
-inline int a_modem_wait_ack(char *ack_msg, int timeout) {
-	/*block until either ack_msg shows or timeout (in miliseconds)	*/
+/*inline int a_modem_wait_ack(char *ack_msg, int timeout) {
+	//block until either ack_msg shows or timeout (in miliseconds)	
 	int n;
 	char buf[BUFSIZE];
 	int delay=0;
@@ -450,7 +451,7 @@ inline int a_modem_wait_ack(char *ack_msg, int timeout) {
 	}
 	printf("ack timeout\n");
 	return FAIL;
-}
+}*/
 
 int a_modem_status() {
 // get status (internal temp, pwr cond...) fill struct a_modem
@@ -532,7 +533,7 @@ int a_modem_upload_file(const char *fname){
 	a_modem_puts(buf);
 	sleep(1);
 	buf[0]=0;
-	a_modem_gets(buf);
+	a_modem_gets(buf,BUFSIZE);
 	if (strcasestr(buf,"ok")!=NULL){
 		fprintf(stderr,"fail to copy files in a modem\n");
 		return FAIL;

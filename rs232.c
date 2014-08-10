@@ -178,65 +178,16 @@ inline void RS232_Flush(int comport_number) {
 	tcflush(Cport[comport_number],TCIOFLUSH);
 }
 
-int RS232_wait_info(int comport_number,char *key_word,int timeout,char *info,int info_size) {
-// output string containing key word
-	int n;
-	char *buf;
-	int delay=0;
-	buf=(char*)malloc(sizeof(char)*info_size);
-	while(delay<timeout) {//before timeout
-		n=RS232_PollComport(comport_number,buf,info_size);
-		if (n<1) {
-			delay++;
-		} else {
-			buf[n]=0;
-			if (n<info_size) {
-				if (strcasestr(buf,key_word)) {
-					strcpy(info,buf); //copy msg
-					return n;
-				}
-			} else {
-				printf("info_size to small\n");
-				return FAIL;
-			}
-		}
-		usleep(1000);
-	}
-// timeout
-	printf("info timeout\n");
-	return FAIL;
-}
-
-int RS232_wait_ack(int comport_number,char *ack_msg,int timeout) {
-//non block
-	int n;
-	char buf[BUFSIZE];
-	int delay=0;
-	while(delay<timeout) {
-		n=RS232_PollComport(comport_number,buf,BUFSIZE);
-		if (n<1) { //input not ready
-			delay++;
-		} else { // input ready
-			buf[n]=0;
-			if (strcasestr(buf,ack_msg))return SUCCESS;
-		}
-		usleep(1000);
-	}
-	printf("ack timeout\n");
-	return FAIL;
-}
-
-inline int RS232_SendByte(int comport_number, char byte)
+inline int RS232_SendByte(int comport_number,const char byte)
 {
 	int n;
 
 	n = write(Cport[comport_number], &byte, 1);
 	if(n<0) return(1);
-
 	return(0);
 }
 
-inline int RS232_SendBuf(int comport_number,char *buf, int size)
+inline int RS232_SendBuf(int comport_number,const char *buf, int size)
 {
 	return(write(Cport[comport_number], buf, size));
 }

@@ -70,7 +70,7 @@ int main() {
 	a_modem_record(1000);
 	printf("check RX\n");
 	printf("\n");
-	a_modem_msg_show();
+	a_modem_msg_show(&msg);
 
 	// set devel configs
 	printf("!set devel configs\n");
@@ -101,7 +101,7 @@ int main() {
 
 //show msg list
 	printf("!show msg list\n");
-	a_modem_msg_show();
+	a_modem_msg_show(&msg);
 	printf("\n");
 // sync gps
 	/*printf("!sync gps\n");

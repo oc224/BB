@@ -1,10 +1,13 @@
+#include "stdio.h"
+
 #define a_modem_dev_no 18
 #define a_modem_serial_baudrate 115200
 #define a_modem_dev_path "/dev/ttyUSB2"
 #define LIST_SIZE 16
 #define TX_SIZE 32
-#define OFFSET_LIST(now,offset); (now+LIST_SIZE+offset)%LIST_SIZE
-#include "stdio.h"
+#define OFFSET_LIST(now,offset)  ((now+LIST_SIZE+offset)%LIST_SIZE)
+#define a_modem_wait_ack(keyword,timeout)  a_modem_wait_info(keyword,timeout,NULL,0)
+
 typedef enum {
 	NOT_SYNC, QUALIFY, SYNC
 } a_modem_sync_state;
@@ -14,7 +17,7 @@ typedef struct {
 	float dsp_bat;
 	float mdm_bat; // ref modem manual mdm_battery
 	float rtc_bat; // ref modem manual rtc_battery
-	a_modem_sync_state sync_stae; //TODOsynchronized or ...
+	a_modem_sync_state sync_state; //TODOsynchronized or ...
 	char latest_tx_stamp[TX_SIZE];
 	char latest_rx_fname[TX_SIZE];
 	char def_tx_wav[TX_SIZE];//TODO
@@ -32,6 +35,10 @@ typedef struct{
 	int N_unread;/*number of unread msg*/
 }a_modem_msg;
 
+extern a_modem modem;
+extern a_modem_msg msg;
+extern a_modem_msg msg_remote;
+
 int a_modem_init();
 int a_modem_open();
 inline void a_modem_close();
@@ -39,7 +46,7 @@ inline void a_modem_close();
 void a_modem_msg_show(a_modem_msg *);
 int a_modem_msg_add(a_modem_msg*,char *msg_str);
 
-inline int a_modem_wait_ack(char *ack_msg, int timeout_mili);
+//inline int a_modem_wait_ack(char *ack_msg, int timeout_mili);
 inline int a_modem_wait_info(char *key_word, int timeout, char *info,int info_size);
 int a_modem_wait_remote(char*,int,int);
 

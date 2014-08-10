@@ -2,7 +2,7 @@ CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 
-all:a_modem_test rs232_test data_upload slave master
+all:a_modem_test rs232_test data_upload slave master gps_test
 rs232.o:rs232.c
 	$(CC) $(CFLAGS) -c rs232.c
 acoustic_modem.o:acoustic_modem.c acoustic_modem.h
@@ -46,6 +46,18 @@ master:master.o acoustic_modem.o rs232.o
 	$(CC) $(CFLAGS) -o ./bin/master master.o acoustic_modem.o rs232.o
 master.o:master.c
 	$(CC) $(CLFAGS) -c master.c
+gps_test:gps.o gps_test.o
+	$(CC) -o ./bin/gps_test gps.o gps_test.o
+gps.o:gps.c
+	$(CC) $(CFLAGS) -c gps.c
+gps_test.o:gps_test.c
+	$(CC) $(CFLAGS) -c gps_test.c
+
+test:sync_test
+sync_test.o:sync_test.c
+	$(CC) $(CFLAGS) -c sync_test.c
+sync_test:rs232.o acoustic_modem.o sync_test.o
+	$(CC) $(CFLAGS) -o ./bin/sync_test rs232.o acoustic_modem.o sync_test.o
 
 clean:
 	rm -f *.o
@@ -54,16 +66,9 @@ run:
 	
 deploy:
 	scp ./bin/* root@charlie:~/bin/.
-	#scp ./bin/* root@dylan:~/bin/.
-	#scp -r ./config/* root@charlie:~/config/.
-	#scp -r ./config/* root@dylan:~/config/.
-
-test:sync_test
-rs232.o:rs232.c
-	$(CC) $(CFLAGS) -c rs232.c
-acoustic_modem.o:acoustic_modem.c
-	$(CC) $(CFLAGS) -c acoustic_modem.c
-sync_test.o:sync_test.c
-	$(CC) $(CFLAGS) -c sync_test.c
-sync_test:rs232.o acoustic_modem.o sync_test.o
-	$(CC) $(CFLAGS) -o ./bin/sync_test rs232.o acoustic_modem.o sync_test.o
+	scp ./bin/* root@dylan:~/bin/.
+deploy_config:
+	scp ./config/*.txt root@charlie:~/config/.
+	scp ./config/charlie/* root@charlie:~/config/.
+	scp ./config/*.txt root@dylan:~/config/.
+	scp ./config/dylan/* root@charlie:~/config/.
