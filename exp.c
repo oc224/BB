@@ -37,11 +37,11 @@ int main(int argc,char* argv[]){
 
 	printf("script file : %s\n",fname);
 	printf("start time : %2d:%2d:%2d\n ",start_time.tm_hour,start_time.tm_min,start_time.tm_sec);
-	a_modem_open();
-	system_cfg_read();
+	if (system_cfg_read()==FAIL)	return FAIL;
 	system_cfg_show();
-	scheduler_init();
-	scheduler_read(fname);
+	a_modem_open();
+	if (scheduler_init()==FAIL) return FAIL;
+	if (scheduler_read(fname)==FAIL) return FAIL;
 	scheduler_start(start_time.tm_hour,start_time.tm_min,start_time.tm_sec);
 
 

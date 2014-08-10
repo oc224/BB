@@ -5,7 +5,10 @@
 #define a_modem_dev_path "/dev/ttyUSB2"
 #define LIST_SIZE 16
 #define TX_SIZE 32
-#define OFFSET_LIST(now,offset)  ((now+LIST_SIZE+offset)%LIST_SIZE)
+
+/*point to oldest unread msg*/
+#define MSG_PULL(msg) msg.text[(msg.i+LIST_SIZE+msg.N_unread-1)%LIST_SIZE]
+
 #define a_modem_wait_ack(keyword,timeout)  a_modem_wait_info(keyword,timeout,NULL,0)
 
 typedef enum {
@@ -20,7 +23,7 @@ typedef struct {
 	a_modem_sync_state sync_state; //TODOsynchronized or ...
 	char latest_tx_stamp[TX_SIZE];
 	char latest_rx_fname[TX_SIZE];
-	char def_tx_wav[TX_SIZE];//TODO
+	char def_tx_wav[TX_SIZE];
 	FILE *tx_p;//TODO
 	FILE *rx_p;//TODO
 } a_modem;
@@ -46,8 +49,7 @@ inline void a_modem_close();
 void a_modem_msg_show(a_modem_msg *);
 int a_modem_msg_add(a_modem_msg*,char *msg_str);
 
-//inline int a_modem_wait_ack(char *ack_msg, int timeout_mili);
-inline int a_modem_wait_info(char *key_word, int timeout, char *info,int info_size);
+int a_modem_wait_info(char *key_word, int timeout, char *info,int info_size);
 int a_modem_wait_remote(char*,int,int);
 
 int a_modem_play(char * filename);

@@ -26,10 +26,13 @@ a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
 int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str){
+	/*add string to msg list*/
+	/*move to current index (msg.i)*/
 	if (msg_list->i<(LIST_SIZE-1))
 	msg_list->i++;
 	else
 	msg_list->i=0;
+
 	msg_list->N_unread++;
 	free(msg_list->text[msg_list->i]);
 	msg_list->text[msg_list->i]=strdup(msg_str);
@@ -39,12 +42,14 @@ int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str){
 int a_modem_wait_remote(char *buf,int bufsize,int timeout){
 /*read msg from remote list and store in buf until timeout (miliseconds)*/
 int delay=0,Niter=timeout/N_ITER_DIV;
-while(delay<Niter){
+
+while(delay<Niter){//before timeout
 if (msg_remote.N_unread>0){/*read the oldest msg from remote msg list*/
-strcpy(buf,msg_remote.text[OFFSET_LIST(msg_remote.i,-msg_remote.N_unread+1)]);
+strcpy(buf,MSG_PULL(msg_remote));
 msg_remote.N_unread--;
 break;
 }
+
 a_modem_gets(buf,BUFSIZE);
 usleep(WAIT_INTVAL);
 delay++;
@@ -71,6 +76,12 @@ int a_modem_init(){
 	msg_remote.i=0;
 	msg_remote.N_unread=0;
 	msg.N_unread=0;
+	if (t_node.this_node.tx_fname[0]==0){
+	printf("fail to find default tx wavform name\n");
+	}else{
+	printf("find default tx wav filename\n");
+	strcpy(modem.def_tx_wav,t_node.this_node.tx_fname);
+	}
 	for (i=0;i<LIST_SIZE;i++){
 	msg.text[i]=strdup(" ");
 	msg_remote.text[i]=strdup("");
@@ -399,7 +410,7 @@ int a_modem_is_clock_Sync(int samp_interval, int N_retry) {
 }
 
 
-inline int a_modem_wait_info(char *key_word, int timeout, char *info,
+int a_modem_wait_info(char *key_word, int timeout, char *info,
 		int info_size) {
 	/*block until key_word prompt or timout(miliseconds), if key_word prompt, 
 	store that line contained key_word to info, the output info is a string
@@ -410,20 +421,20 @@ inline int a_modem_wait_info(char *key_word, int timeout, char *info,
 	int delay=0;
 	int Niter=timeout/N_ITER_DIV;
 	info[0]=0;/*make sure input buffer clear when this funtion fail*/
+	msg.N_unread=0;
 	while(delay<Niter) {//before timeout
-		n=a_modem_gets(buf,info_size);
-		if (n<1) {
+		a_modem_gets(NULL,0);
+		if (msg.N_read<1) {
 			delay++;
-		} else {
-			buf[n]=0;
-			if (n<info_size) {
+		} else {//got new msg
+			if (strlen(msg.text[msg.i])<info_size){
+				printf("info_size too small\n");
+				return FAIL;}
 				if (strcasestr(buf,key_word)) {
 					if (info!=NULL)strcpy(info,buf); //copy msg
 					return n;
 				}
 			} else {
-				printf("info_size too small\n");
-				return FAIL;
 			}
 		}
 		usleep(WAIT_INTVAL);
