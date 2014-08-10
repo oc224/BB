@@ -4,7 +4,8 @@
 #include <fftw3.h>
 #include "wav.h"
 #define FP t_wav->fp
-#define N 1200
+#define Num 1200
+
 wav* wav_open(const char *fname){
 int i;
 uint32_t fs;
@@ -47,25 +48,41 @@ printf("block align = %d\n",t_wav->blk_align);
 printf("length = %ld \n",t_wav->length);
 }
 
-int wav_read(wav* t_wav,fftw_complex *dest,int L){
-//read N samples to fftw_complex zero pading
+int wav_read(wav* t_wav,fftw_complex *dest,int L,int order){
+//read N samples to fftw_complex
 int i;
 int16_t data[2];
-
+switch (order){
+case NORMAL:
 for (i=0;i<L;i++){
 if (fread(data,2,2,FP)<2)break;
 dest[i][0]=(double)data[0];dest[i][1]=(double)data[1];
-//printf("%d %4.4f %4.4f \n",i,dest[i][0],dest[i][1]);
 }
-for (;i<L;i++){
-dest[i][0]=(double)0;dest[i][1]=(double)0;
+break;
+case REVERSE:
+for (i=L-1;i>-1;i--){
+if (fread(data,2,2,FP)<2)break;
+dest[i][0]=(double)data[0];dest[i][1]=(double)data[1];
 }
-
+break;
+default:
+return -1;
+break;
+}
 return i;
 }
-int wav_write(wav* t_wav,fftw_complex* out,int N){
 
+
+int double_write_file(FILE *fp,fftw_complex* out,int N){
+fwrite(out,sizeof(fftw_complex),N,fp);
+return 0;
 }
+
+int double_read_file(FILE *fp,fftw_complex* in,int N){
+fread(in,sizeof(fftw_complex),N,fp);
+return 0;
+}
+
 
 int wav_close(wav* t_wav){
 fclose(FP);
@@ -73,14 +90,15 @@ free(t_wav);
 return 0;
 }
 
-int main(){
+/*int main(){
 fftw_complex *in;
-in=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*N);
+in=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*Num);
 
 wav * t_wav=(wav*)wav_open("T1_raw.wav");
 
-wav_read(t_wav,in,N);
+wav_read(t_wav,in,Num);
 wav_show(t_wav);
 wav_close(t_wav);
 return 0;
 }
+*/
