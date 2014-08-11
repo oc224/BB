@@ -233,12 +233,16 @@ int a_modem_gets(char* buf,int size){
 	dump[n-1]=0;/*remove newline char*/
 	if (buf!=NULL)strcpy(buf,dump);
 
+	/*return if text = user <>*/
+	/*if ((strstr(dump,"user")!=NULL)&(strlen(dump)<11)){
+	printf("debug : prompt\n");
+	return n;
+	}*/
 	/*store to msg list (local & remote)*/
-	if (strstr(dump,"user")==NULL){/*useful info are stored*/
 	dump[n-1]=0;/*remove newline char*/
 	if (strstr(dump,"DATA")==NULL)	a_modem_msg_add(&msg,dump);
 	else	a_modem_msg_add(&msg_remote,dump);
-	}
+
 	return n;
 }
 
@@ -265,59 +269,31 @@ int a_modem_record(int duration) {
 // record waveform, store rx info as well.duration is in milliseconds
 	char buf[BUFSIZE], buf2[BUFSIZE];
 	char logname[32];
-//	char RXtime;
 	int n;
 	/*record on*/
 	modem.latest_rx_fname[0]=0;
-	//a_modem_puts("\r");
+	a_modem_puts("\r");
 	a_modem_puts("record on\r");
 
-/*	if (a_modem_wait_ack("ok", SERIAL_TIMEOUT) == FAIL)
-		fprintf(stderr, "A_modem, record msg (ok) missing\n");*/
-/*	if (a_modem_wait_info("at", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
-		fprintf(stderr, "A_modem, record msg (...recorder on...) missing\n");
-	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
-	system(buf2);*/
-
-	/*recording..*/
+	/*recording*/
 	usleep(duration * 1000); //TODO int overflow?
 
 	/*record off*/
-	//a_modem_puts("\r");
 	a_modem_puts( "record off\r");
-
-	/* get rx filename*/
-	/*if ((n=a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE))){
-	sprintf(buf2, "echo '%s' >> %s", buf,RX_PATH);
-	system(buf2);
 	a_modem_puts("\r");
-	}else{
-		fprintf(stderr, "A_modem, record msg (filename.wav) missing\n");
-	}
-*/
-/*	if (a_modem_wait_info("off at", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
-		fprintf(stderr, "A_modem, record msg (...recorder off...) missing\n");
-	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
-	system(buf2);*/
-/*	if (a_modem_wait_ack("ok", SERIAL_TIMEOUT) == FAIL)
-		fprintf(stderr, "A_modem, record msg (ok) missing\n");*/
-
 	/*get log name*/
-	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)){
+	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)==SUCCESS){
 	printf("debug :%s\n",buf);
-	sscanf(buf,"log file %s",logname);
-	printf("log name :%s\n",logname);
+	sscanf(buf,"%*s log file %s",logname);
+	printf("log name :%s\n",logname+4);
 	sprintf(buf2, "echo '%s' >> %s",logname+4,RX_PATH);
 	system(buf2);
 	system(RX_LOG);
 	strcpy(modem.latest_rx_fname,logname+4);
 
 	// get RX time
-	sprintf(buf,"cat /sd/%s\r",modem.latest_rx_fname);
-	a_modem_puts(buf);
-//	a_modem_wait_info("WAV",4*SERIAL_TIMEOUT, buf, BUFSIZE);
-//	sscanf(buf, "%*s @ %s > %*s",RXtime);
-//	printf("RX: %s\n", RXtime);
+/*	sprintf(buf,"cat /sd/%s\r",modem.latest_rx_fname);
+	a_modem_puts(buf);*/
 
 	return SUCCESS;
 	}else{
@@ -443,7 +419,8 @@ int a_modem_wait_info(char *key_word, int timeout, char *info,
 		if (msg.N_unread<1) {
 			delay++;
 		} else {//got new msg
-			if (strcasestr(msg.text[msg.i],key_word)) {
+			//new msg match
+			if (strcasestr(msg.text[msg.i],key_word)!=NULL) {
 				if (info!=NULL)
 				strncpy(info,msg.text[msg.i],info_size);
 				return SUCCESS;
@@ -457,25 +434,6 @@ int a_modem_wait_info(char *key_word, int timeout, char *info,
 	return FAIL;
 }
 
-/*inline int a_modem_wait_ack(char *ack_msg, int timeout) {
-	//block until either ack_msg shows or timeout (in miliseconds)	
-	int n;
-	char buf[BUFSIZE];
-	int delay=0;
-	int Niter=timeout/N_ITER_DIV;
-	while(delay<Niter) {
-		n=a_modem_gets(buf,BUFSIZE);
-		if (n<1) { //input not ready
-			delay++;
-		} else { // input ready
-			buf[n]=0;
-			if (strcasestr(buf,ack_msg))return SUCCESS;
-		}
-		usleep(WAIT_INTVAL);
-	}
-	printf("ack timeout\n");
-	return FAIL;
-}*/
 
 int a_modem_status() {
 // get status (internal temp, pwr cond...) fill struct a_modem
@@ -518,7 +476,7 @@ void a_modem_status_show() {
 	printf("Board Temp = %f\n", modem.board_temp);
 	printf("Modem battery = %f\n", modem.mdm_bat);
 	printf("Power = %f\n", modem.dsp_bat);
-	printf("RTC battery = %f", modem.rtc_bat);
+	printf("RTC battery = %f\n", modem.rtc_bat);
 	switch (modem.sync_state){
 	case SYNC:
 		printf("sync.\n");

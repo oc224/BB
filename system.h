@@ -1,5 +1,5 @@
 #define FAIL -1
-#define SUCCESS 0
+#define SUCCESS 1
 #define DEBUG_MSG_PATH "/home/root/log/debug.txt"
 #define TNODE_PATH "/home/root/config/this_node.txt"
 #define DEPLOY_PATH "/home/root/config/deploy.txt"
@@ -27,6 +27,7 @@ typedef struct{
 }this_node;
 
 extern this_node t_node;
+
 int system_cfg_read();
 node* system_cfg_find(const char*);
 void system_cfg_show();

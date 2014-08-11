@@ -5,22 +5,38 @@
 #include "system.h"
 
 int main() {
+/*
+int a_modem_init(); ok
+int a_modem_open(); ok
+inline void a_modem_close();ok
+void a_modem_msg_show(a_modem_msg *);ok
+int a_modem_msg_add(a_modem_msg*,char *msg_str);ok
 
-//	inline int a_modem_wait_ack(char *ack_msg,int timeout_mili);//ok
-//	inline int a_modem_wait_info(char *key_word,int timeout,char *info,int info_size);//ok
-//	inline void a_modem_clear_io_buffer();
-//	inline void a_modem_close();//ok
-//	int a_modem_is_clock_Sync(int samp_interval,int N_retry);//ok
-//	int a_modem_ls();// list files
-//	int a_modem_open();//ok
-//	int a_modem_play(char * filename);//ok
-//	int a_modem_print_configs(char * filepath);// save cfg all output for future ref
-//	int a_modem_prob();// get atxn atrn info
-//	int a_modem_record(char * timestamp,int duration_mili);//ok
-//	int a_modem_set_deploy_configs();
-//	int a_modem_set_devel_configs();// set the preferable configs for devel stage, tx pwr...//ok
-//	int a_modem_status();//ok
-//	void a_modem_status_show();//ok
+int a_modem_wait_ack(char*,int);
+int a_modem_wait_info(char *key_word, int timeout, $
+int a_modem_wait_remote(char*,int,int);
+
+int a_modem_play(char * filename);
+int a_modem_record(int duration_mili);
+
+
+int a_modem_status(); // get status (internal temp,$
+void a_modem_status_show();
+
+int a_modem_print_configs(char * filepath); // save$
+int a_modem_set_deploy_configs();
+int a_modem_set_devel_configs(); // set the prefera$
+
+int a_modem_sync_clock_gps();
+int a_modem_sync_time_gps();
+int a_modem_is_clock_Sync(int samp_interval, int N_$
+int a_modem_sync_status();
+
+int a_modem_upload_file(const char *fname);
+int a_modem_msg_send(const char*msg);
+
+
+*/
 	system_cfg_read();
 	system_cfg_show();
 	printf("!!acoustic modem check\n");
@@ -34,17 +50,10 @@ int main() {
 	a_modem_open();
 	printf("\n");
 
-
-	// close
-	printf("!close\n");
-	a_modem_close();
-	printf("\n");
-	a_modem_open();
-
 	//clear ffs
 //	a_modem_ffs_clear();
 
-//wait ack
+	//wait ack
 	a_modem_clear_io_buffer();
 	printf("!wait timeout\n");
 	a_modem_puts("at\r");
@@ -52,14 +61,13 @@ int main() {
 	printf("Should not be blocking..\n");
 	printf("\n");
 
-
 	// play
 	printf("!play wavform\n");
-	a_modem_play("lfm_data_t1_l1.wav");
+	a_modem_play("lfm_data_t3_l1.wav");
 	printf("should hear sound\n");
 	printf("\n");
 
-//wait ack
+	//wait ack
 	a_modem_clear_io_buffer();
 	printf("!wait timeout\n");
 	RS232_SendBuf(a_modem_dev_no, "at\r", 3);
@@ -82,17 +90,6 @@ int main() {
 	a_modem_set_devel_configs();
 	printf("wait ack\n");
 	printf("\n");
-
-
-
-
-// is clock sync
-/*	printf("!sync test\n");
-	if (a_modem_is_clock_Sync(10, 3))
-		printf("sync.\n");
-	else
-		printf("not sync\n");
-	printf("\n");*/
 
 // get status
 	printf("!status get\n");
