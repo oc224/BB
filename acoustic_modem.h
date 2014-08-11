@@ -49,6 +49,7 @@ int a_modem_msg_add(a_modem_msg*,char *msg_str);
 //inline int a_modem_wait_ack(char *ack_msg, int timeout_mili);
 inline int a_modem_wait_info(char *key_word, int timeout, char *info,int info_size);
 int a_modem_wait_remote(char*,int,int);
+void a_modem_printf(int timeout);
 
 int a_modem_play(char * filename);
 int a_modem_record(int duration_mili);

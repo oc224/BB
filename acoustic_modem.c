@@ -25,6 +25,21 @@ a_modem modem;/*a struct that contains the status of modem or some useful inform
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
+void a_modem_print(int timeout){
+int Niter=timeout/N_ITER_DIV,delay=0;
+char buf[BUFSIZE];
+
+while(delay<Niter){
+if (a_modem_gets(buf,BUFSIZE)==FAIL){
+delay++;
+}else{
+printf("%s\n",buf);
+}
+usleep(WAIT_INTVAL);
+}
+
+}
+
 int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str){
 	if (msg_list->i<(LIST_SIZE-1))
 	msg_list->i++;
