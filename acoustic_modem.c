@@ -290,7 +290,7 @@ int a_modem_record(int duration) {
 	a_modem_puts( "record off\r");
 
 	/* get rx filename*/
-	if ((n=a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE))){
+	/*if ((n=a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE))){
 	buf[n-1]=0;
 	sprintf(buf2, "echo '%s' >> %s", buf,RX_PATH);
 	system(buf2);
@@ -298,6 +298,7 @@ int a_modem_record(int duration) {
 	}else{
 		fprintf(stderr, "A_modem, record msg (filename.wav) missing\n");
 	}
+*/
 /*	if (a_modem_wait_info("off at", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
 		fprintf(stderr, "A_modem, record msg (...recorder off...) missing\n");
 	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
