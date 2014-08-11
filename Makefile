@@ -5,17 +5,16 @@ CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 all:a_modem_test rs232_test data_upload slave master gps_test exp
 rs232.o:rs232.c
 	$(CC) $(CFLAGS) -c rs232.c
-acoustic_modem.o:acoustic_modem.c acoustic_modem.h
-	$(CC) $(CFLAGS) -c acoustic_modem.c
+acoustic_modem.o:acoustic_modem.c
+	$(CC) $(CFLAGS) -c acoustic_modem.c 
 rs232_test.o:rs232_test.c
 	$(CC) $(CFLAGS) -c rs232_test.c
 a_modem_test.o:a_modem_test.c
 	$(CC) $(CFLAGS) -c a_modem_test.c 
-a_modem_test:a_modem_test.o acoustic_modem.o rs232.o
-	$(CC) $(CFLAGS) -o ./bin/a_modem_test a_modem_test.o rs232.o \
-	acoustic_modem.o
-rs232_test:rs232_test.o rs232.o
-	$(CC) $(CFLAGS) -o ./bin/rs232_test rs232_test.o rs232.o
+a_modem_test:a_modem_test.o acoustic_modem.o rs232.o system.o
+	$(CC) $(CFLAGS) -o ./bin/a_modem_test a_modem_test.o rs232.o acoustic_modem.o system.o
+rs232_test:rs232_test.o rs232.o system.o
+	$(CC) $(CFLAGS) -o ./bin/rs232_test rs232_test.o rs232.o system.o
 wireless_modem.o:wireless_modem.c wireless_modem.h
 	$(CC) $(CFLAGS) -c wireless_modem.c rs232.o
 w_test.o:w_test.c
@@ -32,18 +31,18 @@ exp:scheduler.o exp.o acoustic_modem.o rs232.o system.o
 	$(CC) $(CFLAGS) -o ./bin/exp scheduler.o exp.o acoustic_modem.o rs232.o system.o -lrt
 data_upload.o:data_upload.c
 	$(CC) $(CFLAGS) -c data_upload.c
-data_upload:data_upload.o acoustic_modem.o rs232.o
-	$(CC) $(CFLAGS) -o ./bin/data_upload data_upload.o acoustic_modem.o rs232.o
+data_upload:data_upload.o acoustic_modem.o rs232.o system.o
+	$(CC) $(CFLAGS) -o ./bin/data_upload data_upload.o acoustic_modem.o rs232.o system.o
 connect.o:connect.c
 	$(CC) $(CFLAGS) -c connect.c
 connect:connect.o wireless_modem.o rs232.o system.o connect.o
 	$(CC) $(CFLAGS) -o ./bin/connect wireless_modem.o rs232.o system.o connect.o
-slave:slave.o rs232.o acoustic_modem.o
-	$(CC) $(CFLAGS) -o ./bin/slave slave.o rs232.o acoustic_modem.o
+slave:slave.o rs232.o acoustic_modem.o system.o
+	$(CC) $(CFLAGS) -o ./bin/slave slave.o rs232.o acoustic_modem.o system.o
 slave.o:slave.c
 	$(CC) $(CFLAGS) -c slave.c
-master:master.o acoustic_modem.o rs232.o
-	$(CC) $(CFLAGS) -o ./bin/master master.o acoustic_modem.o rs232.o
+master:master.o acoustic_modem.o rs232.o system.o
+	$(CC) $(CFLAGS) -o ./bin/master master.o acoustic_modem.o rs232.o system.o
 master.o:master.c
 	$(CC) $(CLFAGS) -c master.c
 gps_test:gps.o gps_test.o
@@ -67,6 +66,8 @@ run:
 deploy:
 	scp ./bin/* root@charlie:~/bin/.
 	scp ./bin/* root@dylan:~/bin/.
+	scp -r ./script root@dylan:~/
+	scp -r ./script root@charlie:~/
 deploy_config:
 	scp ./config/*.txt root@charlie:~/config/.
 	scp ./config/charlie/* root@charlie:~/config/.

@@ -26,6 +26,7 @@ typedef struct{
 	opmode mode;
 }this_node;
 
+extern this_node t_node;
 int system_cfg_read();
 node* system_cfg_find(const char*);
 void system_cfg_show();

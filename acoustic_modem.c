@@ -25,6 +25,26 @@ a_modem modem;/*a struct that contains the status of modem or some useful inform
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
+int a_modem_ffs_clear(){
+	char buf[BUFSIZE];
+	a_modem_puts("ls /ffs\r");
+	sleep(3);
+
+	while(a_modem_gets(buf,BUFSIZE)>3){
+	/*rm file that *.log *.wav except lfm*/
+	printf("%s\n",buf);
+	if (strstr(buf,"lfm")!=NULL)continue;
+	if((strstr(buf,".log")!=NULL)||(strstr(buf,".wav"))){
+		printf("delete %s \n",buf);
+		a_modem_puts("rm /ffs/");
+		a_modem_puts(buf);
+		a_modem_puts("\r");
+		usleep(500000);
+		}
+	}
+return SUCCESS;
+}
+
 int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str){
 	/*add string to msg list*/
 	/*move to current index (msg.i)*/
@@ -72,20 +92,22 @@ void a_modem_msg_show(a_modem_msg * list){
 int a_modem_init(){
 	/*init the struct variable*/
 	int i;
+	/*init msg list (remote & local)*/
 	msg.i=0;
+	msg.N_unread=0;
 	msg_remote.i=0;
 	msg_remote.N_unread=0;
-	msg.N_unread=0;
-	if (t_node.this_node.tx_fname[0]==0){
-	printf("fail to find default tx wavform name\n");
-	}else{
-	printf("find default tx wav filename\n");
-	strcpy(modem.def_tx_wav,t_node.this_node.tx_fname);
-	}
 	for (i=0;i<LIST_SIZE;i++){
 	msg.text[i]=strdup(" ");
 	msg_remote.text[i]=strdup("");
 	}
+	/*init modem struct*/
+	/*if (t_node.this_node->tx_fname[0]==0){
+	printf("fail to find default tx wavform name\n");
+	}else{
+	printf("find default tx wav filename\n");
+	strcpy(modem.def_tx_wav,t_node.this_node->tx_fname);
+	}*/
 	modem.latest_tx_stamp[0]=0;
 	modem.latest_rx_fname[0]=0;
 	modem.def_tx_wav[0]=0;
@@ -124,20 +146,16 @@ int a_modem_set_devel_configs() {
 	a_modem_clear_io_buffer();
 	a_modem_puts("+++\r");
 	a_modem_puts("@P1EchoChar=Ena\r");
-	//RS232_SendBuf(a_modem_dev_no, , 4);
-	//RS232_SendBuf(a_modem_dev_no, "@P1EchoChar=Ena\r", 16);
 	if (a_modem_wait_ack("p1echochar", SERIAL_TIMEOUT) == FAIL) {
 		fprintf(stderr, "A_modem, cfg fail to set\n");
 		return FAIL;
 	}
 	a_modem_puts("@TxPower=1\r");
-	//RS232_SendBuf(a_modem_dev_no, , 11);
 	if (a_modem_wait_ack("txpower", SERIAL_TIMEOUT) == FAIL) {
 		fprintf(stderr, "A_modem, cfg fail to set\n");
 		return FAIL;
 	}
 	a_modem_puts("cfg store\r");
-	//RS232_SendBuf(a_modem_dev_no, , 10);
 	if (a_modem_wait_ack("stored", SERIAL_TIMEOUT) == FAIL) {
 		fprintf(stderr, "A_modem, cfg fail to store\n");
 		return FAIL;
@@ -148,7 +166,6 @@ int a_modem_set_devel_configs() {
 int a_modem_set_deploy_configs() {
 	// set modem the preferable config in deploy stage.
 	a_modem_clear_io_buffer();
-	//RS232_SendBuf(a_modem_dev_no, "+++", 3);
 	a_modem_puts("+++\r");
 	a_modem_puts("@TxPower=8\r");
 	if (a_modem_wait_ack("txpower", SERIAL_TIMEOUT) == FAIL) {
@@ -181,9 +198,8 @@ int a_modem_play(char * filename) {
 		return FAIL;
 	}
 // get time stamp
-	n = a_modem_wait_info("tx",WAIT_TXTIME, buf, BUFSIZE); //TODO play command have a variable buffer time
-	if (n) {
-		buf[n - 1] = 0; //remove carriage return
+	//TODO buffer time is random
+	if (a_modem_wait_info("tx",WAIT_TXTIME, buf, BUFSIZE)==SUCCESS) {
 		printf("info : %s\n", buf);
 		strcpy(modem.latest_tx_stamp,buf);
 		sprintf(buf2, "echo '%s,%s' >> %s", filename, buf,TX_PATH);
@@ -201,30 +217,27 @@ inline int a_modem_puts(const char*msg){
 	return RS232_SendBuf(a_modem_dev_no,msg,strlen(msg));
 }
 
-inline int a_modem_gets(char* buf,int size){
-	// read a line from serial port
+int a_modem_gets(char* buf,int size){
+	// read a line of text from serial port
+	// the newline char is removed.
+	// return FAIL or n char read
 	char dump[BUFSIZE];
 	int n;
-	n=RS232_PollComport(a_modem_dev_no,dump,BUFSIZE);
+
 	buf[0]=0;/*make sure input buffer clear if this function fail*/
+	n=RS232_PollComport(a_modem_dev_no,dump,BUFSIZE);
 	if (n<1){
-		buf[0]=0;
 		return FAIL;
 	}
+	/*store to input buffer*/
+	dump[n-1]=0;/*remove newline char*/
+	if (buf!=NULL)strcpy(buf,dump);
 
-	if (n>0){
-		dump[n]=0;
-		strcpy(buf,dump);
-
-		if (strstr(dump,"user")==NULL){/*useful info are stored*/
-		dump[n-1]=0;/*remove newline char*/
-			if (strstr(dump,"DATA")==NULL){
-			/*DATA only show with remote msg */
-				a_modem_msg_add(&msg,dump);
-			}else{
-				a_modem_msg_add(&msg_remote,dump);
-			}
-		}
+	/*store to msg list (local & remote)*/
+	if (strstr(dump,"user")==NULL){/*useful info are stored*/
+	dump[n-1]=0;/*remove newline char*/
+	if (strstr(dump,"DATA")==NULL)	a_modem_msg_add(&msg,dump);
+	else	a_modem_msg_add(&msg_remote,dump);
 	}
 	return n;
 }
@@ -274,14 +287,14 @@ int a_modem_record(int duration) {
 	a_modem_puts( "record off\r");
 
 	/* get rx filename*/
-	if ((n=a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE))){
-	buf[n-1]=0;
+	/*if ((n=a_modem_wait_info(".wav", SERIAL_TIMEOUT, buf, BUFSIZE))){
 	sprintf(buf2, "echo '%s' >> %s", buf,RX_PATH);
 	system(buf2);
 	a_modem_puts("\r");
 	}else{
 		fprintf(stderr, "A_modem, record msg (filename.wav) missing\n");
 	}
+*/
 /*	if (a_modem_wait_info("off at", SERIAL_TIMEOUT, buf, BUFSIZE) == FAIL)
 		fprintf(stderr, "A_modem, record msg (...recorder off...) missing\n");
 	sprintf(buf2, "echo '%s' >> RXLOG.TXT", buf);
@@ -291,7 +304,8 @@ int a_modem_record(int duration) {
 
 	/*get log name*/
 	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)){
-	sscanf(buf,"%*s log file %s",logname);
+	printf("debug :%s\n",buf);
+	sscanf(buf,"log file %s",logname);
 	printf("log name :%s\n",logname);
 	sprintf(buf2, "echo '%s' >> %s",logname+4,RX_PATH);
 	system(buf2);
@@ -409,6 +423,9 @@ int a_modem_is_clock_Sync(int samp_interval, int N_retry) {
 	return FAIL;
 }
 
+int a_modem_wait_ack(char *keyword,int timeout){
+return a_modem_wait_info(keyword,timeout,NULL,0);
+}
 
 int a_modem_wait_info(char *key_word, int timeout, char *info,
 		int info_size) {
@@ -416,28 +433,24 @@ int a_modem_wait_info(char *key_word, int timeout, char *info,
 	store that line contained key_word to info, the output info is a string
 	(end with a NULL char)
 	*/
-	int n;
 	char buf[BUFSIZE];
 	int delay=0;
 	int Niter=timeout/N_ITER_DIV;
-	info[0]=0;/*make sure input buffer clear when this funtion fail*/
+	if (info!=NULL)info[0]=0;/*make sure input buffer clear when this funtion fail*/
 	msg.N_unread=0;
 	while(delay<Niter) {//before timeout
-		a_modem_gets(NULL,0);
-		if (msg.N_read<1) {
+		a_modem_gets(buf,BUFSIZE);
+		if (msg.N_unread<1) {
 			delay++;
 		} else {//got new msg
-			if (strlen(msg.text[msg.i])<info_size){
-				printf("info_size too small\n");
-				return FAIL;}
-				if (strcasestr(buf,key_word)) {
-					if (info!=NULL)strcpy(info,buf); //copy msg
-					return n;
+			if (strcasestr(msg.text[msg.i],key_word)) {
+				if (info!=NULL)
+				strncpy(info,msg.text[msg.i],info_size);
+				return SUCCESS;
 				}
-			} else {
-			}
 		}
 		usleep(WAIT_INTVAL);
+		delay++;
 	}
 	// timeout
 	printf("info timeout\n");

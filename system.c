@@ -25,10 +25,10 @@ if (fscanf(fp,"name %s",buf)<1){
 }
 t_node.name=strdup(buf);
 
-if (fscanf(fp,"opmode %s",buf)<1){
+/*if (fscanf(fp,"opmode %s",buf)<1){
 	printf("fail to read this_node.txt (opmode)\n");
 	rt=FAIL;
-}
+}*/
 
 
 /*close cfg file*/

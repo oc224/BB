@@ -21,6 +21,8 @@ int main() {
 //	int a_modem_set_devel_configs();// set the preferable configs for devel stage, tx pwr...//ok
 //	int a_modem_status();//ok
 //	void a_modem_status_show();//ok
+	system_cfg_read();
+	system_cfg_show();
 	printf("!!acoustic modem check\n");
 	a_modem_init();
 
@@ -39,12 +41,8 @@ int main() {
 	printf("\n");
 	a_modem_open();
 
-
-	// play
-	printf("!play wavform\n");
-	a_modem_play("lfm_data_t1_l1.wav");
-	printf("should hear sound\n");
-	printf("\n");
+	//clear ffs
+//	a_modem_ffs_clear();
 
 //wait ack
 	a_modem_clear_io_buffer();
@@ -52,6 +50,13 @@ int main() {
 	a_modem_puts("at\r");
 	a_modem_wait_ack("OK", 2000);
 	printf("Should not be blocking..\n");
+	printf("\n");
+
+
+	// play
+	printf("!play wavform\n");
+	a_modem_play("lfm_data_t1_l1.wav");
+	printf("should hear sound\n");
 	printf("\n");
 
 //wait ack

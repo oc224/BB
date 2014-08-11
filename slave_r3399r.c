@@ -15,17 +15,17 @@ int wait_command_master(){
 	int ret;
 	static int cnt=1;
 	char buf[BUFSIZE];
-	
-	while(1) //wait until command
+
+	while(1) //wait until remote msg received
 	{
-		if (a_modem_wait_info("DATA",TIMEOUT,buf,BUFSIZE) >= 0)
+		if (a_modem_wait_remote("DATA",TIMEOUT,buf,BUFSIZE) >= 0)
 			break;
 	}
 
 	/*decode*/
 	if (sscanf(buf,"%d",&ret) < 1)
 		ret = -1;
-	
+
 	/*return*/
 	if (ret >= 0)
 		cnt++;
