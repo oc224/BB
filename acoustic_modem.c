@@ -30,18 +30,11 @@ int Niter=timeout/N_ITER_DIV,delay=0;
 char buf[BUFSIZE];
 
 while(delay<Niter){
-if (a_modem_gets(buf,BUFSIZE)==FAIL){
-delay++;
-}else{
-printf("%s\n",buf);
-}
+if (a_modem_gets(buf,BUFSIZE)==FAIL)delay++;
+else printf("%s\n",buf);
 usleep(WAIT_INTVAL);
 }
 
-}
-
-		}
-	}
 return SUCCESS;
 }
 
@@ -320,7 +313,7 @@ int a_modem_sync_time_gps() {
 	a_modem_wait_info("2014", SERIAL_TIMEOUT, buf, BUFSIZE);
 	sprintf(buf2, "echo '%s' >> %s", buf,AMODEM_PATH);
 	system(buf2);//SYSTEM DUMP
-	a_modem_puts("date -store");
+	a_modem_puts("date -store\r");
 	//TODO check
 	return SUCCESS;
 }
@@ -330,7 +323,7 @@ int a_modem_sync_clock_gps() {
 	a_modem_clear_io_buffer();
 	// Confirm clock source for the modem
 	a_modem_puts("@SyncPPS\r");
-	if (a_modem_wait_ack("4", SERIAL_TIMEOUT) == FAIL) {
+	if (a_modem_wait_ack("2", SERIAL_TIMEOUT) == SUCCESS) {
 		a_modem_puts("@SyncPPS=4\r");
 		printf("A_modem, syncpps source is not gps, reset the source...\n");
 		printf("sync..., this will take 30 seconds or more...\n");

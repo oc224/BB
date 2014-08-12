@@ -75,3 +75,4 @@ int a_modem_upload_file(const char *fname);
 int a_modem_msg_send(const char*msg);
 
 int a_modem_ffs_clear();
+void a_modem_print(int);
