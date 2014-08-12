@@ -1,0 +1,7 @@
+#this will set the modem cfg for devel stage
+@txpower=1
+@fwdelay=0.1
+@opmode=0
+@syncpps=4
+cfg store
+

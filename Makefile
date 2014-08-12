@@ -64,10 +64,10 @@ clean:
 run:
 	
 deploy:
-#	scp ./bin/* root@charlie:~/bin/.
+	scp ./bin/* root@charlie:~/bin/.
 	scp ./bin/* root@dylan:~/bin/.
 	scp -r ./script root@dylan:~/
-#	scp -r ./script root@charlie:~/
+	scp -r ./script root@charlie:~/
 deploy_config:
 	scp ./config/*.txt root@charlie:~/config/.
 	scp ./config/charlie/* root@charlie:~/config/.

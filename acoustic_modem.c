@@ -25,21 +25,21 @@ a_modem modem;/*a struct that contains the status of modem or some useful inform
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
-int a_modem_ffs_clear(){
-	char buf[BUFSIZE];
-	a_modem_puts("ls /ffs\r");
-	sleep(3);
+void a_modem_print(int timeout){
+int Niter=timeout/N_ITER_DIV,delay=0;
+char buf[BUFSIZE];
 
-	while(a_modem_gets(buf,BUFSIZE)>3){
-	/*rm file that *.log *.wav except lfm*/
-	printf("%s\n",buf);
-	if (strstr(buf,"lfm")!=NULL)continue;
-	if((strstr(buf,".log")!=NULL)||(strstr(buf,".wav"))){
-		printf("delete %s \n",buf);
-		a_modem_puts("rm /ffs/");
-		a_modem_puts(buf);
-		a_modem_puts("\r");
-		usleep(500000);
+while(delay<Niter){
+if (a_modem_gets(buf,BUFSIZE)==FAIL){
+delay++;
+}else{
+printf("%s\n",buf);
+}
+usleep(WAIT_INTVAL);
+}
+
+}
+
 		}
 	}
 return SUCCESS;
@@ -97,6 +97,7 @@ int a_modem_init(){
 	msg.N_unread=0;
 	msg_remote.i=0;
 	msg_remote.N_unread=0;
+	msg.N_unread=0;
 	for (i=0;i<LIST_SIZE;i++){
 	msg.text[i]=strdup(" ");
 	msg_remote.text[i]=strdup("");
