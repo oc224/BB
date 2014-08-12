@@ -2,7 +2,11 @@ CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 
-all:a_modem_test rs232_test data_upload slave master gps_test exp
+all:a_modem_test rs232_test data_upload slave master gps_test exp unicon
+unicon.o:unicon.c
+	$(CC) $(CFLAGS) -c unicon.c
+unicon:unicon.o rs232.o acoustic_modem.o
+	$(CC) $(CFLAGS) -o ./bin/unicon unicon.o rs232.o acoustic_modem.o
 rs232.o:rs232.c
 	$(CC) $(CFLAGS) -c rs232.c
 acoustic_modem.o:acoustic_modem.c
@@ -64,11 +68,11 @@ clean:
 run:
 	
 deploy:
-#	scp ./bin/* root@charlie:~/bin/.
-	#scp ./bin/* root@dylan:~/bin/.
-	scp -r ./script root@dylan:~/
-#	scp -r ./script root@charlie:~/
-	$(CC) $(CFLAGS) -c acoustic_modem.c
+	cp ./bin/* ./home_fs/bin/.
+	cp ./config/*txt ./home_fs/config/.
+	cp ./script/* ./home_fs/script/.
+	rsync -avz ./home_fs/ root@charlie:~/.
+	rsync -avz ./home_fs/ root@dylan:~/.
 sync_test.o: sync_test.c
 	$(CC) $(CFLAGS) -c sync_test.c
 sync_test: rs232.o acoustic_modem.o sync_test.o

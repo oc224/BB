@@ -1,0 +1,11 @@
+#include <stdio.h>
+
+
+int main(){
+a_modem_init();
+a_modem_open();
+
+
+a_modem_close();
+return 0;
+}

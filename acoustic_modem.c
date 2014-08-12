@@ -25,23 +25,16 @@ a_modem modem;/*a struct that contains the status of modem or some useful inform
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
-int a_modem_ffs_clear(){
-	char buf[BUFSIZE];
-	a_modem_puts("ls /ffs\r");
-	sleep(3);
+void a_modem_print(int timeout){
+int Niter=timeout/N_ITER_DIV,delay=0;
+char buf[BUFSIZE];
 
-	while(a_modem_gets(buf,BUFSIZE)>3){
-	/*rm file that *.log *.wav except lfm*/
-	printf("%s\n",buf);
-	if (strstr(buf,"lfm")!=NULL)continue;
-	if((strstr(buf,".log")!=NULL)||(strstr(buf,".wav"))){
-		printf("delete %s \n",buf);
-		a_modem_puts("rm /ffs/");
-		a_modem_puts(buf);
-		a_modem_puts("\r");
-		usleep(500000);
-		}
-	}
+while(delay<Niter){
+if (a_modem_gets(buf,BUFSIZE)==FAIL)delay++;
+else printf("%s\n",buf);
+usleep(WAIT_INTVAL);
+}
+
 return SUCCESS;
 }
 
@@ -97,6 +90,7 @@ int a_modem_init(){
 	msg.N_unread=0;
 	msg_remote.i=0;
 	msg_remote.N_unread=0;
+	msg.N_unread=0;
 	for (i=0;i<LIST_SIZE;i++){
 	msg.text[i]=strdup(" ");
 	msg_remote.text[i]=strdup("");
@@ -320,7 +314,7 @@ int a_modem_sync_time_gps() {
 	a_modem_wait_info("2014", SERIAL_TIMEOUT, buf, BUFSIZE);
 	sprintf(buf2, "echo '%s' >> %s", buf,AMODEM_PATH);
 	system(buf2);//SYSTEM DUMP
-	a_modem_puts("date -store");
+	a_modem_puts("date -store\r");
 	//TODO check
 	return SUCCESS;
 }
@@ -330,7 +324,7 @@ int a_modem_sync_clock_gps() {
 	a_modem_clear_io_buffer();
 	// Confirm clock source for the modem
 	a_modem_puts("@SyncPPS\r");
-	if (a_modem_wait_ack("4", SERIAL_TIMEOUT) == FAIL) {
+	if (a_modem_wait_ack("2", SERIAL_TIMEOUT) == SUCCESS) {
 		a_modem_puts("@SyncPPS=4\r");
 		printf("A_modem, syncpps source is not gps, reset the source...\n");
 		printf("sync..., this will take 30 seconds or more...\n");
