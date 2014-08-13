@@ -65,7 +65,6 @@ sync_test:rs232.o acoustic_modem.o sync_test.o
 clean:
 	rm -f *.o
 	rm ./bin/*
-run:
 	
 deploy:
 	cp ./bin/* ./home_fs/bin/.
