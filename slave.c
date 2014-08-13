@@ -3,13 +3,10 @@
 #include <unistd.h>
 #include "system.h"
 #include "acoustic_modem.h"
-#include "MS_sleep_time.h"
+#include "ms.h"
 #define BUFSIZE 128
 #define TIMEOUT 2000
-
-typedef enum{
-	TALK,INIT,PROB
-}command;
+#define REMOTE_TIMEOUT 5000
 
 int wait_command_master(){
 	int ret;
@@ -18,9 +15,10 @@ int wait_command_master(){
 
 	while(1) //wait until remote msg received
 	{
-		if (a_modem_wait_remote("DATA",TIMEOUT,buf,BUFSIZE) >= 0)
+		if (a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT) ==SUCCESS)
 			break;
 	}
+	printf("remote:%s \n",buf);
 
 	/*decode*/
 	if (sscanf(buf,"%d",&ret) < 1)
@@ -38,23 +36,31 @@ int main()
 	command t_cmd;
 	char buf[BUFSIZE];
 
+	system_cfg_read();
+	system_cfg_show();
+	printf("\nNODE NAME : %s\n\n ",t_node.name);
+	a_modem_init();
+	a_modem_open();
 	while (1)
 	{
 		t_cmd = wait_command_master();
 		switch (t_cmd)
 		{
 		case TALK: //DO TALK
-			a_modem_record(Record_time*1000);
-			a_modem_wait_info("@",TIMEOUT, buf, BUFSIZE);
-			a_modem_msg_send(buf);
-			sleep(WAIT_then_PLAY);
-			a_modem_play("lfm_data_t3_l10.wav"); // in this case, Slave is Dylan
-			sleep(Record_time-WAIT_then_PLAY);
-			a_modem_msg_send(modem.latest_tx_stamp);
+			printf("go to talk\n");
+			slave_talk();
 			break;
-
+		case SYNC_TIME:
+			printf("go to sync time\n");
+			slave_sync();
+			break;
+		case ROBIN:
+			printf("go to round robin\n");
+			slave_talk_round_robin();
+			break;
 		case INIT:
 			//DO INIT
+			printf("go to init\n");
 			break;
 		case PROB:
 			//DO PROB
@@ -63,5 +69,6 @@ int main()
 			break;
 		}
 	}
+a_modem_close();
 return 0;
 }

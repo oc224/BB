@@ -56,7 +56,7 @@ printf("set default tx file name : %s\n",modem.def_tx_wav);
 int main(){
 int arg1;
 char arg_str[48];
-
+char arg_str2[48];
 a_modem_init();
 a_modem_open();
 
@@ -106,11 +106,15 @@ printf("showmsg\n");
 break;
 case UPLOAD:
 sscanf(buf,"%*s %s",arg_str);
-/*if (strstr(arg_str,"last")){
-sscanf(buf,"%*s %*s %d",&arg1);
-
-}*/
 a_modem_upload_file(arg_str);
+if (strstr(arg_str,".log")!=NULL){//download wav as well
+sleep(1);
+arg_str[10]='w';
+arg_str[11]='a';
+arg_str[12]='v';
+arg_str[13]=0;
+a_modem_upload_file(arg_str);
+}
 break;
 default:
 a_modem_puts(buf);

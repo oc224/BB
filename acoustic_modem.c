@@ -60,6 +60,7 @@ while(delay<Niter){//before timeout
 if (msg_remote.N_unread>0){/*read the oldest msg from remote msg list*/
 strcpy(buf,MSG_PULL(msg_remote));
 msg_remote.N_unread--;
+return SUCCESS;
 break;
 }
 
@@ -231,7 +232,7 @@ int a_modem_gets(char* buf,int size){
 	dump[n-1]=0;/*remove newline char*/
 	if (strstr(dump,"DATA")==NULL)	a_modem_msg_add(&msg,dump);
 	else{
-	sscanf(dump,"%*s %s",buf2);//TODO
+	sscanf(dump,"DATA(%*d):%s",buf2);//TODO
 	a_modem_msg_add(&msg_remote,buf2);}
 
 	return n;
@@ -304,7 +305,7 @@ int a_modem_sync_time_gps() {
 	a_modem_close();
 	sleep(1);
 	system(GPSPIPE);
-	sleep(GPSPIPE_TIME);
+	//sleep(GPSPIPE_TIME);
 	a_modem_open();
 	a_modem_clear_io_buffer();
 	// simple test
@@ -536,5 +537,8 @@ int a_modem_upload_file(const char *fname){
 	a_modem_puts(buf);
 	sprintf(buf,"rm /sd/%s\r",fname);
 	a_modem_puts(buf);
+	//move file
+	sprintf(buf,"mv ./%s /home/root/data",fname);
+	system(buf);
 	return SUCCESS;
 }
