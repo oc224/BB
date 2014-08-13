@@ -5,11 +5,10 @@
 #define a_modem_dev_path "/dev/ttyUSB2"
 #define LIST_SIZE 16
 #define TX_SIZE 32
-
+#define CFG_DEPLOY "/home/root/config/modem_cfg_deploy.txt"
+#define CFG_DEVEL "/home/root/config/modem_cfg_devel.txt"
 /*point to oldest unread msg*/
 #define MSG_PULL(msg) msg.text[(msg.i+LIST_SIZE+msg.N_unread-1)%LIST_SIZE]
-
-//#define a_modem_wait_ack(keyword,timeout)  a_modem_wait_info(keyword,timeout,NULL,0)
 
 typedef enum {
 	NOT_SYNC, QUALIFY, SYNC
@@ -63,8 +62,10 @@ int a_modem_status(); // get status (internal temp, pwr cond...) fill struct a_m
 void a_modem_status_show();
 
 int a_modem_print_configs(char * filepath); // save cfg all output for future ref
-int a_modem_set_deploy_configs();
-int a_modem_set_devel_configs(); // set the preferable configs for devel stage, tx pwr...
+int a_modem_cfg_set(const char *);
+#define a_modem_cfg_deploy() a_modem_cfg_set(CFG_DEPLOY);
+#define a_modem_cfg_devel() a_modem_cfg_set(CFG_DEVEL);
+
 
 int a_modem_sync_clock_gps();
 int a_modem_sync_time_gps();

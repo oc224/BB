@@ -3,5 +3,4 @@
 @fwdelay=0.1
 @opmode=0
 @syncpps=4
-cfg store
 

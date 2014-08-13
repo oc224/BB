@@ -87,7 +87,7 @@ int a_modem_msg_send(const char*msg);
 
 	// set devel configs
 	printf("!set devel configs\n");
-	a_modem_set_devel_configs();
+	a_modem_cfg_devel();
 	printf("wait ack\n");
 	printf("\n");
 
