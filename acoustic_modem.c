@@ -12,20 +12,20 @@
 #define RX_LOG "echo $(date -Ru) >> /home/root/log/RXLOG.TXT"
 #define RX_PATH "/home/root/log/RXLOG.TXT"
 #define AMODEM_PATH "/home/root/log/AMODEM.TXT"
-#define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
+#define GPSPIPE "gpspipe -r -n 12 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
 #define ONLINE_COMMAND 2 /*Time it takes from online mode to command mode*/
 #define WAIT_INTVAL 100000 /*inteval time for reading serial port*/
 #define N_ITER_DIV (WAIT_INTVAL/1000)
 #define COMMAND_DELAY 300000 /*Latency of entering command mode*/
-#define GPSPIPE_TIME 10 /*seconds that gpspipe feed modem*/
+#define GPSPIPE_TIME 8 /*seconds that gpspipe feed modem*/
 #define WAIT_TXTIME 5000
-
 
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
 void a_modem_print(int timeout){
+/*print all the text from serial port*/
 int Niter=timeout/N_ITER_DIV,delay=0;
 char buf[BUFSIZE];
 
@@ -46,7 +46,7 @@ int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str){
 	else
 	msg_list->i=0;
 
-	msg_list->N_unread++;
+	if (msg_list->N_unread<LIST_SIZE) msg_list->N_unread++;
 	free(msg_list->text[msg_list->i]);
 	msg_list->text[msg_list->i]=strdup(msg_str);
 	return SUCCESS;
@@ -134,39 +134,27 @@ inline void a_modem_clear_io_buffer() {
 	RS232_Flush(a_modem_dev_no);
 }
 
-int a_modem_set_devel_configs() {
-	//TODO read config text
+int a_modem_cfg_set(const char *fname) {
 	// set modem the preferable config in devel stage.
+	FILE *fp;
+	char buf[BUFSIZE];
 	a_modem_clear_io_buffer();
 	a_modem_puts("+++\r");
-	a_modem_puts("@P1EchoChar=Ena\r");
-	if (a_modem_wait_ack("p1echochar", SERIAL_TIMEOUT) == FAIL) {
-		fprintf(stderr, "A_modem, cfg fail to set\n");
-		return FAIL;
+	if (fp=fopen(fname,"r")==NULL){
+	fprintf(stderr,"fail to open %s\n",CFG_DEVEL);
+	return FAIL;
 	}
-	a_modem_puts("@TxPower=1\r");
-	if (a_modem_wait_ack("txpower", SERIAL_TIMEOUT) == FAIL) {
-		fprintf(stderr, "A_modem, cfg fail to set\n");
-		return FAIL;
-	}
-	a_modem_puts("cfg store\r");
-	if (a_modem_wait_ack("stored", SERIAL_TIMEOUT) == FAIL) {
-		fprintf(stderr, "A_modem, cfg fail to store\n");
-		return FAIL;
-	}
-	return SUCCESS;
-}
 
-int a_modem_set_deploy_configs() {
-	// set modem the preferable config in deploy stage.
-	a_modem_clear_io_buffer();
-	a_modem_puts("+++\r");
-	a_modem_puts("@TxPower=8\r");
-	if (a_modem_wait_ack("txpower", SERIAL_TIMEOUT) == FAIL) {
-		fprintf(stderr, "A_modem, cfg fail to set\n");
-		return FAIL;
+	while (fgets(buf,BUFSIZE,fp)>0){
+		if (buf[0]=='#')continue;
+		a_modem_puts(buf);
+		a_modem_puts("\r");
+		a_modem_print(SERIAL_TIMEOUT);
 	}
-	a_modem_puts( "cfg store\r");
+	fclose(fp);
+
+	/*store cfg*/
+	a_modem_puts("cfg store\r");
 	if (a_modem_wait_ack("stored", SERIAL_TIMEOUT) == FAIL) {
 		fprintf(stderr, "A_modem, cfg fail to store\n");
 		return FAIL;
@@ -212,13 +200,20 @@ inline int a_modem_puts(const char*msg){
 }
 
 int a_modem_gets(char* buf,int size){
-	// read a line of text from serial port
-	// the newline char is removed.
-	// return FAIL or n char read
-	char dump[BUFSIZE];
+	/* read a line of text from serial port
+	Input 
+		*buf can be char array ready for store the string 
+		or NULL
+		*size the array size of buf
+	Output
+	 	*buf the text read will be stored at buf
+		*the the text read will be copy to msg or msg_remote
+		*the newline char is removed.
+	 	*return FAIL or n char read*/
+	char dump[BUFSIZE],buf2[BUFSIZE];
 	int n;
 
-	buf[0]=0;/*make sure input buffer clear if this function fail*/
+	if (buf!=NULL)buf[0]=0;/*make sure input buffer clear if this function fail*/
 	n=RS232_PollComport(a_modem_dev_no,dump,BUFSIZE);
 	if (n<1){
 		return FAIL;
@@ -235,7 +230,9 @@ int a_modem_gets(char* buf,int size){
 	/*store to msg list (local & remote)*/
 	dump[n-1]=0;/*remove newline char*/
 	if (strstr(dump,"DATA")==NULL)	a_modem_msg_add(&msg,dump);
-	else	a_modem_msg_add(&msg_remote,dump);
+	else{
+	sscanf(dump,"%*s %s",buf2);//TODO
+	a_modem_msg_add(&msg_remote,buf2);}
 
 	return n;
 }
@@ -275,7 +272,7 @@ int a_modem_record(int duration) {
 	/*record off*/
 	a_modem_puts( "record off\r");
 	a_modem_puts("\r");
-*/
+
 	/*get log name*/
 	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)==SUCCESS){
 	printf("debug :%s\n",buf);
@@ -286,9 +283,10 @@ int a_modem_record(int duration) {
 	system(RX_LOG);
 	strcpy(modem.latest_rx_fname,logname+4);
 
-	// get RX time
-/*	sprintf(buf,"cat /sd/%s\r",modem.latest_rx_fname);
-	a_modem_puts(buf);*/
+	/* get RX time*/
+	//sprintf(buf,"cat /sd/%s\r",modem.latest_rx_fname);
+	//a_modem_puts(buf);
+	//Then?
 
 	return SUCCESS;
 	}else{
@@ -342,7 +340,6 @@ int a_modem_sync_clock_gps() {
 
 int a_modem_sync_status() {
 	// to check if modem is sync
-	//good job
 	char buf[BUFSIZE];
 	int n, delay = 0, Niter=2000/N_ITER_DIV;;
 
@@ -416,10 +413,9 @@ int a_modem_wait_info(char *key_word, int timeout, char *info,
 		} else {//got new msg
 			//new msg match
 			if (strcasestr(msg.text[msg.i],key_word)!=NULL) {
-				if (info!=NULL)
-				strncpy(info,msg.text[msg.i],info_size);
-				return SUCCESS;
-				}
+			if (info!=NULL) strncpy(info,msg.text[msg.i],info_size);
+			return SUCCESS;
+			}
 		}
 		usleep(WAIT_INTVAL);
 		delay++;
