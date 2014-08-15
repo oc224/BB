@@ -6,7 +6,6 @@
 #include "ms.h"
 #define BUFSIZE 128
 #define TIMEOUT 2000
-#define REMOTE_TIMEOUT 5000
 
 int wait_command_master(){
 	int ret;
@@ -15,7 +14,7 @@ int wait_command_master(){
 
 	while(1) //wait until remote msg received
 	{
-		if (a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT) ==SUCCESS)
+		if (a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS)
 			break;
 	}
 	printf("remote:%s \n",buf);
@@ -53,10 +52,6 @@ int main()
 		case SYNC_TIME:
 			printf("go to sync time\n");
 			slave_sync();
-			break;
-		case ROBIN:
-			printf("go to round robin\n");
-			slave_talk_round_robin();
 			break;
 		case INIT:
 			//DO INIT

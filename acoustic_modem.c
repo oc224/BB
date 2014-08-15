@@ -255,18 +255,18 @@ int a_modem_gets(char* buf,int size){
 int a_modem_msg_send(const char*msg){
 	/* write msg acoustically to remote modems*/
 	a_modem_puts("ato\r");
-	if (a_modem_wait_ack("connect",SERIAL_TIMEOUT)==FAIL){
+	if (a_modem_wait_ack("connect",2*SERIAL_TIMEOUT)==FAIL){
 		printf("fail to enter online mode\n");
 		return FAIL;
 	}
 	a_modem_puts(msg);
-	if (a_modem_wait_ack("forwarding",SERIAL_TIMEOUT)==FAIL){
+	if (a_modem_wait_ack("forwarding",2*SERIAL_TIMEOUT)==FAIL){
 		printf("fail to forward msg\n");
 		return FAIL;
 	}
 	usleep(ONLINE_COMMAND);
 
-	a_modem_puts("+++\r");
+	a_modem_puts("+++");
 	usleep(COMMAND_DELAY);
 	return SUCCESS;
 }
