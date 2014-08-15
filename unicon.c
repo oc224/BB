@@ -13,7 +13,8 @@ UPLOAD,
 NONE,
 MSG_SEND,
 MSG_SHOW,
-WAIT_REMOTE
+WAIT_REMOTE,
+CLEAR_FFS
 }cmd;
 
 /*
@@ -41,6 +42,7 @@ else if (strstr(buf,"upload"))tcmd=UPLOAD;
 else if (strstr(buf,"wr"))tcmd=WAIT_REMOTE;
 else if (strstr(buf,"sr"))tcmd=MSG_SEND;
 else if (strstr(buf,"showmsg"))tcmd=MSG_SHOW;
+else if (strstr(buf,"clearffs"))tcmd=CLEAR_FFS;
 else tcmd=NONE;
 if (tcmd!=NONE)cnt++;
 return tcmd;
@@ -94,6 +96,9 @@ a_modem_sync_clock_gps();
 a_modem_sync_time_gps();
 system("ntpdate -u 211.22.103.157");
 break;
+case CLEAR_FFS:
+a_modem_ffs_clear();
+break;
 case HELP:
 printf("play\n");
 printf("record\n");
@@ -102,6 +107,7 @@ printf("help\n");
 printf("upload\n");
 printf("wr\n");
 printf("sr\n");
+printf("clearffs\n");
 printf("showmsg\n");
 break;
 case UPLOAD:

@@ -3,6 +3,12 @@
 #define a_modem_dev_no 18
 #define a_modem_serial_baudrate 115200
 #define a_modem_dev_path "/dev/ttyUSB2"
+#define ONLINE_COMMAND 1600000 /*Time it takes from online mode to command mode*/
+#define WAIT_INTVAL 100000 /*inteval time for reading serial port*/
+#define N_ITER_DIV (WAIT_INTVAL/1000)
+#define COMMAND_DELAY 200000 /*Latency of entering command mode*/
+#define GPSPIPE_TIME 8 /*seconds that gpspipe feed modem*/
+#define WAIT_TXTIME 5000
 #define LIST_SIZE 16
 #define TX_SIZE 32
 #define CFG_DEPLOY "/home/root/config/modem_cfg_deploy.txt"

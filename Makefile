@@ -2,7 +2,7 @@ CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 
-all:a_modem_test rs232_test data_upload master slave gps_test exp unicon
+all:a_modem_test rs232_test data_upload master  gps_test exp unicon charlie dylan
 unicon.o:unicon.c
 	$(CC) $(CFLAGS) -c unicon.c
 unicon:unicon.o rs232.o acoustic_modem.o
@@ -41,6 +41,14 @@ connect.o:connect.c
 	$(CC) $(CFLAGS) -c connect.c
 connect:connect.o wireless_modem.o rs232.o system.o connect.o
 	$(CC) $(CFLAGS) -o ./bin/connect wireless_modem.o rs232.o system.o connect.o
+charlie:charlie.o rs232.o acoustic_modem.o system.o ms.o
+	$(CC) $(CFLAGS) -o ./bin/charlie charlie.o rs232.o acoustic_modem.o system.o ms.o
+charlie.o:charlie.c
+	$(CC) $(CFLAGS) -c charlie.c
+dylan:dylan.o rs232.o acoustic_modem.o system.o ms.o
+	$(CC) $(CFLAGS) -o ./bin/dylan dylan.o rs232.o acoustic_modem.o system.o ms.o
+dylan.o:dylan.c
+	$(CC) $(CFLAGS) -c dylan.c
 slave:slave.o rs232.o acoustic_modem.o system.o ms.o
 	$(CC) $(CFLAGS) -o ./bin/slave slave.o rs232.o acoustic_modem.o system.o ms.o
 slave.o:slave.c

@@ -13,17 +13,31 @@
 #define RX_PATH "/home/root/log/RXLOG.TXT"
 #define AMODEM_PATH "/home/root/log/AMODEM.TXT"
 #define GPSPIPE "gpspipe -r -n 12 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
-#define ONLINE_COMMAND 2 /*Time it takes from online mode to command mode*/
-#define WAIT_INTVAL 100000 /*inteval time for reading serial port*/
-#define N_ITER_DIV (WAIT_INTVAL/1000)
-#define COMMAND_DELAY 300000 /*Latency of entering command mode*/
-#define GPSPIPE_TIME 8 /*seconds that gpspipe feed modem*/
-#define WAIT_TXTIME 5000
 
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
+int a_modem_ffs_clear(){
+char fname[80];
+int rm;
+a_modem_puts("ls /ffs/ \r");
+sleep(2);
+while (a_modem_gets(fname,80)>1){
+printf("file : %s\n",fname);
+rm=0;
+if (strstr(fname,"log")!=NULL) rm=1;
+if ((strstr(fname,"wav")!=NULL)&&(strstr(fname,"t")==NULL)) rm=1;
+if (rm){
+a_modem_puts("rm /ffs/");
+a_modem_puts(fname);
+a_modem_puts("\r");
+}
+}
+
+
+return SUCCESS;
+}
 void a_modem_print(int timeout){
 /*print all the text from serial port*/
 int Niter=timeout/N_ITER_DIV,delay=0;
@@ -250,7 +264,7 @@ int a_modem_msg_send(const char*msg){
 		printf("fail to forward msg\n");
 		return FAIL;
 	}
-	sleep(ONLINE_COMMAND);
+	usleep(ONLINE_COMMAND);
 
 	a_modem_puts("+++\r");
 	usleep(COMMAND_DELAY);
