@@ -18,13 +18,13 @@ a_modem modem;/*a struct that contains the status of modem or some useful inform
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
+
 int a_modem_ffs_clear(){
 char fname[80];
 int rm;
 a_modem_puts("ls /ffs/ \r");
-sleep(2);
-while (a_modem_gets(fname,80)>1){
-printf("file : %s\n",fname);
+while (a_modem_wait_info(NULL,SERIAL_TIMEOUT,fname,80)>1){
+printf("remove file : %s\n",fname);
 rm=0;
 if (strstr(fname,"log")!=NULL) rm=1;
 if ((strstr(fname,"wav")!=NULL)&&(strstr(fname,"t")==NULL)) rm=1;
@@ -72,13 +72,13 @@ int delay=0,Niter=timeout/N_ITER_DIV;
 
 while(delay<Niter){//before timeout
 if (msg_remote.N_unread>0){/*read the oldest msg from remote msg list*/
-strcpy(buf,MSG_PULL(msg_remote));
+if (buf!=NULL)strcpy(buf,MSG_PULL(msg_remote));
 msg_remote.N_unread--;
 return SUCCESS;
 break;
 }
 
-a_modem_gets(buf,BUFSIZE);
+a_modem_gets(NULL,BUFSIZE);
 usleep(WAIT_INTVAL);
 delay++;
 }
@@ -290,18 +290,12 @@ int a_modem_record(int duration) {
 
 	/*get log name*/
 	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)==SUCCESS){
-	printf("debug :%s\n",buf);
 	sscanf(buf,"%*s log file %s",logname);
 	printf("log name :%s\n",logname+4);
 	sprintf(buf2, "echo '%s' >> %s",logname+4,RX_PATH);
 	system(buf2);
 	system(RX_LOG);
 	strcpy(modem.latest_rx_fname,logname+4);
-
-	/* get RX time*/
-	//sprintf(buf,"cat /sd/%s\r",modem.latest_rx_fname);
-	//a_modem_puts(buf);
-	//Then?
 
 	return SUCCESS;
 	}else{

@@ -4,86 +4,116 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+
 #define BUFSIZE 128
-#define TIMEOUT 2000
+#define BUFSHORT 20
 #define M2S_TXPATH "/home/root/log/M2S_TXLOG.txt"
 #define M2S_RXPATH "/home/root/log/M2S_RXLOG.txt"
 #define S2M_TXPATH "/home/root/log/S2M_TXLOG.txt"
 #define S2M_RXPATH "/home/root/log/S2M_RXLOG.txt"
+
+char buf[BUFSIZE];
+cmd t_cmd;
+
 int wait_command_user()
 {
-	/*return command (enum or integer)*/
-	int ret;
+	/*t_cmd.typeurn command (enum or integer)*/
 	static int cnt=1;
-	char buf[BUFSIZE];
+	char arg0[BUFSHORT];
+	t_cmd.type=NONE;
+	t_cmd.isremote=0;
 
 	/*console prompt*/
 	printf("master<%d>:", cnt);
 	fgets(buf, BUFSIZE, stdin);
+	sscanf(buf,"%s",arg0);
+//	printf("input %s \n",arg0);
 
 	/*decode*/
-	if (strstr(buf,"talk"))
-		ret=TALK;
-	else if (strstr(buf,"synctime"))
-		ret=SYNC_TIME;
-	else if (strstr(buf,"init"))
-		ret=INIT;
-	else if (strstr(buf,"prob"))
-		ret=PROB;
-	else if (strstr(buf,"robin"))
-		ret=ROBIN;
-	else
-		ret=-1;
-
+	if (strcmp(arg0,"talk")==0){
+		t_cmd.type=TALK;
+		t_cmd.isremote=1;
+	}else if(strcmp(arg0,"play")==0){
+		t_cmd.type=PLAY;
+		t_cmd.isremote=0;
+	}else if (strcmp(arg0,"record")==0){
+		t_cmd.type=RECORD;
+		t_cmd.isremote=0;
+	}else if (strcmp("sync",arg0)==0){
+		t_cmd.type=SYNCALL;
+		t_cmd.isremote=1;
+	}else if (strcmp("upload",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
+	}else{
+		t_cmd.type=NONE;
+		t_cmd.isremote=0;
+	}
 	/*return*/
-	if (ret>=0)
+	if (t_cmd.type>=0)
 		cnt++;
-	return ret;
+	return t_cmd.type;
 }
 
 int main()
 {
-	char buf[BUFSIZE], buf2[BUFSIZE], buf3[BUFSIZE];
-	int i;
-	command t_cmd;
-
+	char remote[20];
+	/*init cfg...*/
 	system_cfg_read();
 	system_cfg_show();
 	printf("NODE NAME : %s\n\n ",t_node.name);
 	a_modem_init();
 	a_modem_open();
+
 	while (1)
 	{
-		printf("[0] TALK	[1] INIT	[2] PROB\n");
-		/*so you mean user can also enter the number rather than text?*/
-		t_cmd = wait_command_user();
-		if (t_cmd == -1)
-			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
-		else{
-			printf("command = %d\n", t_cmd);
-			sprintf(buf,"%d",t_cmd);
-			a_modem_msg_send(buf);}
-
-		switch (t_cmd)
+		wait_command_user();
+		printf("command %d\n",t_cmd.type);
+		if (t_cmd.isremote){
+		sprintf(remote,"%d",t_cmd.type);
+		a_modem_msg_send(remote);}
+		switch (t_cmd.type)
 		{
-		case TALK: //DO TALK
-			master_talk();
-			break;
-		case ROBIN:
-			master_talk_round_robin();
-			break;
-		case SYNC_TIME:
-			master_sync();
-		case INIT:
-			//DO INIT
-			break;
-		case PROB:
-			//DO PROB
+		case TALK://ok
+		master_talk();
+		break;
+		case PLAY://ok
+		play(buf);
+		break;
+		case RECORD://ok
+		record(buf);
+		break;
+		case SYNCALL:
+		master_sync();
+		break;
+		case HELP:
+		help();
+		break;
+		case WAIT_REMOTE:
+		wait_remote(buf);
+		break;
+		case CLEAR_FFS:
+		a_modem_ffs_clear();
+		break;
+		case MSG_SHOW:
+		a_modem_msg_show(&msg);
+		a_modem_msg_show(&msg_remote);
+		break;
+		case MSG_SEND:
+		msg_send();
+		break;
+		case UPLOAD:
+		upload(buf);
+		break;
+		case NONE:
+			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
 			break;
 		default:
+			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
 			break;
 		}
 	}
+
 a_modem_close();
 return 0;
 }

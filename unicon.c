@@ -70,8 +70,8 @@ a_modem_msg_show(&msg);
 a_modem_msg_show(&msg_remote);
 break;
 case MSG_SEND:
-sscanf(buf,"%*s %s",arg_str);
-a_modem_msg_send(arg_str);
+//sscanf(buf,"%*s %s",arg_str);
+a_modem_msg_send(buf+3);
 arg_str[0]=0;
 break;
 case WAIT_REMOTE:
@@ -113,14 +113,6 @@ break;
 case UPLOAD:
 sscanf(buf,"%*s %s",arg_str);
 a_modem_upload_file(arg_str);
-if (strstr(arg_str,".log")!=NULL){//download wav as well
-sleep(1);
-arg_str[10]='w';
-arg_str[11]='a';
-arg_str[12]='v';
-arg_str[13]=0;
-a_modem_upload_file(arg_str);
-}
 break;
 default:
 a_modem_puts(buf);
