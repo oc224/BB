@@ -10,11 +10,10 @@
 #define BUFSIZE 128
 
 static schedule modem_schedule;
-this_node t_node;
+//this_node t_node;
 
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN
-
 #define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \
                         } while (0)
 static timer_t timerid;
@@ -49,7 +48,7 @@ int scheduler_init() {
 	if (timer_create(CLOCKID, &sev, &timerid) == -1)
 		errExit("timer_create");
 
-	printf("timer ID is 0x%lx\n", (long) timerid);
+	//printf("timer ID is 0x%lx\n", (long) timerid);
 
 	modem_schedule.n_task = 0;
 	return SUCCESS;
@@ -94,7 +93,7 @@ int scheduler_task_add(char *cfg_msg) {
 	modem_schedule.n_task++;
 	sscanf(cfg_msg, "%s %d %s", type_task, &modem_schedule.p_this->duration,
 			arg);
-	if (strcasestr(type_task, "PLAY") != NULL) {
+	if (strcasestr(type_task, "play") != NULL) {
 		modem_schedule.p_this->this_task = PLAY;
 	} else if (strcasestr(type_task, "record") != NULL) {
 		modem_schedule.p_this->this_task = RECORD;
@@ -166,7 +165,6 @@ void scheduler_exce(int sig, siginfo_t *si, void *uc) {
 		break;
 	case RECORD:
 		//printf("debug, amodem record\n");
-		//usleep(modem_schedule.p_this->duration*1000+1000000);
 		a_modem_record(modem_schedule.p_this->duration);
 		break;
 	case SLEEP:
@@ -178,11 +176,10 @@ void scheduler_exce(int sig, siginfo_t *si, void *uc) {
 
 	// book next task
 	int carry=0;
-	its.it_interval.tv_nsec=0;
-	its.it_interval.tv_sec=0;
+//	its.it_interval.tv_nsec=0;
+//	its.it_interval.tv_sec=0;
 	its.it_value.tv_nsec+=(modem_schedule.p_this->duration%1000)*1000000;
 	if (its.it_value.tv_nsec>=1000000000){
-		//printf("carry\n");
 		its.it_value.tv_nsec+=-1000000000;
 		carry=1;
 	}
@@ -191,13 +188,12 @@ void scheduler_exce(int sig, siginfo_t *si, void *uc) {
     if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
          errExit("timer_settime");
 	modem_schedule.p_this=modem_schedule.p_this->next_task;
-	//time(&now);
-
-	//system_msg_dump("stop");
-	//system_msg_dump(ctime(&now));
 }
 
-int scheduler_start(int hh,int mm, int ss) {
+int scheduler_start(int hh,int mm, int ss,char type) {
+	/*input
+	type a -> TIMER_ABSTIMER
+		r -> RELATIVE */
 	struct timespec now_clock;
 	struct tm start_time;
 	long seconds;
@@ -208,25 +204,34 @@ int scheduler_start(int hh,int mm, int ss) {
 	start_time.tm_hour=hh;start_time.tm_min=mm;start_time.tm_sec=ss;
 	time(&now);
 	seconds=difftime(mktime(&start_time),now);
-	//seconds=2;
 
-
-	if (seconds<1){
+	if (seconds<2){
 		printf("error, target time has passed\n");
 		return FAIL;
 	}
 	printf("%ld seconds left\n",seconds);
 
 	/*set the first timer interrupt*/
-	clock_gettime(CLOCK_REALTIME,&now_clock);
-	printf(" sec,%ld\nnsec %ld\n",(long)now_clock.tv_sec,(long)now_clock.tv_nsec);
-	its.it_value.tv_sec=now_clock.tv_sec+seconds;
-	its.it_value.tv_nsec=0;
+	clock_gettime(CLOCKID,&now_clock);
+//	printf(" sec,%ld\nnsec %ld\n",(long)now_clock.tv_sec,(long)now_clock.tv_nsec);
 	its.it_interval.tv_nsec=0;
 	its.it_interval.tv_sec=0;
-
-    if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
+	its.it_value.tv_sec=now_clock.tv_sec+seconds;
+	switch (type){
+	case 'a':
+	its.it_value.tv_nsec=0;
+	break;
+	case 'r':
+	its.it_value.tv_nsec=now_clock.tv_nsec;
+	break;
+	default:
+	fprintf(stderr,"scheduler arg invalid\n");
+	return FAIL;
+	break;
+	}
+	    if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
          errExit("timer_settime");
+
     printf("scheduler start\n");
 	return SUCCESS;
 }

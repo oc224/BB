@@ -42,7 +42,7 @@ int main(int argc,char* argv[]){
 	a_modem_open();
 	if (scheduler_init()==FAIL) return FAIL;
 	if (scheduler_read(fname)==FAIL) return FAIL;
-	scheduler_start(start_time.tm_hour,start_time.tm_min,start_time.tm_sec);
+	scheduler_start(start_time.tm_hour,start_time.tm_min,start_time.tm_sec,'a');
 
 
 	while(1){
