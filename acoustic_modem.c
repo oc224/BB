@@ -523,7 +523,7 @@ int a_modem_upload_file(const char *fname){
 	return FAIL;
 	}
 	if (strcasestr(buf,"error")!=NULL){
-	fprintf(stderr,"cp error\n");
+	fprintf(stderr,"cp error, file may not exist or copy error\n");
 	return FAIL;
 	}
 	if (strcasestr(buf,"ok")!=NULL){
@@ -532,19 +532,6 @@ int a_modem_upload_file(const char *fname){
 	fprintf(stderr,"cp error\n");
 	return FAIL;
 	}
-	/*sleep(2);
-	buf[0]=0;
-	a_modem_gets(buf,BUFSIZE);
-	if (strcasestr(buf,"error")!=NULL){
-		fprintf(stderr,"fail to copy files in a modem\n");
-		return FAIL;
-	}
-	// wait for the copy
-	if (a_modem_wait_ack("ok",60000)==FAIL){//TODO estimate time, proper value
-		printf("copy file time out\r");
-		return FAIL;
-	}
-	*/
 	// issue ymodem send (sb)
 	sprintf(buf,"sb /ffs/%s\r",fname);
 	a_modem_puts(buf);
