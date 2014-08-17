@@ -29,7 +29,7 @@ int main(int argc,char *argv[]){
 	while (fgets(buf,BUFSIZE,fp)!= NULL){
 		if (strlen(buf)<3)continue;
 		buf[strlen(buf)-1]=0;//erase \n char
-		if (strstr(buf,"log")==NULL){
+		if ((strstr(buf,"log")==NULL)|(strstr(buf,"wav")==NULL)){
 			printf("invalid file name\n");
 		}
 		printf("uploading file : %s\n",buf);

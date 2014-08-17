@@ -13,7 +13,7 @@
 #define RX_PATH "/home/root/log/RXLOG.TXT"
 #define AMODEM_PATH "/home/root/log/AMODEM.TXT"
 #define GPSPIPE "gpspipe -r -n 12 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
-
+#define COPY_TIMEOUT 60000
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
@@ -421,6 +421,10 @@ int a_modem_wait_info(char *key_word, int timeout, char *info,
 			delay++;
 		} else {//got new msg
 			//new msg match
+			if (key_word==NULL){
+			strncpy(info,msg.text[msg.i],info_size);
+			return SUCCESS;
+			}
 			if (strcasestr(msg.text[msg.i],key_word)!=NULL) {
 			if (info!=NULL) strncpy(info,msg.text[msg.i],info_size);
 			return SUCCESS;
@@ -497,6 +501,7 @@ int a_modem_upload_file(const char *fname){
 	int ret;
 	int n_file;
 	memset(buf,0,BUFSIZE);
+	/*
 	//check for existence
 	sprintf(buf,"ls -l /sd/%s\r",fname);
 	a_modem_puts(buf);
@@ -508,15 +513,29 @@ int a_modem_upload_file(const char *fname){
 	if (n_file==0){
 		printf("file not exist\n");
 		return FAIL;
-	}
+	}*/
 	// copy
 	a_modem_clear_io_buffer();
 	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
 	a_modem_puts(buf);
-	sleep(1);
+	if (a_modem_wait_info(NULL,COPY_TIMEOUT,buf,BUFSIZE)==FAIL){
+	fprintf(stderr,"cp no response\n");
+	return FAIL;
+	}
+	if (strcasestr(buf,"error")!=NULL){
+	fprintf(stderr,"cp error\n");
+	return FAIL;
+	}
+	if (strcasestr(buf,"ok")!=NULL){
+	fprintf(stdout,"cp done\n");
+	}else{
+	fprintf(stderr,"cp error\n");
+	return FAIL;
+	}
+	/*sleep(2);
 	buf[0]=0;
 	a_modem_gets(buf,BUFSIZE);
-	if (strcasestr(buf,"ok")!=NULL){
+	if (strcasestr(buf,"error")!=NULL){
 		fprintf(stderr,"fail to copy files in a modem\n");
 		return FAIL;
 	}
@@ -525,6 +544,7 @@ int a_modem_upload_file(const char *fname){
 		printf("copy file time out\r");
 		return FAIL;
 	}
+	*/
 	// issue ymodem send (sb)
 	sprintf(buf,"sb /ffs/%s\r",fname);
 	a_modem_puts(buf);
