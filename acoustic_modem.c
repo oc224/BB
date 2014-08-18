@@ -331,7 +331,7 @@ int a_modem_sync_time_gps() {
 	return SUCCESS;
 }
 
-int a_modem_sync_clock_gps(int timeout) {
+int a_modem_sync_clock_gps(int sec) {
 	// sync modem clock source
 	a_modem_clear_io_buffer();
 	// Confirm clock source for the modem
@@ -345,10 +345,11 @@ int a_modem_sync_clock_gps(int timeout) {
 	// confirm sync
 	a_modem_puts("sync\r");
 	printf("modem sync to pps signal...\n");
-	if (a_modem_is_clock_Sync(SYNC_TIMEOUT) == FAIL) {
+	if (a_modem_is_clock_Sync(sec) == FAIL) {
 		printf("A_modem, fail to sync\n");
 		return FAIL;
 	}
+	printf("local modem sync!\n");
 	return SUCCESS;
 }
 
@@ -386,7 +387,7 @@ int a_modem_is_clock_Sync(int sec) {
 	//check if clock sync (regardless of clock source) until synchronized or timeout
 	int i;
 	// check every X sec
-	for (i = 0; i < sec; i++) {
+	for (i = 0; i < sec/(SERIAL_TIMEOUT/1000); i++) {
 		a_modem_puts("sync\r");
 		if (a_modem_wait_ack("synchronized", SERIAL_TIMEOUT)) {
 			modem.sync_state=SYNC;
