@@ -203,7 +203,18 @@ int scheduler_start(int hh,int mm, int ss,char type) {
 	start_time=*localtime(&now);
 	start_time.tm_hour=hh;start_time.tm_min=mm;start_time.tm_sec=ss;
 	time(&now);
+	switch(type){
+	case 'a':
 	seconds=difftime(mktime(&start_time),now);
+	break;
+	case 'r':
+	seconds=3;
+	break;
+	default:
+	fprintf(stderr,"scheduler arg invalid\n");
+	return FAIL;
+	break;
+	}
 
 	if (seconds<2){
 		printf("error, target time has passed\n");

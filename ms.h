@@ -9,17 +9,21 @@
 typedef char bool;
 
 typedef enum{
+	NONE,
         TALK,//recipricol transmission, ok
-	PLAY,//local modem play
-	RECORD,//local modem record
+	CONVERSATION,
+	QUICK,
+	MSPLAY,//local modem play
+	MSRECORD,//local modem record
 	SYNCALL,//sync remote & local modem
 	HELP,//show help msg
 	UPLOAD,//upload local files
-	NONE,
-	MSG_SEND,//send msg to remote modems
+	SEND_REMOTE,//send msg to remote modems
 	MSG_SHOW,//show msg & msg_remote
 	WAIT_REMOTE,//wait remote msg
-	CLEAR_FFS//clear local ffs
+	CLEAR_FFS,//clear local ffs
+	STATUS,
+	GPSLOG
 }cmd_type;
 
 typedef struct{
@@ -31,6 +35,10 @@ bool isremote;
 
 int master_talk();
 int slave_talk();
+int master_con();
+int slave_con();
+int master_quick();
+int slave_quick();
 int master_sync();
 int slave_sync();
 void help();

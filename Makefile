@@ -2,7 +2,7 @@ CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 
-all:data_upload exp unicon
+all:data_upload exp unicon master slave
 unicon.o:unicon.c
 	$(CC) $(CFLAGS) -c unicon.c
 unicon:unicon.o rs232.o acoustic_modem.o
@@ -49,12 +49,12 @@ dylan:dylan.o rs232.o acoustic_modem.o system.o ms.o
 	$(CC) $(CFLAGS) -o ./bin/dylan dylan.o rs232.o acoustic_modem.o system.o ms.o
 dylan.o:dylan.c
 	$(CC) $(CFLAGS) -c dylan.c
-slave:slave.o rs232.o acoustic_modem.o system.o ms.o
-	$(CC) $(CFLAGS) -o ./bin/slave slave.o rs232.o acoustic_modem.o system.o ms.o
+slave:slave.o rs232.o acoustic_modem.o system.o ms.o scheduler.o
+	$(CC) $(CFLAGS) -o ./bin/slave slave.o rs232.o acoustic_modem.o system.o ms.o scheduler.o -lrt
 slave.o:slave.c
 	$(CC) $(CFLAGS) -c slave.c
-master:master.o acoustic_modem.o rs232.o system.o ms.o
-	$(CC) $(CFLAGS) -o ./bin/master master.o acoustic_modem.o rs232.o system.o ms.o
+master:master.o acoustic_modem.o rs232.o system.o ms.o scheduler.o
+	$(CC) $(CFLAGS) -o ./bin/master master.o acoustic_modem.o rs232.o system.o ms.o scheduler.o -lrt
 ms.o:ms.c
 	$(CC) $(CFLAGS) -c ms.c
 master.o:master.c

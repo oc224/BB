@@ -73,7 +73,7 @@ int a_modem_cfg_set(const char *);
 #define a_modem_cfg_devel() a_modem_cfg_set(CFG_DEVEL);
 
 
-int a_modem_sync_clock_gps();
+int a_modem_sync_clock_gps(int);
 int a_modem_sync_time_gps();
 int a_modem_is_clock_Sync(int);
 int a_modem_sync_status();

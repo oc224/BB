@@ -58,7 +58,6 @@ printf("set default tx file name : %s\n",modem.def_tx_wav);
 int main(){
 int arg1;
 char arg_str[48];
-char arg_str2[48];
 a_modem_init();
 a_modem_open();
 
@@ -92,7 +91,7 @@ sscanf(buf,"%*s %d",&arg1);
 a_modem_record(arg1);
 break;
 case SYNC:
-a_modem_sync_clock_gps();
+a_modem_sync_clock_gps(20);
 a_modem_sync_time_gps();
 system("ntpdate -u 211.22.103.157");
 break;

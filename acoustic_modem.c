@@ -9,7 +9,7 @@
 #define BUFSIZE 100/*default size for buffer*/
 #define SERIAL_TIMEOUT 2000/*default timeout for reading modem*/
 #define AMODEM_PATH "/home/root/log/AMODEM.TXT"
-#define GPSPIPE "gpspipe -r -n 12 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
+#define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
 #define TX_PATH "/home/root/log/TXLOG.TXT"
 #define RX_PATH "/home/root/log/RXLOG.TXT"
 #define SYCN_TIMEOUT 15
@@ -393,7 +393,7 @@ int a_modem_is_clock_Sync(int sec) {
 			modem.sync_state=SYNC;
 			return SUCCESS;
 		}
-		sleep(1);
+//		sleep(1);
 	}
 	modem.sync_state=NOT_SYNC;
 	printf("a_modem, sync time out\n");
@@ -422,7 +422,7 @@ int a_modem_wait_info(char *key_word, int timeout, char *info,
 		} else {//got new msg
 			//new msg match
 			if (key_word==NULL){
-			strncpy(info,msg.text[msg.i],info_size);
+			if (info!=NULL) strncpy(info,msg.text[msg.i],info_size);
 			return SUCCESS;
 			}
 			if (strcasestr(msg.text[msg.i],key_word)!=NULL) {
@@ -500,29 +500,21 @@ int a_modem_upload_file(const char *fname){
 	char buf[BUFSIZE];
 	int ret;
 	int n_file;
-	memset(buf,0,BUFSIZE);
-	/*
-	//check for existence
-	sprintf(buf,"ls -l /sd/%s\r",fname);
-	a_modem_puts(buf);
-	if (a_modem_wait_info("total",SERIAL_TIMEOUT,buf,BUFSIZE)==FAIL){
-		fprintf(stderr,"modem timeout\n");
-		return FAIL;
-	}
-	sscanf(buf,"total of %d file",&n_file);
-	if (n_file==0){
-		printf("file not exist\n");
-		return FAIL;
-	}*/
 	// copy
 	a_modem_clear_io_buffer();
 	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
 	a_modem_puts(buf);
+	a_modem_wait_info(NULL,SERIAL_TIMEOUT,NULL,BUFSIZE);
 	if (a_modem_wait_info(NULL,COPY_TIMEOUT,buf,BUFSIZE)==FAIL){
 	fprintf(stderr,"cp no response\n");
 	return FAIL;
 	}
-	if (strcasestr(buf,"error")!=NULL){
+	if (strstr(buf,"ok")==NULL){
+	printf("copy done \n");
+	}else{
+	fprintf(stderr,"cp error\n");
+	return FAIL;}
+	/*if (strcasestr(buf,"error")!=NULL){
 	fprintf(stderr,"cp error\n");
 	return FAIL;
 	}
@@ -531,7 +523,7 @@ int a_modem_upload_file(const char *fname){
 	}else{
 	fprintf(stderr,"cp error\n");
 	return FAIL;
-	}
+	}*/
 	/*sleep(2);
 	buf[0]=0;
 	a_modem_gets(buf,BUFSIZE);

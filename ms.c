@@ -1,6 +1,7 @@
 #include "acoustic_modem.h"
 #include "ms.h"
 #include "system.h"
+#include "scheduler.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -65,11 +66,39 @@ a_modem_msg_send(modem.latest_tx_stamp+8);
 return 0;
 }
 
+int master_con(){
+scheduler_start(0,0,0,'r');
+return 0;
+}
+
+int slave_con(){
+return 0;
+}
+
+int master_quick(){
+/*play*/
+a_modem_play("t1.wav");
+/*wait ack*/
+a_modem_wait_remote(NULL,0,REMOTE_TIMEOUT);
+/*record*/
+a_modem_record(1000);
+return 0;
+}
+
+int slave_quick(){
+/*record*/
+a_modem_record(1000);
+/*send ack*/
+a_modem_msg_send(ACK);
+/*play*/
+a_modem_play("t1.wav");
+return 0;
+}
 
 int master_sync(){
 int i;
 char buf[BUFSIZE];
-a_modem_sync_clock_gps();
+a_modem_sync_clock_gps(10);
 a_modem_sync_time_gps();
 for (i=0;i<3;i++){
 a_modem_msg_send(ACK);
@@ -81,7 +110,7 @@ return FAIL;
 
 int slave_sync(){
 char buf[BUFSIZE];
-a_modem_sync_clock_gps();
+a_modem_sync_clock_gps(10);
 a_modem_sync_time_gps();
 /*sync*/
 printf("sync time done\n");
@@ -129,11 +158,9 @@ return a_modem_record(1000);
 
 int upload(const char *buf){
 char fname[40];
-char * plog;
-printf("debug %s\n",buf);
 if (sscanf(buf,"%*s %s",fname)<1){
-fprintf(stderr,"upload. input invalid\n");
-return FAIL;
+fprintf(stdout,"download last data\n");
+strcpy(fname,modem.latest_rx_fname);
 }
 a_modem_upload_file(fname);
 
@@ -157,3 +184,4 @@ a_modem_wait_remote(buf,80,REMOTE_TIMEOUT);
 printf("%s\n",buf);
 return 0;
 }
+

@@ -47,13 +47,19 @@ int main()
 		switch (t_cmd.type)
 		{
 		case TALK: //DO TALK
-			printf("go to talk\n");
-			slave_talk();
-			break;
+		printf("go to talk\n");
+		slave_talk();
+		break;
+		case CONVERSATION:
+		slave_con();
+		break;
+		case QUICK:
+		slave_quick();
+		break;
 		case SYNCALL:
-			printf("go to sync time\n");
-			slave_sync();
-			break;
+		printf("go to sync time\n");
+		slave_sync();
+		break;
 		default:
 			break;
 		}
