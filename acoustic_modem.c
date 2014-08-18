@@ -12,7 +12,9 @@
 #define GPSPIPE "gpspipe -r -n 12 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
 #define TX_PATH "/home/root/log/TXLOG.TXT"
 #define RX_PATH "/home/root/log/RXLOG.TXT"
+#define SYCN_TIMEOUT 15
 #define COPY_TIMEOUT 60000
+
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
@@ -329,7 +331,7 @@ int a_modem_sync_time_gps() {
 	return SUCCESS;
 }
 
-int a_modem_sync_clock_gps() {
+int a_modem_sync_clock_gps(int timeout) {
 	// sync modem clock source
 	a_modem_clear_io_buffer();
 	// Confirm clock source for the modem
@@ -338,12 +340,12 @@ int a_modem_sync_clock_gps() {
 		a_modem_puts("@SyncPPS=4\r");
 		printf("A_modem, syncpps source is not gps, reset the source...\n");
 		printf("sync..., this will take 30 seconds or more...\n");
-		sleep(30);
+		//sleep(30);
 	}
 	// confirm sync
 	a_modem_puts("sync\r");
 	printf("modem sync to pps signal...\n");
-	if (a_modem_is_clock_Sync(5, 6) == FAIL) {
+	if (a_modem_is_clock_Sync(SYNC_TIMEOUT) == FAIL) {
 		printf("A_modem, fail to sync\n");
 		return FAIL;
 	}
@@ -380,23 +382,17 @@ int a_modem_sync_status() {
 	return FAIL;
 }
 
-int a_modem_is_clock_Sync(int samp_interval, int N_retry) {
-	//check if clock sync (regardless of clock source), samp_interval (sec)
+int a_modem_is_clock_Sync(int sec) {
+	//check if clock sync (regardless of clock source) until synchronized or timeout
 	int i;
-	// input check
-	a_modem_clear_io_buffer();
-	if ((samp_interval <= 0) | (N_retry <= 0)) {
-		printf("IS_SYNC, input error");
-		return FAIL;
-	}
 	// check every X sec
-	for (i = 0; i < N_retry; i++) {
+	for (i = 0; i < sec; i++) {
 		a_modem_puts("sync\r");
 		if (a_modem_wait_ack("synchronized", SERIAL_TIMEOUT)) {
 			modem.sync_state=SYNC;
 			return SUCCESS;
 		}
-		sleep(samp_interval);
+		sleep(1);
 	}
 	modem.sync_state=NOT_SYNC;
 	printf("a_modem, sync time out\n");

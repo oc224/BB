@@ -27,7 +27,6 @@ int wait_command_user()
 	printf("master<%d>:", cnt);
 	fgets(buf, BUFSIZE, stdin);
 	sscanf(buf,"%s",arg0);
-//	printf("input %s \n",arg0);
 
 	/*decode*/
 	if (strcmp(arg0,"talk")==0){
