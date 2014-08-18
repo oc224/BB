@@ -5,11 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #define BUFSIZE 100/*default size for buffer*/
 #define SERIAL_TIMEOUT 2000/*default timeout for reading modem*/
 #define AMODEM_PATH "/home/root/log/AMODEM.TXT"
 #define GPSPIPE "gpspipe -r -n 12 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
-
+#define TX_PATH "/home/root/log/TXLOG.TXT"
+#define RX_PATH "/home/root/log/RXLOG.TXT"
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
@@ -155,7 +157,7 @@ int a_modem_cfg_set(const char *fname) {
 	char buf[BUFSIZE];
 	a_modem_clear_io_buffer();
 	a_modem_puts("+++\r");
-	if (fp=fopen(fname,"r")==NULL){
+	if ((fp=fopen(fname,"r"))==NULL){
 	fprintf(stderr,"fail to open %s\n",CFG_DEVEL);
 	return FAIL;
 	}
@@ -180,6 +182,7 @@ int a_modem_cfg_set(const char *fname) {
 int a_modem_play(char * filename) {
 	//play a wavform, store the tx time
 	char buf[BUFSIZE];
+	time_t bb_time;
 	modem.latest_tx_stamp[0]=0;
 	time_t bb_stamp;
 	time(&bb_stamp);
