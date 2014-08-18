@@ -183,7 +183,6 @@ int a_modem_cfg_set(const char *fname) {
 int a_modem_play(char * filename) {
 	//play a wavform, store the tx time
 	char buf[BUFSIZE];
-	time_t bb_time;
 	modem.latest_tx_stamp[0]=0;
 	time_t bb_stamp;
 	time(&bb_stamp);
@@ -204,7 +203,7 @@ int a_modem_play(char * filename) {
 		printf("local tx time : %s\n", buf);
 		strcpy(modem.latest_tx_stamp,buf);
 		fprintf(modem.tx_p,"%s,%s\n",filename,buf);
-		fprintf(modem.tx_p,"BB:%s\n\n",ctime(&bb_time));
+		fprintf(modem.tx_p,"BB:%s\n\n",ctime(&bb_stamp));
 		fflush(modem.tx_p);
 		return SUCCESS;
 	} else {
@@ -299,7 +298,7 @@ int a_modem_record(int duration) {
 	printf("local log file : %s\n",logname+4);
 	strcpy(modem.latest_rx_fname,logname+4);
 	fprintf(modem.rx_p,"%s\n",logname+4);
-	fprintf(modem.rx_p,"bb : %s\n\n",ctime(&bb_stamp));
+	fprintf(modem.rx_p,"bb : %s\n",ctime(&bb_stamp));
 	fflush(modem.rx_p);
 	return SUCCESS;
 	}else{

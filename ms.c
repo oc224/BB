@@ -12,7 +12,7 @@
 int master_talk(){
 char buf[BUFSIZE];
 /*sync*/
-//master_sync();
+master_sync();
 /*send ack*/
 a_modem_msg_send(ACK);
 /*play*/
@@ -33,43 +33,33 @@ a_modem_record(1000);
 a_modem_msg_send(ACK);
 /*recv stamp*/
 a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-printf("TX @ %s\n",buf);
+printf("Remote TX @ %s\n",buf);
 return 0;
 }
 
 int slave_talk(){
 char buf[BUFSIZE];
 /*sync*/
-//slave_sync();
-printf("d1\n");
+slave_sync();
 /*send ack*/
 a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-printf("d1\n");
 /*record*/
 a_modem_record(1000);
-printf("d1\n");
 /*send ack*/
 a_modem_msg_send(ACK);
-printf("d1\n");
 /*recv stamp*/
 a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-printf("TX @ %s\n",buf);
-printf("d1\n");
+printf("Remote TX @ %s\n",buf);
 /*send ack*/
 a_modem_msg_send(ACK);
-printf("d1\n");
 /*sync*/
 slave_sync();
-printf("d1\n");
 /*wait ack*/
 a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-printf("d1\n");
 /*play*/
 a_modem_play("t1.wav");
-printf("d1\n");
 /*wait ack*/
 a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-printf("d1\n");
 /*send stamp*/
 a_modem_msg_send(modem.latest_tx_stamp+8);
 return 0;
