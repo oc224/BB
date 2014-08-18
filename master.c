@@ -44,6 +44,30 @@ int wait_command_user()
 	}else if (strcmp("upload",arg0)==0){
 		t_cmd.type=UPLOAD;
 		t_cmd.isremote=0;
+	}else if (strcmp("quick",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
+	}else if (strcmp("status",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
+	}else if (strcmp("sr",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
+	}else if (strcmp("wr",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
+	}else if (strcmp("showmsg",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
+	}else if (strcmp("clearffs",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
+	}else if (strcmp("help",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
+	}else if (strcmp("gpslog",arg0)==0){
+		t_cmd.type=UPLOAD;
+		t_cmd.isremote=0;
 	}else{
 		t_cmd.type=NONE;
 		t_cmd.isremote=0;
