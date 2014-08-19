@@ -24,20 +24,25 @@ int wait_command_user()
 	t_cmd.isremote=0;
 
 	/*console prompt*/
-	printf("master<%d>:", cnt);
+	printf("%s<%d>:",t_node.name, cnt);
 	fgets(buf, BUFSIZE, stdin);
 	sscanf(buf,"%s",arg0);
-//	printf("input %s \n",arg0);
-
+	//printf("debug %s\n",arg0);
 	/*decode*/
 	if (strcmp(arg0,"talk")==0){
 		t_cmd.type=TALK;
 		t_cmd.isremote=1;
+	}else if (strcmp(arg0,"con")==0){
+		t_cmd.type=CONVERSATION;
+		t_cmd.isremote=1;
+	}else if (strcmp(arg0,"conend")==0){
+		t_cmd.type=CONEND;
+		t_cmd.isremote=1;
 	}else if(strcmp(arg0,"play")==0){
-		t_cmd.type=PLAY;
+		t_cmd.type=MSPLAY;
 		t_cmd.isremote=0;
 	}else if (strcmp(arg0,"record")==0){
-		t_cmd.type=RECORD;
+		t_cmd.type=MSRECORD;
 		t_cmd.isremote=0;
 	}else if (strcmp("sync",arg0)==0){
 		t_cmd.type=SYNCALL;
@@ -45,12 +50,36 @@ int wait_command_user()
 	}else if (strcmp("upload",arg0)==0){
 		t_cmd.type=UPLOAD;
 		t_cmd.isremote=0;
+	}else if (strcmp("quick",arg0)==0){
+		t_cmd.type=QUICK;
+		t_cmd.isremote=1;
+	}else if (strcmp("status",arg0)==0){
+		t_cmd.type=STATUS;
+		t_cmd.isremote=1;
+	}else if (strcmp("sr",arg0)==0){
+		t_cmd.type=SEND_REMOTE;
+		t_cmd.isremote=0;
+	}else if (strcmp("wr",arg0)==0){
+		t_cmd.type=WAIT_REMOTE;
+		t_cmd.isremote=0;
+	}else if (strcmp("showmsg",arg0)==0){
+		t_cmd.type=MSG_SHOW;
+		t_cmd.isremote=0;
+	}else if (strcmp("clearffs",arg0)==0){
+		t_cmd.type=CLEAR_FFS;
+		t_cmd.isremote=0;
+	}else if (strcmp("help",arg0)==0){
+		t_cmd.type=HELP;
+		t_cmd.isremote=0;
+	}else if (strcmp("gpslog",arg0)==0){
+		t_cmd.type=GPSLOG;
+		t_cmd.isremote=0;
 	}else{
 		t_cmd.type=NONE;
 		t_cmd.isremote=0;
 	}
 	/*return*/
-	if (t_cmd.type>=0)
+	if (t_cmd.type>0)
 		cnt++;
 	return t_cmd.type;
 }
@@ -61,9 +90,12 @@ int main()
 	/*init cfg...*/
 	system_cfg_read();
 	system_cfg_show();
-	printf("NODE NAME : %s\n\n ",t_node.name);
+	printf("NODE NAME : %s\n ",t_node.name);
 	a_modem_init();
 	a_modem_open();
+	scheduler_init();
+	scheduler_read("/home/root/config/schedule.txt");
+	scheduler_task_show();
 
 	while (1)
 	{
@@ -77,37 +109,50 @@ int main()
 		case TALK://ok
 		master_talk();
 		break;
-		case PLAY://ok
+		case CONVERSATION:
+		master_con();
+		break;
+		case QUICK:
+		master_quick();
+		break;
+		case MSPLAY://ok
 		play(buf);
 		break;
-		case RECORD://ok
+		case MSRECORD://ok
 		record(buf);
 		break;
-		case SYNCALL:
+		case SYNCALL://ok
 		master_sync();
 		break;
 		case HELP:
 		help();
 		break;
-		case WAIT_REMOTE:
+		case UPLOAD:
+		upload(buf);
+		break;
+		case SEND_REMOTE://ok
+		msg_send();
+		break;
+		case MSG_SHOW://ok
+		a_modem_msg_show(&msg);
+		a_modem_msg_show(&msg_remote);
+		break;
+		case WAIT_REMOTE://ok
 		wait_remote(buf);
 		break;
 		case CLEAR_FFS:
 		a_modem_ffs_clear();
 		break;
-		case MSG_SHOW:
-		a_modem_msg_show(&msg);
-		a_modem_msg_show(&msg_remote);
+		case STATUS:
+		
 		break;
-		case MSG_SEND:
-		msg_send();
-		break;
-		case UPLOAD:
-		upload(buf);
+		case GPSLOG:
+		system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
 		break;
 		case NONE:
-			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
-			break;
+		a_modem_puts(buf);
+		a_modem_print(1000);
+		break;
 		default:
 			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
 			break;

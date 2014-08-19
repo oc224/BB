@@ -42,10 +42,14 @@ int gps_update(){
 	sscanf(strstr(buf,"alt")+5,"%f[,]",&gps.alt);
 //	sscanf(strstr(buf,"time")+7,"%d-%d-%dT%d:%d:%f[^0-9]",&gps.year,&gps.month,&gps.day,&gps.hh,&gps.mm,&gps.ss);
 /*GPRMC*/
+char *token;
 if ((pp=popen(GPSPIPE_GPRMC,"r"))==NULL){
 fprintf(stderr,"popen error\n");
-return FAIL;
-}
+return FAIL;}
+fgets(buf,BUFSIZE,pp);
+token=strtok(buf,",");
+printf("token : %s\n",token);
+pclose(pp);
 /*SKY*/
 /*    if( (pp = popen(GPSPIPE_SKY, "r")) == NULL )
     {
