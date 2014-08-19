@@ -1,30 +1,56 @@
 
 * talk
-	Conduct two way transmission, Sync before both transmission,
+	Conduct two way transmission, Sync before both transmissions,
 	Send TX stamp
+
+* atalk
+	Conduct two way transmission, Sync before the first transmission,
+	Remote(Slave) send TX stamp to Local(Master)
+
 * con
 	Keep transmission
+	Note. This feature has a bug.
+	please press enter two times after issue this con command
+
+* conend
+	Stop transmission issued by con
+	
 * play
 	play a wavform
+
 * record
 	record a wavform
+
 * sync
 	Sync will sync both clock & time for both local & remote
 	modems
+
 * upload
 	upload data stored at modem
+
 * quick
 	Conduct two way transmission, minimum action
+
 * status
+	Not implement yet
+
 * sr
 	send message to remote modem
+
 * wr
 	wait message from remote modem
+
 * showmsg
 	shows message from local modem
+
 * clearffs
 	clear the /ffs/ for the local modem
+
 * help
 	Show this help
+
 * gpslog
 	Log the GPS info (GPGGA sentence)
+
+* rreboot
+	Cause the remote modem reboot

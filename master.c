@@ -95,13 +95,13 @@ int main()
 	char remote[20];
 	/*init cfg...*/
 	system_cfg_read();
-	system_cfg_show();
-	printf("NODE NAME : %s\n ",t_node.name);
+//	system_cfg_show();
+//	printf("NODE NAME : %s\n ",t_node.name);
 	a_modem_init();
 	a_modem_open();
 	scheduler_init();
 	scheduler_read("/home/root/config/schedule.txt");
-	scheduler_task_show();
+//	scheduler_task_show();
 
 	while (1)
 	{

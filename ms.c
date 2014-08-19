@@ -170,6 +170,8 @@ return 0;
 }
 
 void help(){
+system("cat /home/root/config/help.txt");
+/*
 printf("talk\n");
 printf("con\n");
 printf("");
@@ -184,6 +186,7 @@ printf("upload\n");
                 printf("sr\n");
                 printf("clearffs\n");
                 printf("showmsg\n");
+*/
 }
 
 int play(const char *buf){
