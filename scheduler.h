@@ -33,7 +33,7 @@ void scheduler_task_show();
 int scheduler_task_add(char *cfg_msg);
 int scheduler_read(char *filename);
 void scheduler_exce(int sig, siginfo_t *si, void *uc);
-int scheduler_start(int hh,int mm, int ss);
+int scheduler_start(int hh,int mm, int ss,char type);
 
 
 #endif /* SCHEDULER_H_ */

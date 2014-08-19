@@ -25,7 +25,7 @@ typedef struct {
 	float dsp_bat;
 	float mdm_bat; // ref modem manual mdm_battery
 	float rtc_bat; // ref modem manual rtc_battery
-	a_modem_sync_state sync_state; //TODOsynchronized or ...
+	a_modem_sync_state sync_state;
 	char latest_tx_stamp[TX_SIZE];
 	char latest_rx_fname[TX_SIZE];
 	char def_tx_wav[TX_SIZE];
@@ -64,7 +64,7 @@ inline void a_modem_clear_io_buffer();
 int a_modem_play(char * filename);
 int a_modem_record(int duration_mili);
 
-int a_modem_status(); // get status (internal temp, pwr cond...) fill struct a_modem
+int a_modem_status();
 void a_modem_status_show();
 
 int a_modem_print_configs(char * filepath); // save cfg all output for future ref
@@ -73,9 +73,9 @@ int a_modem_cfg_set(const char *);
 #define a_modem_cfg_devel() a_modem_cfg_set(CFG_DEVEL);
 
 
-int a_modem_sync_clock_gps();
+int a_modem_sync_clock_gps(int);
 int a_modem_sync_time_gps();
-int a_modem_is_clock_Sync(int samp_interval, int N_retry);
+int a_modem_is_clock_Sync(int);
 int a_modem_sync_status();
 
 int a_modem_upload_file(const char *fname);
