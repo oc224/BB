@@ -40,6 +40,9 @@ int main()
 	printf("\nNODE NAME : %s\n\n ",t_node.name);
 	a_modem_init();
 	a_modem_open();
+	scheduler_init();
+	scheduler_read("/home/root/config/schedule.txt");
+	scheduler_task_show();
 
 	while (1)
 	{

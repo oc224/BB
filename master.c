@@ -147,8 +147,9 @@ int main()
 		system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
 		break;
 		case NONE:
-			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
-			break;
+		a_modem_puts(buf);
+		a_modem_print(1000);
+		break;
 		default:
 			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
 			break;

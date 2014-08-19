@@ -28,15 +28,18 @@ rm *.log file and *.wav file except *t*.wav file
 char fname[80];
 int rm;
 a_modem_puts("ls /ffs/ \r");
-while (a_modem_wait_info(NULL,SERIAL_TIMEOUT,fname,80)>1){
+while (a_modem_wait_info(NULL,SERIAL_TIMEOUT,fname,80)==SUCCESS){
 printf("remove file : %s\n",fname);
 rm=0;
+if ((strstr(fname,"user")!=NULL)&&(strlen(fname)<7))continue;
 if (strstr(fname,"log")!=NULL) rm=1;
 if ((strstr(fname,"wav")!=NULL)&&(strstr(fname,"t")==NULL)) rm=1;
 if (rm){
 a_modem_puts("rm /ffs/");
 a_modem_puts(fname);
 a_modem_puts("\r");}
+usleep(100000);
+fname[0]=0;
 }
 return SUCCESS;
 }
@@ -251,8 +254,8 @@ int a_modem_gets(char* buf,int size){
 	dump[n-1]=0;/*remove newline char*/
 	if (strstr(dump,"DATA")==NULL)	a_modem_msg_add(&msg,dump);
 	else{
-	sscanf(dump,"DATA(%*d):%s",buf2);//TODO
-	a_modem_msg_add(&msg_remote,buf2);}
+	//sscanf(dump,"DATA(%*d):%s",buf2);//TODO
+	a_modem_msg_add(&msg_remote,strstr(dump,":")+1);}
 
 	return n;
 }

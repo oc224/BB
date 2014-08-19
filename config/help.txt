@@ -1,0 +1,30 @@
+
+* talk
+	Conduct two way transmission, Sync before both transmission,
+	Send TX stamp
+* con
+	Keep transmission
+* play
+	play a wavform
+* record
+	record a wavform
+* sync
+	Sync will sync both clock & time for both local & remote
+	modems
+* upload
+	upload data stored at modem
+* quick
+	Conduct two way transmission, minimum action
+* status
+* sr
+	send message to remote modem
+* wr
+	wait message from remote modem
+* showmsg
+	shows message from local modem
+* clearffs
+	clear the /ffs/ for the local modem
+* help
+	Show this help
+* gpslog
+	Log the GPS info (GPGGA sentence)

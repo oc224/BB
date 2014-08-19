@@ -7,7 +7,15 @@ Bob{
 play 2000 lfm_data_t1_l1.wav
 sleep 8000
 }
-Charlie{
-record 500
-sleep 9500
+charlie{
+record 1000
+sleep 4000
+play 500 t1.wav
+sleep 4500
+}
+dylan{
+play 500 t1.wav
+sleep 4500
+record 1000
+sleep 4000
 }

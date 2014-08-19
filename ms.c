@@ -68,12 +68,11 @@ return 0;
 
 int master_con(){
 scheduler_start(0,0,0,'r');
-return 0;
-}
+return 0;}
 
 int slave_con(){
-return 0;
-}
+scheduler_start(0,0,0,'r');
+return 0;}
 
 int master_quick(){
 /*play*/
@@ -98,36 +97,46 @@ return 0;
 int master_sync(){
 int i;
 char buf[BUFSIZE];
-a_modem_sync_clock_gps(10);
-a_modem_sync_time_gps();
+int clock[2],time[2];
+/*local sync*/
+clock[0]=a_modem_sync_clock_gps(10);
+time[0]=a_modem_sync_time_gps();
+/*active wait response*/
 for (i=0;i<3;i++){
 a_modem_msg_send(ACK);
-if (a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS)return SUCCESS;
-}
-printf("remote time out\n");
-return FAIL;
+if (a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS){
+sscanf(buf,"%d %d",clock+1,time+1);
+break;}}
+/*show result*/
+printf("Local : Clock %d , Time %d\n",clock[0],time[0]);
+printf("Remote : Clock %d , Time %d\n ",clock[1],time[1]);
+return 0;
 }
 
 int slave_sync(){
 char buf[BUFSIZE];
-a_modem_sync_clock_gps(10);
-a_modem_sync_time_gps();
-/*sync*/
-printf("sync time done\n");
-a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-a_modem_msg_send(ACK);
+int clock,time;
+/*local sync*/
+clock=a_modem_sync_clock_gps(10);
+time=a_modem_sync_time_gps();
+sprintf(buf,"%d %d",clock,time);
+printf("sync time done: %d %d\n",clock,time);
+/*passive response*/
+if (a_modem_wait_remote(NULL,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS)a_modem_msg_send(buf);
 return 0;
 }
 
 void help(){
 printf("talk\n");
+printf("con\n");
+printf("");
 printf("play\n");
 printf("record\n");
 printf("sync\n");
 printf("help\n");
 printf("wr --wait remote msg\n");
 printf("clearffs\n");
-                printf("upload\n");
+printf("upload\n");
                 printf("wr\n");
                 printf("sr\n");
                 printf("clearffs\n");
