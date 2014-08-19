@@ -208,7 +208,8 @@ int a_modem_play(char * filename) {
 		printf("local tx time : %s\n", buf);
 		strcpy(modem.latest_tx_stamp,buf);
 		fprintf(modem.tx_p,"%s,%s\n",filename,buf);
-		fprintf(modem.tx_p,"BB:%s\n\n",ctime(&bb_stamp));
+		fprintf(modem.tx_p,"sync %d\n",a_modem_is_clock_Sync(2));
+		fprintf(modem.tx_p,"BB:%s\n",ctime(&bb_stamp));
 		fflush(modem.tx_p);
 		return SUCCESS;
 	} else {
@@ -303,6 +304,7 @@ int a_modem_record(int duration) {
 	printf("local log file : %s\n",logname+4);
 	strcpy(modem.latest_rx_fname,logname+4);
 	fprintf(modem.rx_p,"%s\n",logname+4);
+	fprintf(modem.rx_p,"sync %d\n",a_modem_is_clock_Sync(2));
 	fprintf(modem.rx_p,"bb : %s\n",ctime(&bb_stamp));
 	fflush(modem.rx_p);
 	return SUCCESS;
