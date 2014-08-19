@@ -11,6 +11,7 @@ typedef char bool;
 typedef enum{
 	NONE,
         TALK,//recipricol transmission, ok
+	ATALK,
 	CONVERSATION,
 	CONEND,
 	QUICK,
@@ -37,6 +38,8 @@ bool isremote;
 
 int master_talk();
 int slave_talk();
+int master_atalk();
+int slave_atalk();
 int master_con();
 int slave_con();
 int master_conend();

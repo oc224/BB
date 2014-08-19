@@ -42,7 +42,7 @@ int slave_talk(){
 char buf[BUFSIZE];
 /*sync*/
 slave_sync();
-/*send ack*/
+/*wait ack*/
 a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 /*record*/
 a_modem_record(1000);
@@ -65,6 +65,39 @@ a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 a_modem_msg_send(modem.latest_tx_stamp+8);
 return 0;
 }
+
+int master_atalk(){
+char buf[BUFSIZE];
+/*sync*/
+master_sync();
+/*send ack*/
+a_modem_msg_send(ACK);
+/*play*/
+a_modem_play("t1.wav");
+/*wait ack*/
+a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
+/*record*/
+a_modem_record(1000);
+/*recv stamp*/
+a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
+printf("Remote TX @ %s\n",buf);
+return 0;}
+
+int slave_atalk(){
+char buf[BUFSIZE];
+/*sync*/
+slave_sync();
+/*wait ack*/
+a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
+/*record*/
+a_modem_record(1000);
+/*send ack*/
+a_modem_msg_send(ACK);
+/*play*/
+a_modem_play("t1.wav");
+/*send stamp*/
+a_modem_msg_send(modem.latest_tx_stamp+8);
+return 0;}
 
 int master_con(){
 scheduler_start(0,0,0,'r');

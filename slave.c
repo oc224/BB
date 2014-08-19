@@ -53,6 +53,9 @@ int main()
 		printf("go to talk\n");
 		slave_talk();
 		break;
+		case ATALK: //DO TALK
+		slave_atalk();
+		break;
 		case CONVERSATION:
 		slave_con();
 		break;
