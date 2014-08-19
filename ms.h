@@ -12,6 +12,7 @@ typedef enum{
 	NONE,
         TALK,//recipricol transmission, ok
 	CONVERSATION,
+	CONEND,
 	QUICK,
 	MSPLAY,//local modem play
 	MSRECORD,//local modem record

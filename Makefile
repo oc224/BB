@@ -2,7 +2,7 @@ CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfloat-abi=soft
 
-all:data_upload exp unicon master slave
+all:data_upload exp unicon master slave gps_test
 unicon.o:unicon.c
 	$(CC) $(CFLAGS) -c unicon.c
 unicon:unicon.o rs232.o acoustic_modem.o

@@ -6,7 +6,7 @@ float knot;
 float alt;
 int hh;
 int mm;
-float ss;
+int ss;
 int day;
 int month;
 int year;
