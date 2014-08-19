@@ -204,3 +204,19 @@ printf("%s\n",buf);
 return 0;
 }
 
+int master_rreboot(){
+printf("this will take 25 seconds, wait\n");
+sleep(25);
+/*wait ack*/
+a_modem_wait_remote(NULL,0,REMOTE_TIMEOUT);
+return 0;
+}
+
+int slave_rreboot(){
+a_modem_puts("\r");
+a_modem_puts("reboot\r");
+sleep(25);
+/*send ack*/
+a_modem_msg_send(ACK);
+return 0;
+}

@@ -74,6 +74,9 @@ int wait_command_user()
 	}else if (strcmp("gpslog",arg0)==0){
 		t_cmd.type=GPSLOG;
 		t_cmd.isremote=0;
+	}else if (strcmp("rreboot",arg0)==0){
+		t_cmd.type=RREBOOT;
+		t_cmd.isremote=1;
 	}else{
 		t_cmd.type=NONE;
 		t_cmd.isremote=0;
@@ -151,6 +154,9 @@ int main()
 		break;
 		case GPSLOG:
 		system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
+		break;
+		case RREBOOT:
+		master_rreboot();
 		break;
 		case NONE:
 		a_modem_puts(buf);

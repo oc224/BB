@@ -24,7 +24,8 @@ typedef enum{
 	WAIT_REMOTE,//wait remote msg
 	CLEAR_FFS,//clear local ffs
 	STATUS,
-	GPSLOG
+	GPSLOG,
+	RREBOOT
 }cmd_type;
 
 typedef struct{
@@ -50,3 +51,5 @@ int record(const char*);
 int upload(const char*);
 int msg_send();
 int wait_remote();
+int master_rreboot();
+int slave_rreboot();

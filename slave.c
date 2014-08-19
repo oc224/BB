@@ -66,6 +66,9 @@ int main()
 		printf("go to sync time\n");
 		slave_sync();
 		break;
+		case RREBOOT:
+		slave_rreboot();
+		break;
 		default:
 			break;
 		}
