@@ -38,6 +38,8 @@ int master_talk();
 int slave_talk();
 int master_con();
 int slave_con();
+int master_conend();
+int slave_conend();
 int master_quick();
 int slave_quick();
 int master_sync();

@@ -56,6 +56,9 @@ int main()
 		case CONVERSATION:
 		slave_con();
 		break;
+		case CONEND:
+		slave_conend();
+		break;
 		case QUICK:
 		slave_quick();
 		break;

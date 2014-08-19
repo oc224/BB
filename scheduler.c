@@ -248,5 +248,12 @@ int scheduler_start(int hh,int mm, int ss,char type) {
 }
 
 int scheduler_stop() {
+	its.it_interval.tv_nsec=0;
+	its.it_interval.tv_sec=0;
+	its.it_value.tv_sec=0;
+	its.it_value.tv_nsec=0;
+    if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
+         errExit("timer_settime");
+printf("scheduler stop\n");
 	return SUCCESS;
 }

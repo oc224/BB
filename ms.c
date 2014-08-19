@@ -74,6 +74,16 @@ int slave_con(){
 scheduler_start(0,0,0,'r');
 return 0;}
 
+int master_conend(){
+scheduler_stop();
+return 0;
+}
+
+int slave_conend(){
+scheduler_stop();
+return 0;
+}
+
 int master_quick(){
 /*play*/
 a_modem_play("t1.wav");

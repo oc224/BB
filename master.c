@@ -112,6 +112,9 @@ int main()
 		case CONVERSATION:
 		master_con();
 		break;
+		case CONEND:
+		master_conend();
+		break;
 		case QUICK:
 		master_quick();
 		break;
