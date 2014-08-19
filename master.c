@@ -32,6 +32,9 @@ int wait_command_user()
 	if (strcmp(arg0,"talk")==0){
 		t_cmd.type=TALK;
 		t_cmd.isremote=1;
+	}else if (strcmp(arg0,"atalk")==0){
+		t_cmd.type=ATALK;
+		t_cmd.isremote=1;
 	}else if (strcmp(arg0,"con")==0){
 		t_cmd.type=CONVERSATION;
 		t_cmd.isremote=1;
@@ -108,6 +111,9 @@ int main()
 		{
 		case TALK://ok
 		master_talk();
+		break;
+		case ATALK://ok
+		master_atalk();
 		break;
 		case CONVERSATION:
 		master_con();
