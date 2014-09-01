@@ -1,5 +1,3 @@
-#include "stdio.h"
-
 #define a_modem_dev_no 18
 #define a_modem_serial_baudrate 115200
 #define a_modem_dev_path "/dev/ttyUSB2"
