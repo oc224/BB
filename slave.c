@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "system.h"
 #include "acoustic_modem.h"
+#include "scheduler.h"
 #include "ms.h"
 #define BUFSIZE 128
 #define TIMEOUT 2000

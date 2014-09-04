@@ -17,4 +17,4 @@ extern gps_info gps;
 
 int gps_update();
 void gps_show();
-int gps_log();
+void gps_log();
