@@ -43,7 +43,6 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __linux__
 
 #include <termios.h>
 #include <sys/ioctl.h>
@@ -52,26 +51,14 @@ extern "C" {
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
-#else
 
-#include <windows.h>
-
-#endif
-
-int RS232_OpenComport(int, int);
+int RS232_OpenComport(const char*, int);
 inline int RS232_PollComport(int,char *, int);
 inline int RS232_SendByte(int,const char);
 inline int RS232_SendBuf(int, const char *, int);
-inline void RS232_Flush(int comport_number);
+inline void RS232_Flush(int );
 void RS232_CloseComport(int);
 void RS232_cputs(int, const char *);
-int RS232_IsDCDEnabled(int);
-int RS232_IsCTSEnabled(int);
-int RS232_IsDSREnabled(int);
-void RS232_enableDTR(int);
-void RS232_disableDTR(int);
-void RS232_enableRTS(int);
-void RS232_disableRTS(int);
 
 #ifdef __cplusplus
 } /* extern "C" */
