@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "acoustic_modem.h"
 #include "rs232.h"
 #include "system.h"
@@ -14,7 +15,6 @@
 #define RX_PATH "/home/root/log/RXLOG.TXT"
 #define SYCN_TIMEOUT 15
 #define COPY_TIMEOUT 60000
-
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
