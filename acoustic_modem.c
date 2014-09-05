@@ -277,7 +277,7 @@ if (a_modem_wait_ack("ok",SERIAL_TIMEOUT)==FAIL)
 break;
 }
 
-
+return -1;
 }
 
 int a_modem_msg_send(const char*msg){
@@ -305,6 +305,7 @@ int a_modem_record(int duration) {
 duration in mili seconds
 */
 	char logname[32];
+	char buf[BUFSIZE];
 	time_t bb_stamp;
 
 	modem.latest_rx_fname[0]=0;
@@ -318,7 +319,6 @@ duration in mili seconds
 
 	/*record off*/
 	a_modem_puts( "record off\r\r");
-*/
 
 
 	/*get log name*/

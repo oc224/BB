@@ -100,7 +100,7 @@ int scheduler_task_add(char *cfg_msg) {
 		modem_schedule.p_this->this_task = SD_RECORD;
 	} else if (strcmp(type_task, "sleep") == 0) {
 		modem_schedule.p_this->this_task = SD_SLEEP;
-	} else if (strcmp(type_task, "sync") == NULL) {
+	} else if (strcmp(type_task, "sync") == 0) {
 		modem_schedule.p_this->this_task = SD_SYNC;
 	}
 	modem_schedule.p_this->arg = strdup(arg);
@@ -112,7 +112,6 @@ int scheduler_task_add(char *cfg_msg) {
 int scheduler_read(char *filename) {
 	FILE *fp;
 	char buf[BUFSIZE];
-	int is_match = 0;
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
 		printf("fail to read schedule file\n");

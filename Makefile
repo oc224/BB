@@ -1,4 +1,4 @@
-CC=arm-linux-gnueabihf-gcc
+CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall
 
@@ -80,4 +80,4 @@ deploy:
 	cp ./config/*txt ./home_fs/config/.
 	cp ./script/* ./home_fs/script/.
 	rsync -avz ./home_fs/ root@charlie:~/.
-	rsync -avz ./home_fs/ root@dylan:~/.
+	#rsync -avz ./home_fs/ root@dylan:~/.
