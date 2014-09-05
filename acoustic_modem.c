@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "acoustic_modem.h"
 #include "rs232.h"
 #include "system.h"
@@ -14,7 +15,6 @@
 #define RX_PATH "/home/root/log/RXLOG.TXT"
 #define SYCN_TIMEOUT 15
 #define COPY_TIMEOUT 60000
-
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
@@ -138,8 +138,8 @@ int a_modem_init(){
 
 int a_modem_open() {
 	//open serial port, go to command mode, issue at (attention), then check response
-	if (RS232_OpenComport(a_modem_dev_no, a_modem_serial_baudrate)) {
-		printf("Acoustic modem, Fail to open.\n");
+	if ((modem.fd=RS232_OpenComport(a_modem_dev_path, a_modem_serial_baudrate))) {
+		printf("Acoustic modem, Fail to open.\n");//error
 		return FAIL;
 	}
 	// ensure command mode
@@ -220,7 +220,7 @@ int a_modem_play(char * filename) {
 
 inline int a_modem_puts(const char*msg){
 	// write a line to serial port
-	return RS232_SendBuf(a_modem_dev_no,msg,strlen(msg));
+	return RS232_SendBuf(modem.fd,msg,strlen(msg));
 }
 
 int a_modem_gets(char* buf,int size){
@@ -234,11 +234,11 @@ int a_modem_gets(char* buf,int size){
 		*the the text read will be copy to msg or msg_remote
 		*the newline char is removed.
 	 	*return FAIL or n char read*/
-	char dump[BUFSIZE],buf2[BUFSIZE];
+	char dump[BUFSIZE];
 	int n;
 
 	if (buf!=NULL)buf[0]=0;/*make sure input buffer clear if this function fail*/
-	n=RS232_PollComport(a_modem_dev_no,dump,BUFSIZE);
+	n=RS232_PollComport(modem.fd,dump,BUFSIZE);
 	if (n<1){
 		return FAIL;
 	}
@@ -504,7 +504,6 @@ int a_modem_upload_file(const char *fname){
 	then remove the file*/
 	char buf[BUFSIZE];
 	int ret;
-	int n_file;
 	// copy
 	a_modem_clear_io_buffer();
 	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);

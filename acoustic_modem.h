@@ -1,5 +1,4 @@
-#include "stdio.h"
-
+#include <stdio.h>
 #define a_modem_dev_no 18
 #define a_modem_serial_baudrate 115200
 #define a_modem_dev_path "/dev/ttyUSB2"
@@ -21,6 +20,7 @@ typedef enum {
 } a_modem_sync_state;
 
 typedef struct {
+	int fd;
 	float board_temp; //ref modem manual, atv
 	float dsp_bat;
 	float mdm_bat; // ref modem manual mdm_battery
