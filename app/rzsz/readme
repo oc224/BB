@@ -1,0 +1,103 @@
+Unix Rz and sz support XMODEM, YMODEM, and ZMODEM transfers via
+the dial-in controlling TTY (or PTY) port.  Client rz/sz
+programs in crzsz.zip should be used for dial-out applications.
+
+Also included is the "undos" program which converts between
+Unix, MSDOS, CP/M, and Macintosh text file end of line conventions.
+
+The contents of this archive can be uploaded to a remote Unix or
+Xenix system by ZCOMM or Professional-YAM using the supplied
+zupl.t script.  Connect to your Unix/Xenix system, select an
+empty directory, and then give the YAM/ZCOMM command: "source
+zupl.t".  This will upload minirb.c, compile it, and then use
+minirb to bootstrap upload the rz/sz files.
+
+Once these files are on your Unix system, you can type "make".
+The Makefile will list the various systems it knows how to
+compile the programs for, and the command to do so (e.g.,
+"make bsd").
+
+The Makefile is self explanatory; just say "make".
+
+Unregistered users can obtain support on a consulting basis.
+Please call 503-614-0430 to arrange consulting support.
+
+Registered users with support options can obtain support for
+problems not involving terminal servers or third party software
+using email or the regular Omen Technology phone number.
+
+Rz and sz work best with comm programs that properly support
+ZMODEM command and file AutoDownload (Pro-YAM and ZCOMM).
+
+The "GSZ" shareware program allows ZMODEM file transfers with
+DOS comm programs.  GSZ provides a "mini term function" that
+supports ZMODEM AutoDownload.  GSZ (part of GSZ.ZIP) and ZCOMM
+(ZCOMMEXE.ZIP, ZCOMMDOC.ZIP, ZCOMMHLP.ZIP) are available on
+TeleGodzilla and other fine bulletin boards.
+
+This software may be freely used to support file transfer
+operations to or from duly licensed Omen Technology products.
+This includes DSZ, GSZ, ZCOMM, Professional-YAM and PowerCom.
+Institutions desiring to use rz/sz this way should add the
+following to the sz compile line: -DCOMPL
+Programs based on stolen or public domain ZMODEM materials are
+not included.  Use with other commercial or shareware programs
+(Crosstalk, Procomm, etc.) REQUIRES REGISTRATION.
+
+Unregistered copies of rz and sz mail messages indicating
+their use after successful file transfers.  Registration
+eliminates this code.
+
+Rz ans Sz are Copyrighted shareware programs.  Commercial Use of
+these programs is subject to licensing conditions detailed in
+the sz.c source code.  "Commercial Use" includes use of this
+program to transfer files to/from any commercial or shareware
+program not published by Omen Technology INC.  Please print the
+"mailer.rz" file, fill out the form and return same with your
+registration.
+
+1.xx and 2.xx versions of rz and sz (April 1988) are Public Domain,
+but lack recent enhancements and bug fixes.
+
+The Man pages are formatted for those without Unix nroff.  For
+best results, use less(1) (available on comp.sources.misc) as
+your manual page reader.  The troff sources for the rz/sz man pages
+are included with copies of Unix Professional-YAM, and are provided
+to registered sites as described in the mailer.rz file.
+
+Please check our web page www.omen.com for the latest updates.
+
+FTP access is available at ftp.cs.pdx.edu pub/zmodem
+directory.  This account has the latest and greatest selection
+of OMEN files available for FTP.  The files in this direcotry
+are uploaded with ZMODEM directly from the Omen home system,
+preserving modification dates and file contents.
+
+VMS systems are now supported with native VMS versions in
+RZSZ.TLB.  The rz and sz in RZSZ.TLB support wild cards and
+VMS record types.
+
+In order for us to handle problem reports, we must have the
+exact error messages displayed by Professional-YAM.  If
+transfers do not work at all, we must have complete results of
+the sz -T test procedure!  If you are not using an Omen
+Technology product to talk to rz/sz and have not registered
+rz/sz, contact the author of the communications program you have
+purchased for support.  Some heavily marketed programs do not
+properly support the XMODEM, YMODEM, and/or ZMODEM protocols.
+
+The Omen Technology Code in unmodified copies of rz/sz 3.54
+is Y2K Compliant.  When compiled by a Y2K compliant
+compiler, linked with a Y2K compliant library, executed on a
+Y2K compliant system, and used with Y2K compliant clients,
+rz/sz 3.54 is Y2K compliant.  Consulting is available to
+investigate Y2K issues with third party software.  Omen
+Technology cannot accept liability for Y2K problems caused
+by third party software.
+
+
+Chuck Forsberg WA7KGX     caf@omen.COM     http://www.omen.com
+   Omen Technology Inc      "The High Reliability Software"
+Author of YMODEM, ZMODEM, Professional-YAM, ZCOMM, GSZ and DSZ
+POB 1314 Hillsboro OR 97123     503-614-0430   
+

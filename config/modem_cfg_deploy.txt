@@ -1,5 +1,0 @@
-#this will set the modem config for deployment
-@syncpps=4
-@txpower=5
-@fwdelay=0.1
-@opmode=0

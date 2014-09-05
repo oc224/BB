@@ -173,8 +173,8 @@ void scheduler_exce(int sig, siginfo_t *si, void *uc) {
 		//printf("debug, amodem sleep\n");
 		break;
 	case SD_SYNC:
-		a_modem_sync_clock_gps(4);
-		a_modem_sync_time_gps();
+		amodem_sync_clock_gps(4);
+		amodem_sync_time_gps();
 		break;
 	default:
 		break;

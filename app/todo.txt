@@ -1,0 +1,8 @@
+1. multi-station
+2. integrate master&slave(dynamic master/slave)
+3. in-situ DSP
+4. data manage
+5. log sys
+6. error handling
+7. socket from station to control PC
+8. pps input on gpio pin, beagleboard gps time source

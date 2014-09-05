@@ -44,7 +44,10 @@ fname[0]=0;
 }
 return SUCCESS;
 }
+int amodem_msg_send(const char *str){
 
+return SUCCESS;
+}
 void amodem_print(int msec){
 /*print all the text from serial port*/
 int Niter=msec/N_ITER_DIV,delay=0;
@@ -138,7 +141,7 @@ int amodem_init(){
 
 int amodem_open() {
 	//open serial port, go to command mode, issue at (attention), then check response
-	if ((modem.fd=RS232_OpenComport(a_modem_dev_path, a_modem_serial_baudrate))) {
+	if ((modem.fd=RS232_OpenComport(amodem_dev_path, amodem_serial_baudrate))) {
 		printf("Acoustic modem, Fail to open.\n");//error
 		return FAIL;
 	}
@@ -261,23 +264,21 @@ int amodem_gets(char* buf,int size){
 	return n;
 }
 
-int a_modem_mode_select(char mode){
+int amodem_mode_select(char mode){
 //usleep()
 switch (mode){
 case 'o':
-a_modem_puts("ato\r");
-if (a_modem_wait_ack("connect",SERIAL_TIMEOUT)==FAIL)
+amodem_puts("ato\r");
+if (amodem_wait_ack("connect",SERIAL_TIMEOUT)==FAIL)
 break;
 case 'c':
-a_modem_puts("+++");
+amodem_puts("+++");
 //usleep()
-a_modem_puts("at\r");
-if (a_modem_wait_ack("ok",SERIAL_TIMEOUT)==FAIL)
+amodem_puts("at\r");
+if (amodem_wait_ack("ok",SERIAL_TIMEOUT)==FAIL)
 break;
 }
 
-return -1;
-}
 
 	/* write msg acoustically to remote modems*/
 	amodem_puts("ato\r");

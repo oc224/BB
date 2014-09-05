@@ -1,0 +1,342 @@
+RZ(1)									 RZ(1)
+
+
+
+NNAAMMEE
+       rx, rc, rb, rz - Receive Files and Commands with X/Y/ZMODEM
+
+SSYYNNOOPPSSIISS
+       rrzz [-vvqq] [-wwWWIINNDDOOWW] [-ttTTIIMMEEOOUUTT]
+       rrbb [-vvqqyy] [-ttTTIIMMEEOOUUTT]
+       rrcc [-vvqqyy] [-ttTTIIMMEEOOUUTT] _f_i_l_e
+       rrxx [-ccvvqqyy] [-ttTTIIMMEEOOUUTT] _f_i_l_e
+       ggzz _f_i_l_e _._._.
+
+LLIICCEENNSSEE AAGGRREEEEMMEENNTT
+       This  is	 a Copyrighted shareware program.  Commercial use of this pro-
+       gram is subject to licensing conditions detailed	 in  the  rz.c	source
+       code.   "Commercial  Use"  includes  any use of this program to receive
+       files from a commercial or shareware  program  not  published  by  Omen
+       Technology INC.
+
+       Registration information is provided in the file mailer.rz.
+
+       Use of this program constitutes agreement to the License Agreement.
+
+       Please check http://www.omen.com for more information.
+
+SSUUPPPPOORRTT
+       Users  who have not purchased support as part of their registration may
+       call 503-614-0430 to arrange for	 technical  support  on	 a  consulting
+       basis.
+
+       Technical support for registered users is available by phone and email.
+
+DDEESSCCRRIIPPTTIIOONN
+       This program uses error correcting protocols to receive	files  over  a
+       dial-in	serial	port  from a variety of programs running under PC-DOS,
+       CP/M, Unix, and other operating systems.	 It is invoked	from  a	 shell
+       prompt  manually, or automatically as a result of an "sz file ..." com-
+       mand given to the calling program.
+
+       To obtain the maximum performance and full functionality of  this  pro-
+       gram we recommend its use with GSZ, Professional-YAM or ZCOMM.
+
+       This  program is intended to act as a server for terminal programs, not
+       to act as one.  This program is not designed to be called  from	_c_u_(_1_)_,
+       _t_i_p_(_1_)_,	or  other  communications programs.  The client rz/sz package,
+       distributed in (crzsz.zip), is designed to be  called  from  such  pro-
+       grams.
+
+       Unix flavors of Omen Technology's Professional-YAM communications soft-
+       ware are suitable for  dial-out	applications.	Unix  Professional-YAM
+       supports	 dial-out  applications	 with  telephone directory, a powerful
+       script language with learn function,  high  quality  multiple  protocol
+       support, and UUCP port arbitration.
+
+
+       RRzz  (Receive  ZMODEM) receives one or more files with the ZMODEM proto-
+       col.  Pathnames are supplied by the sending  program,  and  directories
+       are created if necessary.  (See the example below.)  If standard output
+       is not redirected to a file or pipe, output is appended to a file named
+       "stdout".
+
+       Normally,  the "rz" command is automatically issued by the calling ZMO-
+       DEM program, but defective ZMODEM implementations may require  starting
+       _r_z manually.
+
+       RRbb  receives  file(s)  with  YMODEM, accepting either standard 128 byte
+       sectors or 1024 byte sectors (Pro-YAM/ZCOMM sb --kk  option).   The  user
+       should  determine  when	the  1024  byte block length actually improves
+       throughput.
+
+       If True YMODEM  (Omen  Technology  trademark)  file  information	 (file
+       length,	etc.)	is  received,  the  file length controls the number of
+       bytes written to the output dataset and the modify time (iff non	 zero)
+       are set accordingly.
+
+       If  True	 YMODEM file information is not received, slashes in the path-
+       name are changed to underscore, and any trailing period in the pathname
+       is  eliminated.	This conversion is useful for files received from CP/M
+       and other historical systems.
+
+       RRcc receives a single _f_i_l_e with XMODEM-CRC  or  XMODEM-1k-CRC  protocol.
+       The  user  should  determine  when  the 1024 byte block length actually
+       improves throughput without causing problems.  The user must supply the
+       file  name  to both sending and receiving programs.  Up to 1023 garbage
+       characters may be added to the received file.
+
+       RRxx receives a single _f_i_l_e with XMODEM or XMODEM-1k protocol.  The  user
+       should  determine  when	the  1024  byte block length actually improves
+       throughput without causing problems.  The user  must  supply  the  file
+       name  to both sending and receiving programs.  Up to 1023 garbage char-
+       acters may be added to the received file.
+
+       GGzz is a shell script which calls _s_z to  command	Pro-YAM	 or  ZCOMM  to
+       transmit	 the  specified files.	Pathnames used with _g_z must be escaped
+       if they have special significance to the Unix shell.
+       EXAMPLE: gz "-a C:*.c D:*.h"
+
+       If invoked with a leading ''v'', _r_z will report progress to /tmp/rzlog.
+       EXAMPLE: ln rz vrz; rz=vrz; export rz
+
+       If  the	RESTRICTED  shell  environment variable is set to 1, or if the
+       SHELL environment variable includes _r_s_h	or  _r_k_s_h  (restricted  shell),
+       registered copies of _r_z will not accept command uploads, absolute path-
+       names, references to a parent directory, will not  modify  an  existing
+       file, and removes any files received in error.
+       EXAMPLE: RESTRICTED=1 rz
+
+
+       The meanings of the available options are:
+
+       cc      Use CRC-16 for XMODEM transfers.
+       ttTTIIMMEEOOUUTT
+	      Change TIMEOUT to _T_I_M_E_O_U_T tenths of seconds.
+       qq      Quiet  suppresses	 the routine message display.  (New in Version
+	      5)
+       vv      Verbose causes a list of file names to be appended to /tmp/rzlog
+	      .	 More v's generate more detailed debugging output.
+       wwWWIINNDDOOWW
+	      Use  a  receive  window of WINDOW bytes.	Details in the Profes-
+	      sional-YAM user manual.
+
+       EEXXAAMMPPLLEESS
+(Pro-YAM command)
+_<_A_L_T_-_2_>
+Pro-YAM Command: _s_z _*_._h _*_._c
+This automatically invokes _r_z on the connected system, and sends all .h and .c
+files in the current directory.
+
+_s_z _-_n _-_R_f _.
+This  Professional-YAM	command recursively follows the current directory tree
+(.) (Pro-YAM -R option), sends the full relative pathname (-f), for files that
+are newer (-n) than their copies on the destination system.
+
+_r_z _| _s_o_r_t _>_/_t_m_p_/_s_o_r_t_e_d
+_s_z _O_N_A_M_E_=_- _*_._l_s_t
+The  first  command  manually starts rrzz with output piped to the sort command.
+The second command instructs Professional-YAM, ZCOMM, GSZ or DSZ to  sene  the
+files using "-" as pathname, which instructs rrzz to output the received data to
+its standard output.  The end result is a single file containing all the lines
+of the .lst files sorted alphabetically.
+
+
+
+DDIIAAGGNNOOSSTTIICCSS
+       Exit status is as follows: 0 for successful transfers.  1 if unrecover-
+       able errors are detected.  2 if syntax errors or file  access  problems
+       are detected.  3 if the program was terminated by a caught interrupt.
+
+
+SSEEEE AALLSSOO
+       Professional-YAM,   ZCOMM,   DSZ,   crc(omen),	sz(omen),   usq(omen),
+       undos(omen)
+
+       Compile	time  options  required	 for  various  operating  systems  are
+       described in the source file.
+
+SSEERRVVEERR//NNEETTWWOORRKK NNOOTTEESS
+       Terminals  on  some timesharing systems are connected indirectly to the
+       host with TTEERRMMIINNAALL SSEERRVVEERRSS operating over networks.   Terminal  servers
+       often  interfere	 with  file  transfers	by "eating" control characters
+       and/or losing data.
+
+       Accessing a distant system using tteellnneett on a local Unix system  entails
+       the  same  problems.  If tteellnneett does not work well, try rrllooggiinn with the
+       --88 option.  Set the escape character to ^P (control P)  which  is  pro-
+       tected by ZMODEM.
+
+       When  terminal  servers	interfere with file transfers, server commands
+       are often available to help the problem.	  When	possible,  enable  the
+       server and modems for hardware flow control in and out.	Set the termi-
+       nal server to telnet transparent mode.  Some typical commands are  "SET
+       TERMINAL	 DOWNLOAD",  "set session passall", and "SET TERMINAL NO ESC",
+       but there is no standard set of	commands  suitable  for	 all  terminal
+       servers.	  Normally  these  commands  are  given before attempting file
+       transfers, but one user has reported that the  command  must  be	 given
+       _a_f_t_e_r  the  file transfer is started(!).	 Until terminal server vendors
+       improve the quality of their product, you may have to get on their case
+       until they adequately support high performance file transfers.
+
+       The telnet protcol used by the _t_e_l_n_e_t program and terminal servers uses
+       0xFF (377 octal) for special control functions.	The 0xFF character may
+       cause  problems	if it appears in the data stream, especially uploading
+       at high speeds.	With ZCOMM or Professional-YAM the 0xFF character  can
+       be protected by giving the command:
+       set zmtxesc ?
+
+       Escaping	 control characters with ZMODEM (sz -e) may help if the trans-
+       fer gets stuck in the same place on  every  attempt.   Professional-YAM
+       and  ZCOMM  allow  selection  of	 which	control	 characters need to be
+       escaped.	 In extreme cases 7-bit transmission may be required (see  the
+       Professional-YAM/ZCOMM manual).	If you encounter problems with control
+       characters you should identify which control characters are causing the
+       problem.	 Please refer to the sz -T command in sz.doc for more help.
+
+       Flow  control  between  the  server and modem is often defective.  This
+       rarely causes a problem in interactive applications whose short	bursts
+       (a  screenfull  at  most)  fit  within  the  available  memory buffers.
+       Streaming protocols such as YMODEM-g, long packet SuperKermit, and ZMO-
+       DEM  can	 overload the available buffering.  Some terminal servers sup-
+       port commands to enable hardware flow control such as "TERM FLOWCONTROL
+       HARDWARE	 IN  OUT";  this  assumes  the modem attached to the server is
+       properly configured.
+
+       If the terminal server is too brain damaged to  support	flow  control,
+       ZMODEM lets you fake it by setting a window size.  Try
+	    sz -w2048 file...
+       to  enable  software  flow  control.   Experiment with different window
+       sizes for best results.
+
+       Terminal servers are designed to accept keyboard input from human oper-
+       ators.	They  may lose data when a program sends more data to the host
+       faster than humans type.	 Some servers allow larger  input  buffers  to
+       support	file  uploads.	 If  you can upload short files (less than 100
+       bytes) but not longer files, try
+	    sz -w1024 file...
+       with your uploading program.  (Not all programs	support	 this  option;
+       use ZCOMM or Professional-YAM.)
+
+       When both flow control and character transparency are problems, use
+	    sz -ew1024 file...
+       as a starting point.
+
+       Sometimes  the  terminal	 server software is defective and must be cor-
+       rected.	Please contact the network's vendor for corrective procedures.
+       An  alternative is to install direct serial ports for users desiring to
+       upload files.
+
+       We have also encountered problems when  networking  software  fails  to
+       pass data after a large amount of data has been sent to the host.  This
+       has happened on a PPP internet connection which	prevented  uploads  of
+       large  amounts  of data via either FTP or a ZMODEM upload (via TELNET).
+       The PPP connection grinds to a standstill and not even PING works.  The
+       same  ZMODEM/TELNET  combination easily uploaded ten times as much to a
+       nearby machine connected by Ethernet.
+
+
+PPOORRTT WWAATTCCHHEERRSS
+       Some systems enforce a timeout which disconnects a user	after  several
+       minutes	of  keyboard inactivity.  Long, error free ZMODEM transfers do
+       not generate keyboard activity (this is why ZMODEM  is  so  efficient).
+       Restricting the window size with
+	    sz -w16384 file...
+       option generates terminal input at regular intervals even when no error
+       correction is needed.   If  problems  persist,  try  setting  a	packet
+       length.
+	    sz -l1024 file...
+       (The default ZMODEM packet length is the file length.)
+
+NNOOTTEESS
+       RRzz,,  rrbb,,	 and  rrxx are hard links to the rz executable.  These links are
+       automatically made by the Makefile.
+
+       ZMODEM's support of XOFF/XON flow control allows	 proper	 operation  in
+       many  environments  that do not support XMODEM uploads.	Unfortunately,
+       not all Unix versions  support  input  flow  control.   The  TTY	 input
+       buffering  on  some  systems  may  not adequately buffer long blocks or
+       streaming input at high speed.  You should suspect  this	 problem  when
+       you  can't  send	 data  to the Unix system at high speeds using ZMODEM,
+       YMODEM-1k or XMODEM-1k, but YMODEM with 128 byte blocks works properly.
+
+       The  DSZ	 or  Pro-YAM  zzmmooddeemm ll numeric parameter may be set to a value
+       between 64 and  1024  to	 limit	the  burst  length  ("zmodem  pl128").
+       Although this compromises ZMODEM's throughput, ZMODEM's superior relia-
+       bility remains intact.
+
+       If a program that does not properly implement the specified file trans-
+       fer  protocol  causes  _r_z  to  "hang" the port after a failed transfer,
+       either wait for _r_z to time out or keyboard a dozen  Ctrl-X  characters.
+       Every  reported	instance  of  this problem has been corrected by using
+       ZCOMM, Pro-YAM, DSZ, or other program with a correct implementation  of
+       the specified protocol.
+
+       Many  programs  claiming	 to support YMODEM only support XMODEM with 1k
+       blocks, and they often don't get that quite right.
+
+       In the case of a few poorly  designed  microcomputers,  sending	serial
+       data  to	 a  tty	 port at sustained high speeds has been known to cause
+       lockups,	 system	 halts,	 kernel	 panics,  and  occasional   antisocial
+       behaviour.  This problem is not unique to _r_z_; newer versions of Kermit,
+       CRT terminals with screen transmission, and line noise  have  the  same
+       effect.	When experimenting with high speed input to a system, consider
+       rebooting the system if the file transfers are  not  successful,	 espe-
+       cially if the personality of the system appears altered.
+
+       The  Unix  "ulimit"  parameter  must be set high enough to permit large
+       file transfers to Unix.
+
+       Telebit modems must not be set to "spoof" UUCP, XMODEM, YMODEM, or KER-
+       MIT.   Setting one of these spoofing modes interferes with other proto-
+       cols.  Telebit's YMODEM spoofing interferes with YMODEM transfers.
+
+       32 bit CRC code courtesy Gary S. Brown.	Directory creation  code  from
+       John Gilmore's PD TAR program.
+
+NNEETTWWOORRKK NNOOTTEESS
+       Escaping	 all  control characters (sz -e) may help if the transfer gets
+       stuck in the same place on every attempt.  Professional-YAM  and	 ZCOMM
+       allow selection of which control characters need to be escaped.
+
+       In  extreme cases 7-bit transmission may be required (see Professional-
+       YAM/ZCOMM manual).  7-bit transmission  requires	 rz  version  4.50  or
+       higher.
+
+       Please refer to the sz -T command in sz.doc for more help.
+
+BBUUGGSS
+       This version of _r_z does not support some ZMODEM features.  Unix flavors
+       of Professional-YAM may be linked to "rz" to support these features.
+
+       The ASCII  option´s  CR/LF  to  NL  translation	merely	deletes	 CR´s;
+       undos(omen) performs a more intelligent translation.
+
+ZZMMOODDEEMM CCAAPPAABBIILLIITTIIEESS
+       _R_z supports ZMODEM command execution (zcommand), incoming ZMODEM binary
+       (-b), ASCII (-a), escape controls  (-e),	 newer(-n),  newer+longer(-N),
+       protect	(-p),  Crash  Recovery(-r),  clobber (-y), match+clobber (-Y),
+       compression(-Z), and append (-+) requests.  Other options sent  by  the
+       sender  are ignored.  Crash recovery (-r) cannot be combined with other
+       options.	 The default is protect (-p) and binary (-b).
+
+       Unix Professional-YAM provides higher performance  and  other  features
+       not  supported  by  _r_z_.	Please contact Omen Technology Inc for product
+       information.
+
+       http://www.omen.com
+
+       Omen Technology INC
+       Post Office Box 1314
+       Portland OR 97123
+       503-614-0430 (Sales)
+
+
+FFIILLEESS
+       rz.c, crctab.c, rbsb.c, zm.c, zmr.c, zmodem.h, rz.1
+
+       /tmp/rzlog stores debugging output generated with -vv option
+
+
+
+				     OMEN				 RZ(1)

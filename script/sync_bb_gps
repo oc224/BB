@@ -1,7 +1,0 @@
-#!/bin/bash
-# this script will sync bb date & time from gpspipe output msg
-# this is a work around method to sync time from gps nmea sentence.
-# 2014-08-10 Y.W.
-GPSDATE=`gpspipe -w | head -10 | grep TPV | sed -r 's/.*"time":"([^"]*)".*/\1/' | head -1`
-echo $GPSDATE
-date -s "$GPSDATE"
