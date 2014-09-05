@@ -531,7 +531,7 @@ int a_modem_upload_file(const char *fname){
 	a_modem_clear_io_buffer();
 	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
 	a_modem_puts(buf);
-	a_modem_wait_info(NULL,SERIAL_TIMEOUT,NULL,BUFSIZE);
+
 	if (a_modem_wait_info(NULL,COPY_TIMEOUT,buf,BUFSIZE)==FAIL){
 	fprintf(stderr,"cp no response\n");
 	return FAIL;
@@ -542,7 +542,6 @@ int a_modem_upload_file(const char *fname){
 	fprintf(stderr,"cp error\n");
 	return FAIL;}
 	/*if (strcasestr(buf,"error")!=NULL){
-	fprintf(stderr,"cp error\n");
 	return FAIL;
 	}
 	if (strcasestr(buf,"ok")!=NULL){
@@ -551,19 +550,6 @@ int a_modem_upload_file(const char *fname){
 	fprintf(stderr,"cp error\n");
 	return FAIL;
 	}*/
-	/*sleep(2);
-	buf[0]=0;
-	a_modem_gets(buf,BUFSIZE);
-	if (strcasestr(buf,"error")!=NULL){
-		fprintf(stderr,"fail to copy files in a modem\n");
-		return FAIL;
-	}
-	// wait for the copy
-	if (a_modem_wait_ack("ok",60000)==FAIL){//TODO estimate time, proper value
-		printf("copy file time out\r");
-		return FAIL;
-	}
-	*/
 	// issue ymodem send (sb)
 	sprintf(buf,"sb /ffs/%s\r",fname);
 	a_modem_puts(buf);
@@ -584,8 +570,6 @@ int a_modem_upload_file(const char *fname){
 	a_modem_puts(buf);
 	sprintf(buf,"rm /sd/%s\r",fname);
 	a_modem_puts(buf);
-	//move the file
-	sprintf(buf,"mv ./%s /home/root/data/.",fname);
 	system(buf);
 	return SUCCESS;
 }
