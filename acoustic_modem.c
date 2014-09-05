@@ -281,8 +281,9 @@ int a_modem_msg_send(const char*msg){
 }
 
 int a_modem_record(int duration) {
-// record waveform, store rx info as well.duration is in milliseconds
-	char buf[BUFSIZE];
+/* record waveform, store rx info as well.
+duration in mili seconds
+*/
 	char logname[32];
 	time_t bb_stamp;
 
@@ -297,6 +298,8 @@ int a_modem_record(int duration) {
 
 	/*record off*/
 	a_modem_puts( "record off\r\r");
+*/
+
 
 	/*get log name*/
 	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)==SUCCESS){
