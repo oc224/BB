@@ -121,8 +121,8 @@ int scheduler_read(char *filename) {
 			printf("fail to find the corresponding script\n");
 			return FAIL;
 		}
-		is_match = strcasestr(buf, t_node.name);	//TODO
-	} while (is_match == NULL);
+//		 strcasestr(buf, t_node.name);	//TODO
+	} while (strcasestr(buf, t_node.name)==NULL);
 	//actually read
 	while (fgets(buf, BUFSIZE, fp)!=NULL) {
 		if (strstr(buf, "}") != NULL) {//end
