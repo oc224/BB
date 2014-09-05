@@ -94,12 +94,14 @@ int scheduler_task_add(char *cfg_msg) {
 	modem_schedule.n_task++;
 	sscanf(cfg_msg, "%s %d %s", type_task, &modem_schedule.p_this->duration,
 			arg);
-	if (strcasestr(type_task, "play") != NULL) {
-		modem_schedule.p_this->this_task = PLAY;
-	} else if (strcasestr(type_task, "record") != NULL) {
-		modem_schedule.p_this->this_task = RECORD;
-	} else if (strcasestr(type_task, "sleep") != NULL) {
-		modem_schedule.p_this->this_task = SLEEP;
+	if (strcmp(type_task, "play") ==0) {
+		modem_schedule.p_this->this_task = SD_PLAY;
+	} else if (strcmp(type_task, "record") == 0) {
+		modem_schedule.p_this->this_task = SD_RECORD;
+	} else if (strcmp(type_task, "sleep") == 0) {
+		modem_schedule.p_this->this_task = SD_SLEEP;
+	} else if (strcmp(type_task, "sync") == NULL) {
+		modem_schedule.p_this->this_task = SD_SYNC;
 	}
 	modem_schedule.p_this->arg = strdup(arg);
 	//printf("debug ,arg:%s\n",arg);
@@ -160,16 +162,20 @@ void scheduler_exce(int sig, siginfo_t *si, void *uc) {
 	// do this task
     //printf("task : %d\n",modem_schedule.p_this->index);
 	switch (modem_schedule.p_this->this_task) {
-	case PLAY:
+	case SD_PLAY:
 		//printf("debug, amodem play\n");
 		a_modem_play(modem_schedule.p_this->arg);
 		break;
-	case RECORD:
+	case SD_RECORD:
 		//printf("debug, amodem record\n");
 		a_modem_record(modem_schedule.p_this->duration);
 		break;
-	case SLEEP:
+	case SD_SLEEP:
 		//printf("debug, amodem sleep\n");
+		break;
+	case SD_SYNC:
+		a_modem_sync_clock_gps(4);
+		a_modem_sync_time_gps();
 		break;
 	default:
 		break;

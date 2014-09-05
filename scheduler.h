@@ -10,7 +10,7 @@
 
 #include <signal.h>
 typedef enum{
-	PLAY,RECORD,SLEEP
+	SD_PLAY,SD_RECORD,SD_SLEEP,SD_SYNC
 }type_task;
 
 typedef struct{
