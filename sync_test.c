@@ -13,16 +13,16 @@ int main()
 {
 	char buf[128];
 	int i, j;
-	a_modem_open();
-	a_modem_puts("sync\r");
+	amodem_open();
+	amodem_puts("sync\r");
 	sleep(1);
 	for (i=1; i<=20; i++)
 	{
 		//for (j=0; j<128; j++)
 			//buf[j] = 0;
-		a_modem_gets(buf,128);
+		amodem_gets(buf,128);
 		printf("%s",buf);
 	}
-	a_modem_close();
+	amodem_close();
 	return 0;
 }

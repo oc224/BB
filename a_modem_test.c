@@ -6,72 +6,72 @@
 
 int main() {
 /*
-int a_modem_init(); ok
-int a_modem_open(); ok
-inline void a_modem_close();ok
-void a_modem_msg_show(a_modem_msg *);ok
-int a_modem_msg_add(a_modem_msg*,char *msg_str);ok
+int amodem_init(); ok
+int amodem_open(); ok
+inline void amodem_close();ok
+void amodem_msg_show(amodem_msg *);ok
+int amodem_msg_add(amodem_msg*,char *msg_str);ok
 
-int a_modem_wait_ack(char*,int);
-int a_modem_wait_info(char *key_word, int timeout, $
-int a_modem_wait_remote(char*,int,int);
+int amodem_wait_ack(char*,int);
+int amodem_wait_info(char *key_word, int timeout, $
+int amodem_wait_remote(char*,int,int);
 
-int a_modem_play(char * filename);
-int a_modem_record(int duration_mili);
+int amodem_play(char * filename);
+int amodem_record(int duration_mili);
 
 
-int a_modem_status(); // get status (internal temp,$
-void a_modem_status_show();
+int amodem_status(); // get status (internal temp,$
+void amodem_status_show();
 
-int a_modem_print_configs(char * filepath); // save$
-int a_modem_set_deploy_configs();
-int a_modem_set_devel_configs(); // set the prefera$
+int amodem_print_configs(char * filepath); // save$
+int amodem_set_deploy_configs();
+int amodem_set_devel_configs(); // set the prefera$
 
-int a_modem_sync_clock_gps();
-int a_modem_sync_time_gps();
-int a_modem_is_clock_Sync(int samp_interval, int N_$
-int a_modem_sync_status();
+int amodem_sync_clock_gps();
+int amodem_sync_time_gps();
+int amodem_is_clock_Sync(int samp_interval, int N_$
+int amodem_sync_status();
 
-int a_modem_upload_file(const char *fname);
-int a_modem_msg_send(const char*msg);
+int amodem_upload_file(const char *fname);
+int amodem_msg_send(const char*msg);
 
 
 */
 	system_cfg_read();
 	system_cfg_show();
 	printf("!!acoustic modem check\n");
-	a_modem_init();
+	amodem_init();
 
-	a_modem_msg_show(&msg);
-	a_modem_msg_show(&msg_remote);
+	amodem_msg_show(&msg);
+	amodem_msg_show(&msg_remote);
 
 	// open
 	printf("!open\n");
-	a_modem_open();
+	amodem_open();
 	printf("\n");
 
 	//clear ffs
-//	a_modem_ffs_clear();
+//	amodem_ffs_clear();
 
 	//wait ack
-	a_modem_clear_io_buffer();
+	amodem_clear_io_buffer();
 	printf("!wait timeout\n");
-	a_modem_puts("at\r");
-	a_modem_wait_ack("OK", 2000);
+	amodem_puts("at\r");
+	amodem_wait_ack("OK", 2000);
 	printf("Should not be blocking..\n");
 	printf("\n");
 
 	// play
 	printf("!play wavform\n");
-	a_modem_play("lfm_data_t3_l1.wav");
+	amodem_play("lfm_data_t3_l1.wav");
 	printf("should hear sound\n");
 	printf("\n");
 
 	//wait ack
-	a_modem_clear_io_buffer();
+	amodem_clear_io_buffer();
 	printf("!wait timeout\n");
-	RS232_SendBuf(a_modem_dev_no, "at\r", 3);
-	if (a_modem_wait_ack("OK", 2000) == FAIL)
+	RS232_SendBuf(amodem_dev_no, "at\r", 3);
+	if (amodem_wait_ack("OK", 2000) == FAIL)
 		printf("no response\n");
 	else
 		printf("got response\n");
@@ -80,48 +80,48 @@ int a_modem_msg_send(const char*msg);
 
 	//record
 	printf("!record\n");
-	a_modem_record(1000);
+	amodem_record(1000);
 	printf("check RX\n");
 	printf("\n");
-	a_modem_msg_show(&msg);
+	amodem_msg_show(&msg);
 
 	// set devel configs
 	printf("!set devel configs\n");
-	a_modem_cfg_devel();
+	amodem_cfg_devel();
 	printf("wait ack\n");
 	printf("\n");
 
 // get status
 	printf("!status get\n");
-	a_modem_status();
+	amodem_status();
 	printf("\n");
 
 // show status
 	printf("!show status\n");
-	a_modem_status_show();
+	amodem_status_show();
 	printf("\n");
 
 //show msg list
 	printf("!show msg list\n");
-	a_modem_msg_show(&msg);
+	amodem_msg_show(&msg);
 	printf("\n");
 // sync gps
 	/*printf("!sync gps\n");
-	 a_modem_sync_gps();
+	 amodem_sync_gps();
 	 printf("\n");*/
 
 	/*// is sync
 	 printf("!sync test\n");
-	 if (a_modem_is_clock_Sync(10,3))printf("sync.\n");
+	 if (amodem_is_clock_Sync(10,3))printf("sync.\n");
 	 else printf("not sync\n");
 	 printf("\n");*/
 	// close
 
 	/*	//upload file
 		printf("!upload file\n");
-		a_modem_upload_file("25080801.WAV");
+		amodem_upload_file("25080801.WAV");
 		printf("\n");*/
-a_modem_close();
+amodem_close();
 return 0;
 
 }

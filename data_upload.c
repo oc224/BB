@@ -18,7 +18,7 @@ int main(int argc,char *argv[]){
 		printf("please provide file list text file.\n");
 		return -1;
 	}
-	a_modem_open();
+	amodem_open();
 
 	fp=fopen(argv[1],"r");
 	if(fp==NULL){
@@ -33,11 +33,11 @@ int main(int argc,char *argv[]){
 			printf("invalid file name\n");
 		}
 		printf("uploading file : %s\n",buf);
-		a_modem_upload_file(buf);
+		amodem_upload_file(buf);
 		printf("done \n");
 		sleep(1);
 	}
-	a_modem_close();
+	amodem_close();
 	return 0;
 }
 

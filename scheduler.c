@@ -161,11 +161,11 @@ void scheduler_exce(int sig, siginfo_t *si, void *uc) {
 	switch (modem_schedule.p_this->this_task) {
 	case PLAY:
 		//printf("debug, amodem play\n");
-		a_modem_play(modem_schedule.p_this->arg);
+		amodem_play(modem_schedule.p_this->arg);
 		break;
 	case RECORD:
 		//printf("debug, amodem record\n");
-		a_modem_record(modem_schedule.p_this->duration);
+		amodem_record(modem_schedule.p_this->duration);
 		break;
 	case SLEEP:
 		//printf("debug, amodem sleep\n");

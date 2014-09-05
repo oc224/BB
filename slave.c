@@ -15,7 +15,7 @@ int wait_command_master(){
 
 	while(1) //wait until remote msg received
 	{
-		if (a_modem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS)
+		if (amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS)
 			break;
 	}
 	printf("remote:%s \n",buf);
@@ -38,8 +38,8 @@ int main()
 	system_cfg_read();
 //	system_cfg_show();
 	printf("\nNODE NAME : %s\n\n ",t_node.name);
-	a_modem_init();
-	a_modem_open();
+	amodem_init();
+	amodem_open();
 	scheduler_init();
 	scheduler_read("/home/root/config/schedule.txt");
 //	scheduler_task_show();
@@ -76,6 +76,6 @@ int main()
 			break;
 		}
 	}
-a_modem_close();
+amodem_close();
 return 0;
 }

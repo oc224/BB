@@ -48,7 +48,7 @@ if (tcmd!=NONE)cnt++;
 return tcmd;
 }
 
-void a_modem_enter_tx(){
+void amodem_enter_tx(){
 char buf[BUFSIZE];
 fgets(buf,BUFSIZE,stdin);
 strcpy(modem.def_tx_wav,buf);
@@ -58,45 +58,45 @@ printf("set default tx file name : %s\n",modem.def_tx_wav);
 int main(){
 int arg1;
 char arg_str[48];
-a_modem_init();
-a_modem_open();
+amodem_init();
+amodem_open();
 
 while (1){
 /*input & do cmd*/
 switch (get_command()){
 case MSG_SHOW:
-a_modem_msg_show(&msg);
-a_modem_msg_show(&msg_remote);
+amodem_msg_show(&msg_local);
+amodem_msg_show(&msg_remote);
 break;
 case MSG_SEND:
 //sscanf(buf,"%*s %s",arg_str);
-a_modem_msg_send(buf+3);
+amodem_msg_send(buf+3);
 arg_str[0]=0;
 break;
 case WAIT_REMOTE:
-a_modem_wait_remote(arg_str,48,5000);
+amodem_wait_remote(arg_str,48,5000);
 printf("remote %s\n",arg_str);
 break;
 case PLAY:
 arg1=sscanf(buf,"%*s %s",arg_str);
 if (arg1<1){
-if (modem.def_tx_wav[0]==0)a_modem_enter_tx();
-a_modem_play(modem.def_tx_wav);
+if (modem.def_tx_wav[0]==0)amodem_enter_tx();
+amodem_play(modem.def_tx_wav);
 }else{
-a_modem_play(arg_str);
+amodem_play(arg_str);
 }
 break;
 case RECORD:
 sscanf(buf,"%*s %d",&arg1);
-a_modem_record(arg1);
+amodem_record(arg1);
 break;
 case SYNC:
-a_modem_sync_clock_gps(20);
-a_modem_sync_time_gps();
+amodem_sync_clock_gps(20);
+amodem_sync_time_gps();
 system("ntpdate -u 211.22.103.157");
 break;
 case CLEAR_FFS:
-a_modem_ffs_clear();
+amodem_ffs_clear();
 break;
 case HELP:
 printf("play\n");
@@ -111,16 +111,16 @@ printf("showmsg\n");
 break;
 case UPLOAD:
 sscanf(buf,"%*s %s",arg_str);
-a_modem_upload_file(arg_str);
+amodem_upload_file(arg_str);
 break;
 default:
-a_modem_puts(buf);
+amodem_puts(buf);
 break;
 }
 /*output*/
-a_modem_print(1000);
+amodem_print(1000);
 }
 
-a_modem_close();
+amodem_close();
 return 0;
 }
