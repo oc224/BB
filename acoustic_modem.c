@@ -16,49 +16,49 @@
 #define SYCN_TIMEOUT 15
 #define COPY_TIMEOUT 60000
 #define ATODELAY 500000
-a_modem modem;/*a struct that contains the status of modem or some useful information*/
-a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
-a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
+amodem modem;/*a struct that contains the status of modem or some useful information*/
+amodem_msg msg_local;/*a list that contains latest msg from (local) modem*/
+amodem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
 
-int a_modem_ffs_clear(){
+int amodem_ffs_clear(){
 /*clear ffs system, high usage ie. 98% of ffs system make the modem
 behave strange
 rm *.log file and *.wav file except *t*.wav file
 */
 char fname[80];
 int rm;
-a_modem_puts("ls /ffs/ \r");
-while (a_modem_wait_info(NULL,SERIAL_TIMEOUT,fname,80)==SUCCESS){
+amodem_puts("ls /ffs/ \r");
+while (amodem_wait_info(NULL,SERIAL_TIMEOUT,fname,80)==SUCCESS){
 printf("remove file : %s\n",fname);
 rm=0;
 if ((strstr(fname,"user")!=NULL)&&(strlen(fname)<7))continue;
 if (strstr(fname,"log")!=NULL) rm=1;
 if ((strstr(fname,"wav")!=NULL)&&(strstr(fname,"t")==NULL)) rm=1;
 if (rm){
-a_modem_puts("rm /ffs/");
-a_modem_puts(fname);
-a_modem_puts("\r");}
+amodem_puts("rm /ffs/");
+amodem_puts(fname);
+amodem_puts("\r");}
 usleep(100000);
 fname[0]=0;
 }
 return SUCCESS;
 }
 
-void a_modem_print(int msec){
+void amodem_print(int msec){
 /*print all the text from serial port*/
 int Niter=msec/N_ITER_DIV,delay=0;
 char buf[BUFSIZE];
 
 while(delay<Niter){
-if (a_modem_gets(buf,BUFSIZE)==FAIL){
+if (amodem_gets(buf,BUFSIZE)==FAIL){
 delay++;
 usleep(WAIT_INTVAL);
 }else printf("%s\n",buf);
 }
 }
 
-int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str){
+int amodem_msg_add(amodem_msg *msg_list ,char *msg_str){
 	/*add string to msg list*/
 	/*move to current index (msg.i)*/
 	if (msg_list->i<(LIST_SIZE-1))
@@ -72,7 +72,7 @@ int a_modem_msg_add(a_modem_msg *msg_list ,char *msg_str){
 	return SUCCESS;
 }
 
-int a_modem_wait_remote(char *buf,int bufsize,int msec){
+int amodem_wait_remote(char *buf,int bufsize,int msec){
 /*read msg from remote list and store in buf until timeout (miliseconds)*/
 int delay=0,Niter=msec/N_ITER_DIV;
 
@@ -83,7 +83,7 @@ msg_remote.N_unread--;
 return SUCCESS;
 }
 
-a_modem_gets(NULL,0);
+amodem_gets(NULL,0);
 usleep(WAIT_INTVAL);
 delay++;
 }
@@ -92,7 +92,7 @@ printf("wait remote timeout\n");
 return FAIL;
 }
 
-void a_modem_msg_show(a_modem_msg * list){
+void amodem_msg_show(amodem_msg * list){
 	/*show msg list*/
 	int i;
 	printf("MSG LIST\n");
@@ -102,18 +102,17 @@ void a_modem_msg_show(a_modem_msg * list){
 	printf("\n");
 }
 
-int a_modem_init(){
+int amodem_init(){
 	int i;
 
 	/*init the struct variable*/
 	/*init msg list (remote & local)*/
-	msg.i=0;
-	msg.N_unread=0;
+	msg_local.i=0;
+	msg_local.N_unread=0;
 	msg_remote.i=0;
 	msg_remote.N_unread=0;
-	msg.N_unread=0;
 	for (i=0;i<LIST_SIZE;i++){
-	msg.text[i]=strdup(" ");
+	msg_local.text[i]=strdup("");
 	msg_remote.text[i]=strdup("");
 	}
 	/*init modem*/
@@ -137,33 +136,33 @@ int a_modem_init(){
 	return SUCCESS;
 }
 
-int a_modem_open() {
+int amodem_open() {
 	//open serial port, go to command mode, issue at (attention), then check response
 	if ((modem.fd=RS232_OpenComport(a_modem_dev_path, a_modem_serial_baudrate))) {
 		printf("Acoustic modem, Fail to open.\n");//error
 		return FAIL;
 	}
 	// ensure command mode
-	a_modem_puts("+++\r");
+	amodem_puts("+++\r");
 	return SUCCESS;
 }
 
-inline void a_modem_close() {
+inline void amodem_close() {
 	//close serial port
-	RS232_CloseComport(a_modem_dev_no);
+	RS232_CloseComport(amodem_dev_no);
 }
 
-inline void a_modem_clear_io_buffer() {
+inline void amodem_clear_io_buffer() {
 	// Clear input/output buffer, may put a delay function before this
-	RS232_Flush(a_modem_dev_no);
+	RS232_Flush(amodem_dev_no);
 }
 
-int a_modem_cfg_set(const char *fname) {
+int amodem_cfg_set(const char *fname) {
 	// set modem the preferable config in devel stage.
 	FILE *fp;
 	char buf[BUFSIZE];
-	a_modem_clear_io_buffer();
-	a_modem_puts("+++\r");
+	amodem_clear_io_buffer();
+	amodem_puts("+++\r");
 	if ((fp=fopen(fname,"r"))==NULL){
 	fprintf(stderr,"fail to open %s\n",CFG_DEVEL);
 	return FAIL;
@@ -171,60 +170,60 @@ int a_modem_cfg_set(const char *fname) {
 
 	while (fgets(buf,BUFSIZE,fp)>0){
 		if (buf[0]=='#')continue;
-		a_modem_puts(buf);
-		a_modem_puts("\r");
-		a_modem_print(SERIAL_TIMEOUT);
+		amodem_puts(buf);
+		amodem_puts("\r");
+		amodem_print(SERIAL_TIMEOUT);
 	}
 	fclose(fp);
 
 	/*store cfg*/
-	a_modem_puts("cfg store\r");
-	if (a_modem_wait_ack("stored", SERIAL_TIMEOUT) == FAIL) {
-		fprintf(stderr, "A_modem, cfg fail to store\n");
+	amodem_puts("cfg store\r");
+	if (amodem_wait_ack("stored", SERIAL_TIMEOUT) == FAIL) {
+		fprintf(stderr, "amodem, cfg fail to store\n");
 		return FAIL;
 	}
 	return SUCCESS;
 }
 
-int a_modem_play(char * filename) {
+int amodem_play(char * filename) {
 	//play a wavform, store the tx time
 	char buf[BUFSIZE];
 	modem.latest_tx_stamp[0]=0;
 	time_t bb_stamp;
 	time(&bb_stamp);
 	// play
-	a_modem_puts("\r");
+	amodem_puts("\r");
 	sprintf(buf, "play /ffs/%s\r", filename); 
-	if (a_modem_puts(buf)==FAIL) {
+	if (amodem_puts(buf)==FAIL) {
 		printf("Acoustic modem, send command error\n");
 		return FAIL;
 	}
-	if (a_modem_wait_ack("buffering", SERIAL_TIMEOUT) == FAIL) {
-		fprintf(stderr, "A_modem, fail to play waveform\n");
+	if (amodem_wait_ack("buffering", SERIAL_TIMEOUT) == FAIL) {
+		fprintf(stderr, "amodem, fail to play waveform\n");
 		return FAIL;
 	}
 	// get time stamp
 	//TODO buffer time is random
-	if (a_modem_wait_info("tx",WAIT_TXTIME, buf, BUFSIZE)==SUCCESS) {
+	if (amodem_wait_info("tx",WAIT_TXTIME, buf, BUFSIZE)==SUCCESS) {
 		printf("local tx time : %s\n", buf);
 		strcpy(modem.latest_tx_stamp,buf);
 		fprintf(modem.tx_p,"%s,%s\n",filename,buf);
-		fprintf(modem.tx_p,"sync %d\n",a_modem_is_clock_Sync(2));
+		fprintf(modem.tx_p,"sync %d\n",amodem_is_clock_Sync(2));
 		fprintf(modem.tx_p,"BB:%s\n",ctime(&bb_stamp));
 		fflush(modem.tx_p);
 		return SUCCESS;
 	} else {
-		printf("A_modem, fail to get TX time\n");
+		printf("amodem, fail to get TX time\n");
 		return FAIL;
 	}
 }
 
-inline int a_modem_puts(const char*msg){
+inline int amodem_puts(const char*msg){
 	// write a line to serial port
 	return RS232_SendBuf(modem.fd,msg,strlen(msg));
 }
 
-int a_modem_gets(char* buf,int size){
+int amodem_gets(char* buf,int size){
 	/* read a line of text from serial port
 	Input
 		*buf can be char array ready for store the string 
@@ -254,10 +253,10 @@ int a_modem_gets(char* buf,int size){
 	}*/
 	/*store to msg list (local & remote)*/
 	dump[n-1]=0;/*remove newline char*/
-	if (strstr(dump,"DATA")==NULL)	a_modem_msg_add(&msg,dump);
+	if (strstr(dump,"DATA")==NULL)	amodem_msg_add(&msg_local,dump);
 	else{
 	//sscanf(dump,"DATA(%*d):%s",buf2);//TODO
-	a_modem_msg_add(&msg_remote,strstr(dump,":")+1);}
+	amodem_msg_add(&msg_remote,strstr(dump,":")+1);}
 
 	return n;
 }
@@ -280,27 +279,25 @@ break;
 return -1;
 }
 
-int a_modem_msg_send(const char*msg){
 	/* write msg acoustically to remote modems*/
-	a_modem_puts("ato\r");
-	if (a_modem_wait_ack("connect",2*SERIAL_TIMEOUT)==FAIL){
+	amodem_puts("ato\r");
+	if (amodem_wait_ack("connect",2*SERIAL_TIMEOUT)==FAIL){
 		fprintf(stderr,"msg_send, fail to enter online mode\n");
 		return FAIL;
 	}
 	usleep(ATODELAY);
-	a_modem_puts(msg);
-	if (a_modem_wait_ack("forwarding",2*SERIAL_TIMEOUT)==FAIL){
+	if (amodem_wait_ack("forwarding",2*SERIAL_TIMEOUT)==FAIL){
 		fprintf(stderr,"msg_send, fail to forward msg\n");
 		return FAIL;
 	}
 	usleep(ONLINE_COMMAND);
 
-	a_modem_puts("+++\r");
+	amodem_puts("+++\r");
 	usleep(COMMAND_DELAY);
 	return SUCCESS;
 }
 
-int a_modem_record(int duration) {
+int amodem_record(int duration) {
 /* record waveform, store rx info as well.
 duration in mili seconds
 */
@@ -311,91 +308,91 @@ duration in mili seconds
 	modem.latest_rx_fname[0]=0;
 	time(&bb_stamp);
 	/*record on*/
-	a_modem_puts("\r");
-	a_modem_puts("record on\r");
+	amodem_puts("\r");
+	amodem_puts("record on\r");
 
 	/*recording*/
 	usleep(duration * 1000); //TODO int overflow?
 
 	/*record off*/
-	a_modem_puts( "record off\r\r");
+	amodem_puts( "record off\r\r");
 
 
 	/*get log name*/
-	if (a_modem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)==SUCCESS){
+	if (amodem_wait_info("log", 4*SERIAL_TIMEOUT, buf, BUFSIZE)==SUCCESS){
 	sscanf(buf,"%*s log file %s",logname);
 	printf("local log file : %s\n",logname+4);
 	strcpy(modem.latest_rx_fname,logname+4);
 	fprintf(modem.rx_p,"%s\n",logname+4);
-	fprintf(modem.rx_p,"sync %d\n",a_modem_is_clock_Sync(2));
+	fprintf(modem.rx_p,"sync %d\n",amodem_is_clock_Sync(2));
 	fprintf(modem.rx_p,"bb : %s\n",ctime(&bb_stamp));
 	fflush(modem.rx_p);
 	return SUCCESS;
 	}else{
-	fprintf(stderr, "A_modem, record msg (filename.log) missing\n");
+	fprintf(stderr, "amodem, record msg (filename.log) missing\n");
 	return FAIL;
 	}
 }
 
-int a_modem_sync_time_gps() {
+int amodem_sync_time_gps() {
 	/* sync modem date&time with gps NMEA msg (GPGGA)*/
 	char buf[BUFSIZE];
 	char buf2[BUFSIZE];
-	a_modem_puts("gpsd\r");
-	a_modem_close();
+	amodem_puts("gpsd\r");
+	amodem_close();
 	sleep(1);
 	system(GPSPIPE);
 	//sleep(GPSPIPE_TIME);
-	a_modem_open();
-	a_modem_clear_io_buffer();
+	amodem_open();
+	amodem_clear_io_buffer();
 	// simple test
-	a_modem_puts("date\r");
-	a_modem_wait_info(NULL, SERIAL_TIMEOUT, buf, BUFSIZE);
+	amodem_puts("date\r");
+	amodem_wait_info(NULL, SERIAL_TIMEOUT, buf, BUFSIZE);
 	// dump
 	sprintf(buf2, "echo '%s' >> %s", buf,AMODEM_PATH);
 	system(buf2);//SYSTEM DUMP
-	a_modem_puts("date -store\r");
+	amodem_puts("date -store\r");
 	//TODO check
 	return SUCCESS;
 }
 
-int a_modem_sync_clock_gps(int sec) {
+int amodem_sync_clock_gps(int sec) {
 	// sync modem clock source
-	a_modem_clear_io_buffer();
+	amodem_clear_io_buffer();
 	// Confirm clock source for the modem
-	a_modem_puts("@SyncPPS\r");
-	if (a_modem_wait_ack("2", SERIAL_TIMEOUT) == SUCCESS) {
-		a_modem_puts("@SyncPPS=4\r");
-		printf("A_modem, syncpps source is not gps, reset the source...\n");
+	amodem_puts("@SyncPPS\r");
+	if (amodem_wait_ack("2", SERIAL_TIMEOUT) == SUCCESS) {
+		amodem_puts("@SyncPPS=4\r");
+		printf("amodem, syncpps source is not gps, reset the source...\n");
 		printf("sync..., this will take 30 seconds or more...\n");
 		//sleep(30);
 	}
 	// confirm sync
-	a_modem_puts("sync\r");
+	amodem_puts("sync\r");
 	printf("modem sync to pps signal...\n");
-	if (a_modem_is_clock_Sync(sec) == FAIL) {
-		printf("A_modem, fail to sync\n");
+	if (amodem_is_clock_Sync(sec) == FAIL) {
+		printf("amodem, fail to sync\n");
 		return FAIL;
 	}
 	printf("local modem sync!\n");
 	return SUCCESS;
 }
 
-int a_modem_sync_status() {
+int amodem_sync_status() {
 	// to check if modem is sync
 	char buf[BUFSIZE];
 	int n, delay = 0, Niter=2000/N_ITER_DIV;;
 
-	a_modem_puts("sync\r");
+	amodem_puts("sync\r");
 
 	while(delay<Niter) { //before timeout
-		n=a_modem_gets(buf,BUFSIZE);
+		n=amodem_gets(buf,BUFSIZE);
 		if (n<1)
 			delay++;
 		else {
 			if (n<BUFSIZE) {
 				if (strcasestr(buf,"eA")) {
-					a_modem_gets(buf,BUFSIZE);
+					amodem_gets(buf,BUFSIZE);
 					printf("sync status is: 	%s",buf);
 					return n;
 				}
@@ -411,28 +408,28 @@ int a_modem_sync_status() {
 	return FAIL;
 }
 
-int a_modem_is_clock_Sync(int sec) {
+int amodem_is_clock_Sync(int sec) {
 	//check if clock sync (regardless of clock source) until synchronized or timeout
 	int i;
 	// check every X sec
 	for (i = 0; i < sec/(SERIAL_TIMEOUT/1000); i++) {
-		a_modem_puts("sync\r");
-		if (a_modem_wait_ack("synchronized", SERIAL_TIMEOUT)) {
+		amodem_puts("sync\r");
+		if (amodem_wait_ack("synchronized", SERIAL_TIMEOUT)) {
 			modem.sync_state=SYNC;
 			return SUCCESS;
 		}
 //		sleep(1);
 	}
 	modem.sync_state=NOT_SYNC;
-	printf("a_modem, sync time out\n");
+	printf("amodem, sync time out\n");
 	return FAIL;
 }
 
-int a_modem_wait_ack(char *keyword,int timeout){
-return a_modem_wait_info(keyword,timeout,NULL,0);
+int amodem_wait_ack(char *keyword,int timeout){
+return amodem_wait_info(keyword,timeout,NULL,0);
 }
 
-int a_modem_wait_info(char *key_word, int timeout, char *info,
+int amodem_wait_info(char *key_word, int timeout, char *info,
 		int info_size) {
 	/*block until key_word prompt or timout(miliseconds), if key_word prompt, 
 	store that line contained key_word to info, the output info is a string
@@ -442,19 +439,19 @@ int a_modem_wait_info(char *key_word, int timeout, char *info,
 	int delay=0;
 	int Niter=timeout/N_ITER_DIV;
 	if (info!=NULL)info[0]=0;/*make sure input buffer clear when this funtion fail*/
-	msg.N_unread=0;
+	msg_local.N_unread=0;
 	while(delay<Niter) {//before timeout
-		a_modem_gets(buf,BUFSIZE);
-		if (msg.N_unread<1) {
+		amodem_gets(buf,BUFSIZE);
+		if (msg_local.N_unread<1) {
 			delay++;
 		} else {//got new msg
 			//new msg match
 			if (key_word==NULL){
-			if (info!=NULL) strncpy(info,msg.text[msg.i],info_size);
+			if (info!=NULL) strncpy(info,msg_local.text[msg_local.i],info_size);
 			return SUCCESS;
 			}
-			if (strcasestr(msg.text[msg.i],key_word)!=NULL) {
-			if (info!=NULL) strncpy(info,msg.text[msg.i],info_size);
+			if (strcasestr(msg_local.text[msg_local.i],key_word)!=NULL) {
+			if (info!=NULL) strncpy(info,msg_local.text[msg_local.i],info_size);
 			return SUCCESS;
 			}
 		}
@@ -467,44 +464,44 @@ int a_modem_wait_info(char *key_word, int timeout, char *info,
 }
 
 
-int a_modem_status() {
-// get status (internal temp, pwr cond...) fill struct a_modem
+int amodem_status() {
+// get status (internal temp, pwr cond...) fill struct amodem
 	int return_state = SUCCESS;
 	char buf[BUFSIZE];
-	a_modem_puts("atv\r");
-	if (a_modem_wait_info("dsp", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
+	amodem_puts("atv\r");
+	if (amodem_wait_info("dsp", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
 		sscanf(buf, "DSP Bat = %f", &modem.dsp_bat);
 	} else {
-		fprintf(stderr, "A_modem, fail to get modem status(dsp bat)\n");
+		fprintf(stderr, "amodem, fail to get modem status(dsp bat)\n");
 		return_state = FAIL;
 	}
-	if (a_modem_wait_info("temp", SERIAL_TIMEOUT, buf, BUFSIZE)) {
+	if (amodem_wait_info("temp", SERIAL_TIMEOUT, buf, BUFSIZE)) {
 		sscanf(buf, "Board Temp = %f", &modem.board_temp);
 	} else {
-		fprintf(stderr, "A_modem, fail to get modem status (board temp)\n");
+		fprintf(stderr, "amodem, fail to get modem status (board temp)\n");
 		return_state = FAIL;
 	}
 
-	a_modem_puts("mdm_battery\r");
-	if (a_modem_wait_info("modem battery", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
+	amodem_puts("mdm_battery\r");
+	if (amodem_wait_info("modem battery", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
 		sscanf(buf, "Modem Battery = %f", &modem.mdm_bat);
 	} else {
-		fprintf(stderr, "A_modem, fail to get modem status(modem battery)\n");
+		fprintf(stderr, "amodem, fail to get modem status(modem battery)\n");
 		return_state = FAIL;
 	}
 
-	a_modem_puts("rtc_battery\r");
-	if (a_modem_wait_info("rtc battery", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
+	amodem_puts("rtc_battery\r");
+	if (amodem_wait_info("rtc battery", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
 		sscanf(buf, "RTC Battery = %f", &modem.rtc_bat);
 	} else {
-		fprintf(stderr, "A_modem, fail to get modem status(rtc battery)\n");
+		fprintf(stderr, "amodem, fail to get modem status(rtc battery)\n");
 		return_state = FAIL;
 	}
 	return return_state;
 }
 
-void a_modem_status_show() {
-	//show modem status stored in a_modem struct
+void amodem_status_show() {
+	//show modem status stored in amodem struct
 	printf("Board Temp = %f\n", modem.board_temp);
 	printf("Modem battery = %f\n", modem.mdm_bat);
 	printf("Power = %f\n", modem.dsp_bat);
@@ -522,17 +519,17 @@ void a_modem_status_show() {
 	}
 }
 
-int a_modem_upload_file(const char *fname){
+int amodem_upload_file(const char *fname){
 	/*upload a file in modem /sd/ directory to current path
 	then remove the file*/
 	char buf[BUFSIZE];
 	int ret;
 	// copy
-	a_modem_clear_io_buffer();
+	amodem_clear_io_buffer();
 	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
-	a_modem_puts(buf);
+	amodem_puts(buf);
 
-	if (a_modem_wait_info(NULL,COPY_TIMEOUT,buf,BUFSIZE)==FAIL){
+	if (amodem_wait_info(NULL,COPY_TIMEOUT,buf,BUFSIZE)==FAIL){
 	fprintf(stderr,"cp no response\n");
 	return FAIL;
 	}
@@ -552,32 +549,32 @@ int a_modem_upload_file(const char *fname){
 	}*/
 	// issue ymodem send (sb)
 	sprintf(buf,"sb /ffs/%s\r",fname);
-	a_modem_puts(buf);
-	a_modem_close();
+	amodem_puts(buf);
+	amodem_close();
 	// rb
-	sprintf(buf,"rb -vv >%s<%s",a_modem_dev_path,a_modem_dev_path);
+	sprintf(buf,"rb -vv >%s<%s",amodem_dev_path,amodem_dev_path);
 	ret=system(buf);//SET PWD TO BE SPECIFIC PATH
 	printf("rb return %d\n",ret);
 	//open
-	a_modem_open();
+	amodem_open();
 	if (ret!=0){
 		printf("fail to use y modem protocol\n");
 		return FAIL;
 	}
 	// delete old files
-	a_modem_puts("\r");
+	amodem_puts("\r");
 	sprintf(buf,"rm /ffs/%s\r",fname);
-	a_modem_puts(buf);
+	amodem_puts(buf);
 	sprintf(buf,"rm /sd/%s\r",fname);
-	a_modem_puts(buf);
+	amodem_puts(buf);
 	system(buf);
 	return SUCCESS;
 }
 
-int a_modem_end(){
+int amodem_end(){
 fclose(modem.tx_p);
 fclose(modem.rx_p);
-a_modem_puts("record off\r");//make sure modem is not recording...
-a_modem_close();
+amodem_puts("record off\r");//make sure modem is not recording...
+amodem_close();
 return SUCCESS;
 }

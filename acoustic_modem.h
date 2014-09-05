@@ -1,7 +1,7 @@
 #include <stdio.h>
-#define a_modem_dev_no 18
-#define a_modem_serial_baudrate 115200
-#define a_modem_dev_path "/dev/ttyUSB2"
+#define amodem_dev_no 18
+#define amodem_serial_baudrate 115200
+#define amodem_dev_path "/dev/ttyUSB2"
 #define ONLINE_COMMAND 1600000 /*Time it takes from online mode to command mode*/
 #define WAIT_INTVAL 100000 /*inteval time for reading serial port*/
 #define N_ITER_DIV (WAIT_INTVAL/1000)
@@ -17,7 +17,7 @@
 
 typedef enum {
 	NOT_SYNC, QUALIFY, SYNC
-} a_modem_sync_state;
+} amodem_sync_state;
 
 typedef struct {
 	int fd;
@@ -25,13 +25,13 @@ typedef struct {
 	float dsp_bat;
 	float mdm_bat; // ref modem manual mdm_battery
 	float rtc_bat; // ref modem manual rtc_battery
-	a_modem_sync_state sync_state;
+	amodem_sync_state sync_state;
 	char latest_tx_stamp[TX_SIZE];
 	char latest_rx_fname[TX_SIZE];
 	char def_tx_wav[TX_SIZE];
 	FILE *tx_p;//TODO
 	FILE *rx_p;//TODO
-} a_modem;
+} amodem;
 
 typedef struct {
 } a_network;
@@ -41,45 +41,45 @@ typedef struct{
 	int i;/*point to latest msg aka text[i] is latest msg*/
 	/*New text[i]>text[i-1]>...>text[i-N_unread+1]*/
 	int N_unread;/*number of unread msg*/
-}a_modem_msg;
+}amodem_msg;
 
-extern a_modem modem;
-extern a_modem_msg msg;
-extern a_modem_msg msg_remote;
+extern amodem modem;
+extern amodem_msg msg_local;
+extern amodem_msg msg_remote;
 
-int a_modem_init();
-int a_modem_open();
-inline void a_modem_close();
+int amodem_init();/*init amodem*/
+int amodem_open();/*open the serial port*/
+inline void amodem_close();/*close the serial port*/
 
-void a_modem_msg_show(a_modem_msg *);
-int a_modem_msg_add(a_modem_msg*,char *msg_str);
+void amodem_msg_show(amodem_msg *);/*show msg list*/
+int amodem_msg_add(amodem_msg*,char *msg_str);/*add to msg list*/
 
-int a_modem_wait_ack(char*,int);
-int a_modem_wait_info(char *key_word, int timeout, char *info,int info_size);
-int a_modem_wait_remote(char*,int,int);
-int a_modem_gets(char* buf,int size);
-inline int a_modem_puts(const char*msg);
-inline void a_modem_clear_io_buffer();
+int amodem_wait_ack(char*,int);/*wait local msg ack*/
+int amodem_wait_info(char *key_word, int timeout, char *info,int info_size);/*wait local msg info*/
+int amodem_wait_remote(char*,int,int);/*wait remote*/
+int amodem_gets(char* buf,int size);/**/
+inline int amodem_puts(const char*msg);/**/
+inline void amodem_clear_io_buffer();
 
-int a_modem_play(char * filename);
-int a_modem_record(int duration_mili);
+int amodem_play(char * filename);
+int amodem_record(int duration_mili);
 
-int a_modem_status();
-void a_modem_status_show();
+int amodem_status();
+void amodem_status_show();
 
-int a_modem_print_configs(char * filepath); // save cfg all output for future ref
-int a_modem_cfg_set(const char *);
-#define a_modem_cfg_deploy() a_modem_cfg_set(CFG_DEPLOY);
-#define a_modem_cfg_devel() a_modem_cfg_set(CFG_DEVEL);
+int amodem_print_configs(char * filepath); // save cfg all output for future ref
+int amodem_cfg_set(const char *);
+#define amodem_cfg_deploy() amodem_cfg_set(CFG_DEPLOY);
+#define amodem_cfg_devel() amodem_cfg_set(CFG_DEVEL);
 
 
-int a_modem_sync_clock_gps(int);
-int a_modem_sync_time_gps();
-int a_modem_is_clock_Sync(int);
-int a_modem_sync_status();
+int amodem_sync_clock_gps(int);
+int amodem_sync_time_gps();
+int amodem_is_clock_Sync(int);
+int amodem_sync_status();
 
-int a_modem_upload_file(const char *fname);
-int a_modem_msg_send(const char*msg);
+int amodem_upload_file(const char *fname);/*upload a file in /sd on the modem*/
+int amodem_msg_send(const char*msg);/*send msg to remote*/
 
-int a_modem_ffs_clear();
-void a_modem_print(int);
+int amodem_ffs_clear();/*clean up ffs*/
+void amodem_print(int);/*show msg from remote*/

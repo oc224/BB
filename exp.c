@@ -39,7 +39,7 @@ int main(int argc,char* argv[]){
 	printf("start time : %2d:%2d:%2d\n ",start_time.tm_hour,start_time.tm_min,start_time.tm_sec);
 	if (system_cfg_read()==FAIL)	return FAIL;
 	system_cfg_show();
-	a_modem_open();
+	amodem_open();
 	if (scheduler_init()==FAIL) return FAIL;
 	if (scheduler_read(fname)==FAIL) return FAIL;
 	scheduler_start(start_time.tm_hour,start_time.tm_min,start_time.tm_sec,'a');
@@ -48,6 +48,6 @@ int main(int argc,char* argv[]){
 	while(1){
 		sleep(1);
 	}
-	a_modem_close();
+	amodem_close();
 	return 0;
 }

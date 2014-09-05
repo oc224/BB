@@ -97,8 +97,8 @@ int main()
 	system_cfg_read();
 //	system_cfg_show();
 //	printf("NODE NAME : %s\n ",t_node.name);
-	a_modem_init();
-	a_modem_open();
+	amodem_init();
+	amodem_open();
 	scheduler_init();
 	scheduler_read("/home/root/config/schedule.txt");
 //	scheduler_task_show();
@@ -109,7 +109,7 @@ int main()
 		printf("command %d\n",t_cmd.type);
 		if (t_cmd.isremote){
 		sprintf(remote,"%d",t_cmd.type);
-		a_modem_msg_send(remote);}
+		amodem_msg_send(remote);}
 		switch (t_cmd.type)
 		{
 		case TALK://ok
@@ -146,14 +146,14 @@ int main()
 		msg_send();
 		break;
 		case MSG_SHOW://ok
-		a_modem_msg_show(&msg);
-		a_modem_msg_show(&msg_remote);
+		amodem_msg_show(&msg_local);
+		amodem_msg_show(&msg_remote);
 		break;
 		case WAIT_REMOTE://ok
 		wait_remote(buf);
 		break;
 		case CLEAR_FFS:
-		a_modem_ffs_clear();
+		amodem_ffs_clear();
 		break;
 		case STATUS:
 		
@@ -165,8 +165,8 @@ int main()
 		master_rreboot();
 		break;
 		case NONE:
-		a_modem_puts(buf);
-		a_modem_print(1000);
+		amodem_puts(buf);
+		amodem_print(1000);
 		break;
 		default:
 			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
@@ -174,6 +174,6 @@ int main()
 		}
 	}
 
-a_modem_close();
+amodem_close();
 return 0;
 }
