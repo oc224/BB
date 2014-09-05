@@ -15,6 +15,7 @@
 #define RX_PATH "/home/root/log/RXLOG.TXT"
 #define SYCN_TIMEOUT 15
 #define COPY_TIMEOUT 60000
+#define ATODELAY 500000
 a_modem modem;/*a struct that contains the status of modem or some useful information*/
 a_modem_msg msg;/*a list that contains latest msg from (local) modem*/
 a_modem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
@@ -261,16 +262,35 @@ int a_modem_gets(char* buf,int size){
 	return n;
 }
 
+int a_modem_mode_select(char mode){
+//usleep()
+switch (mode){
+case 'o':
+a_modem_puts("ato\r");
+if (a_modem_wait_ack("connect",SERIAL_TIMEOUT)==FAIL)
+break;
+case 'c':
+a_modem_puts("+++");
+//usleep()
+a_modem_puts("at\r");
+if (a_modem_wait_ack("ok",SERIAL_TIMEOUT)==FAIL)
+break;
+}
+
+
+}
+
 int a_modem_msg_send(const char*msg){
 	/* write msg acoustically to remote modems*/
 	a_modem_puts("ato\r");
 	if (a_modem_wait_ack("connect",2*SERIAL_TIMEOUT)==FAIL){
-		printf("fail to enter online mode\n");
+		fprintf(stderr,"msg_send, fail to enter online mode\n");
 		return FAIL;
 	}
+	usleep(ATODELAY);
 	a_modem_puts(msg);
 	if (a_modem_wait_ack("forwarding",2*SERIAL_TIMEOUT)==FAIL){
-		printf("fail to forward msg\n");
+		fprintf(stderr,"msg_send, fail to forward msg\n");
 		return FAIL;
 	}
 	usleep(ONLINE_COMMAND);
