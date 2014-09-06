@@ -136,6 +136,9 @@ int amodem_init(){
 	fprintf(stderr,"fail to open RX log\n");
 	return FAIL;
 	}
+	/*com logger*/
+	log_open(modem.com_logger,AMODEM_PATH);
+	log_event(modem.com_logger,0,"amodem init");
 	return SUCCESS;
 }
 
@@ -152,12 +155,12 @@ int amodem_open() {
 
 inline void amodem_close() {
 	//close serial port
-	RS232_CloseComport(amodem_dev_no);
+	RS232_CloseComport(modem.fd);
 }
 
 inline void amodem_clear_io_buffer() {
 	// Clear input/output buffer, may put a delay function before this
-	RS232_Flush(amodem_dev_no);
+	RS232_Flush(modem.fd);
 }
 
 int amodem_cfg_set(const char *fname) {
@@ -469,15 +472,20 @@ int amodem_status() {
 // get status (internal temp, pwr cond...) fill struct amodem
 	int return_state = SUCCESS;
 	char buf[BUFSIZE];
+	//log
+	log_event(modem.com_logger,0,"amodem status:");
 	amodem_puts("atv\r");
 	if (amodem_wait_info("dsp", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
 		sscanf(buf, "DSP Bat = %f", &modem.dsp_bat);
+		fprintf(modem.com_logger->fp,"dsp : %f\n",modem.dsp_bat);
+
 	} else {
 		fprintf(stderr, "amodem, fail to get modem status(dsp bat)\n");
 		return_state = FAIL;
 	}
 	if (amodem_wait_info("temp", SERIAL_TIMEOUT, buf, BUFSIZE)) {
 		sscanf(buf, "Board Temp = %f", &modem.board_temp);
+		fprintf(modem.com_logger->fp,"board temp : %f\n",modem.board_temp);
 	} else {
 		fprintf(stderr, "amodem, fail to get modem status (board temp)\n");
 		return_state = FAIL;
@@ -486,6 +494,8 @@ int amodem_status() {
 	amodem_puts("mdm_battery\r");
 	if (amodem_wait_info("modem battery", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
 		sscanf(buf, "Modem Battery = %f", &modem.mdm_bat);
+		fprintf(modem.com_logger->fp,"mdm bat : %f\n",modem.mdm_bat);
+
 	} else {
 		fprintf(stderr, "amodem, fail to get modem status(modem battery)\n");
 		return_state = FAIL;
@@ -494,10 +504,12 @@ int amodem_status() {
 	amodem_puts("rtc_battery\r");
 	if (amodem_wait_info("rtc battery", SERIAL_TIMEOUT, buf, BUFSIZE) ) {
 		sscanf(buf, "RTC Battery = %f", &modem.rtc_bat);
+		fprintf(modem.com_logger->fp,"rtc bat : %f\n",modem.rtc_bat);
 	} else {
 		fprintf(stderr, "amodem, fail to get modem status(rtc battery)\n");
 		return_state = FAIL;
 	}
+	fflush(modem.com_logger->fp);
 	return return_state;
 }
 
@@ -525,6 +537,9 @@ int amodem_upload_file(const char *fname){
 	then remove the file*/
 	char buf[BUFSIZE];
 	int ret;
+	//log
+	sprintf(buf,"try to upload file %s",fname);
+	log_event(modem.com_logger,1,buf);
 	// copy
 	amodem_clear_io_buffer();
 	sprintf(buf,"cp /sd/%s /ffs/%s\r",fname,fname);
@@ -562,19 +577,20 @@ int amodem_upload_file(const char *fname){
 		printf("fail to use y modem protocol\n");
 		return FAIL;
 	}
-	// delete old files
+	// delete old files//TODO hot,
 	amodem_puts("\r");
 	sprintf(buf,"rm /ffs/%s\r",fname);
 	amodem_puts(buf);
 	sprintf(buf,"rm /sd/%s\r",fname);
 	amodem_puts(buf);
-	system(buf);
 	return SUCCESS;
 }
 
 int amodem_end(){
+log_event(modem.com_logger,0,"amodem stop");
 fclose(modem.tx_p);
 fclose(modem.rx_p);
+log_close(modem.com_logger);
 amodem_puts("record off\r");//make sure modem is not recording...
 amodem_close();
 return SUCCESS;

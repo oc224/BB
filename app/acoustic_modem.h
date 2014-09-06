@@ -1,5 +1,5 @@
 #include <stdio.h>
-#define amodem_dev_no 18
+#include "log.h"
 #define amodem_serial_baudrate 115200
 #define amodem_dev_path "/dev/ttyUSB2"
 #define ONLINE_COMMAND 1600000 /*Time it takes from online mode to command mode*/
@@ -29,8 +29,9 @@ typedef struct {
 	char latest_tx_stamp[TX_SIZE];
 	char latest_rx_fname[TX_SIZE];
 	char def_tx_wav[TX_SIZE];
-	FILE *tx_p;//TODO
-	FILE *rx_p;//TODO
+	FILE *tx_p;
+	FILE *rx_p;
+	logger *com_logger;
 } amodem;
 
 typedef struct {
