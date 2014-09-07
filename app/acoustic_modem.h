@@ -1,3 +1,5 @@
+#ifndef ACOUSTIC_MODEM
+#define ACOUSTIC_MODEM
 #include <stdio.h>
 #define amodem_dev_no 18
 #define amodem_serial_baudrate 115200
@@ -57,9 +59,8 @@ int amodem_msg_add(amodem_msg*,char *msg_str);/*add to msg list*/
 int amodem_wait_ack(char*,int);/*wait local msg ack*/
 int amodem_wait_info(char *key_word, int timeout, char *info,int info_size);/*wait local msg info*/
 int amodem_wait_remote(char*,int,int);/*wait remote*/
-int amodem_gets(char* buf,int size);/**/
 inline int amodem_puts(const char*msg);/**/
-inline void amodem_clear_io_buffer();
+char* amodem_msg_pull(amodem_msg* msg);
 
 int amodem_play(char * filename);
 int amodem_record(int duration_mili);
@@ -72,7 +73,7 @@ int amodem_cfg_set(const char *);
 #define amodem_cfg_deploy() amodem_cfg_set(CFG_DEPLOY);
 #define amodem_cfg_devel() amodem_cfg_set(CFG_DEVEL);
 
-
+int amodem_wait_msg(amodem_msg *msg,char *key_word, int timeout, char *info, int info_size);
 int amodem_sync_clock_gps(int);
 int amodem_sync_time_gps();
 int amodem_is_clock_Sync(int);
@@ -83,3 +84,4 @@ int amodem_msg_send(const char*msg);/*send msg to remote*/
 
 int amodem_ffs_clear();/*clean up ffs*/
 void amodem_print(int);/*show msg from remote*/
+#endif

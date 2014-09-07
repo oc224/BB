@@ -51,7 +51,8 @@ struct termios new_port_settings,old_port_settings;
 */
 int RS232_OpenComport(const char* devname,int baudrate)
 {
-	int baudr, status;
+	int baudr; 
+	//status;
 	int fd;
 
 	switch(baudrate)
@@ -130,6 +131,9 @@ int RS232_OpenComport(const char* devname,int baudrate)
 	new_port_settings.c_cc[VMIN] = 0; /* block untill n bytes are received */
 	new_port_settings.c_cc[VTIME] = 0; /* block untill a timer expires (n * 100 mSec.) */
 	error = tcsetattr(fd, TCSANOW, &new_port_settings);
+	//IGNPAR Ignore framing errors and parity errors.
+	//CLOCAL Ignore modem control lines.
+	//CREAD enable receiver
 	if(error==-1)
 	{
 		close(fd);
@@ -137,11 +141,11 @@ int RS232_OpenComport(const char* devname,int baudrate)
 		return(1);
 	}
 
-	if(ioctl(fd, TIOCMGET, &status) == -1)
+	/*if(ioctl(fd, TIOCMGET, &status) == -1)
 	{
 		perror("unable to get portstatus");
 		return(1);
-	}
+	}*/
 
 	//status |= TIOCM_DTR; /* turn on DTR */
 	//status |= TIOCM_RTS; /* turn on RTS */
