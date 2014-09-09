@@ -14,8 +14,6 @@
 #define TX_SIZE 32
 #define CFG_DEPLOY "/home/root/config/modem_cfg_deploy.txt"
 #define CFG_DEVEL "/home/root/config/modem_cfg_devel.txt"
-/*point to oldest unread msg*/
-#define MSG_PULL(msg) msg.text[(msg.i+LIST_SIZE+msg.N_unread-1)%LIST_SIZE]
 
 typedef enum {
 	NOT_SYNC, QUALIFY, SYNC

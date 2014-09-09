@@ -39,7 +39,7 @@
 
 //TODO TIMEOUT BUSYWAITING
 int error;
-//int Cport[30], int error; 
+//int Cport[30], int error;
 struct termios new_port_settings,old_port_settings;
 
 /*char comports[30][16]= {"/dev/ttyS0","/dev/ttyS1","/dev/ttyS2","/dev/ttyS3","/dev/ttyS4","/dev/ttyS5",
@@ -51,7 +51,7 @@ struct termios new_port_settings,old_port_settings;
 */
 int RS232_OpenComport(const char* devname,int baudrate)
 {
-	int baudr; 
+	int baudr;
 	//status;
 	int fd;
 
@@ -108,7 +108,7 @@ int RS232_OpenComport(const char* devname,int baudrate)
 		break;
 	}
 
-	fd = open(devname, O_RDWR | O_NOCTTY | O_NDELAY);
+	fd = open(devname, O_RDWR | O_NOCTTY );//O_NDELAY
 	if(fd==-1)
 	{
 		perror("unable to open comport ");

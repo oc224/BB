@@ -35,23 +35,18 @@ return SUCCESS;
 void log_show(logger* t_logger){
 printf("Logger :\n");
 printf("level : %d \n",t_logger->level);
-printf("path :%s\n",t_logger->path);
+printf("path : %s\n",t_logger->path);
 }
+
 int log_event(logger* t_logger,unsigned int level,const char* msg){
-return 0;
 //if really need to log
-printf("debug1\n");
-if (t_logger->level>level) return SUCCESS;
+if (level>t_logger->level) return SUCCESS;
 //update time stamp*/
-printf("debug1\n");
 time(&t_logger->stamp);
 //puts event msg and flush
-printf("debug1\n");
 if (fprintf(t_logger->fp,"%s %s\n",ctime(&t_logger->stamp),msg)<0)
 return FAIL;
-printf("debug1\n");
 fflush(t_logger->fp);
-
 return SUCCESS;
 }
 

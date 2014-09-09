@@ -8,7 +8,7 @@
 
 #define BUFSIZE 128
 #define BUFSHORT 20
-#define MASTER_LOGPATH "/home/root/config/master_log.txt"
+#define MASTER_LOGPATH "/home/root/log/master_log.txt"
 
 char buf[BUFSIZE];
 cmd t_cmd;
@@ -21,6 +21,7 @@ int wait_command_user()
 	char arg0[BUFSHORT];
 	t_cmd.type=NONE;
 	t_cmd.isremote=0;
+	buf[0]=0;
 
 	/*console prompt*/
 	printf("%s<%d>:",t_node.name, cnt);
@@ -91,7 +92,7 @@ int wait_command_user()
 int main()
 {
 	char remote[20];
-	char buf[BUFSIZE];
+	char buf_log[BUFSIZE];
 	/*init cfg...*/
 	system_cfg_read();
 //	system_cfg_show();
@@ -108,8 +109,8 @@ int main()
 	{
 		wait_command_user();
 		printf("command %d\n",t_cmd.type);
-		sprintf(buf,"task %d",t_cmd.type);
-		log_event(t_log,0,buf);
+		sprintf(buf_log,"task %d",t_cmd.type);
+		log_event(t_log,0,buf_log);
 		if (t_cmd.isremote){
 		sprintf(remote,"%d",t_cmd.type);
 		amodem_msg_send(remote);}
@@ -159,7 +160,6 @@ int main()
 		amodem_ffs_clear();
 		break;
 		case STATUS:
-		
 		break;
 		case GPSLOG:
 		system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");

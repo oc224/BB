@@ -7,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <fcntl.h>
 #include <pthread.h>
 
 #define BUFSIZE 100/*default size for buffer*/
@@ -67,10 +68,8 @@ usleep(WAIT_INTVAL);
 int amodem_msg_add(amodem_msg *msg_list ,char *msg_str){
 	/*add string to msg list*/
 	/*move to current index (msg.i)*/
-	if (msg_list->i<(LIST_SIZE-1))
-	msg_list->i++;
-	else
-	msg_list->i=0;
+	if (msg_list->i<(LIST_SIZE-1))	msg_list->i++;
+	else msg_list->i=0;
 
 	if (msg_list->N_unread<LIST_SIZE) msg_list->N_unread++;
 	free(msg_list->text[msg_list->i]);
@@ -128,7 +127,7 @@ int amodem_init(){
 	return FAIL;
 	}
 	/*com logger*/
-	log_open(modem.com_logger,AMODEM_PATH);
+	modem.com_logger=log_open(AMODEM_PATH);
 	log_event(modem.com_logger,0,"amodem init");
 	return SUCCESS;
 }
@@ -136,11 +135,13 @@ int amodem_init(){
 static void amodem_readthread(void *arg){
 char dump[BUFSIZE];
 int n;
-
+/*int flags=fcntl(modem.fd,F_GETFL,0);
+flags=flags&(~O_NONBLOCK);
+fcntl(modem.fd,F_SETFL,flags);*/
 while(1){
-
         n=RS232_PollComport(modem.fd,dump,BUFSIZE);
         if (n<1) continue;
+	//printf("%s",dump);
         /*store to input buffer*/
         dump[n-1]=0;/*remove newline char*/
 
@@ -569,6 +570,7 @@ int amodem_upload_file(const char *fname){
 	amodem_puts(buf);
 	sprintf(buf,"rm /sd/%s\r",fname);
 	amodem_puts(buf);
+	// move file TODO
 	return SUCCESS;
 }
 
