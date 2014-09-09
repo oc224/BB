@@ -69,8 +69,8 @@ clean:
 	rm ./bin/*
 	
 deploy:
-	cp ./bin/* ./home_fs/bin/.
-	cp ./config/*txt ./home_fs/config/.
-	cp ./script/* ./home_fs/script/.
-	rsync -avz ./home_fs/ root@charlie:~/.
+	#cp ./bin/* ./home_fs/bin/.
+	#cp ./config/*txt ./home_fs/config/.
+	#cp ./script/* ./home_fs/script/.
+	rsync -avz ./bin/ root@charlie:~/bin/.
 	#rsync -avz ./home_fs/ root@dylan:~/.

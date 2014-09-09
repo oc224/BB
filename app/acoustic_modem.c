@@ -141,7 +141,7 @@ int amodem_init(){
 
 int amodem_open() {
 	//open serial port, go to command mode, issue at (attention), then check response
-	if ((modem.fd=RS232_OpenComport(amodem_dev_path, amodem_serial_baudrate))) {
+	if ((modem.fd=RS232_OpenComport(amodem_dev_path, amodem_serial_baudrate))<1) {
 		printf("Acoustic modem, Fail to open.\n");//error
 		return FAIL;
 	}
@@ -152,7 +152,7 @@ int amodem_open() {
 
 inline void amodem_close() {
 	//close serial port
-	RS232_CloseComport(amodem_dev_no);
+	RS232_CloseComport(modem.fd);
 }
 
 inline void amodem_clear_io_buffer() {
