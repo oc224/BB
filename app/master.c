@@ -1,3 +1,4 @@
+#include "log.h"
 #include "system.h"
 #include "acoustic_modem.h"
 #include "ms.h"
@@ -7,13 +8,11 @@
 
 #define BUFSIZE 128
 #define BUFSHORT 20
-#define M2S_TXPATH "/home/root/log/M2S_TXLOG.txt"
-#define M2S_RXPATH "/home/root/log/M2S_RXLOG.txt"
-#define S2M_TXPATH "/home/root/log/S2M_TXLOG.txt"
-#define S2M_RXPATH "/home/root/log/S2M_RXLOG.txt"
+#define MASTER_LOGPATH "/home/root/config/master_log.txt"
 
 char buf[BUFSIZE];
 cmd t_cmd;
+logger *t_log;
 
 int wait_command_user()
 {
@@ -89,10 +88,10 @@ int wait_command_user()
 		cnt++;
 	return t_cmd.type;
 }
-
 int main()
 {
 	char remote[20];
+	char buf[BUFSIZE];
 	/*init cfg...*/
 	system_cfg_read();
 //	system_cfg_show();
@@ -102,11 +101,15 @@ int main()
 	scheduler_init();
 	scheduler_read("/home/root/config/schedule.txt");
 //	scheduler_task_show();
-
+	t_log=log_open(MASTER_LOGPATH);
+	log_show(t_log);
+	log_event(t_log,0,"master program start");
 	while (1)
 	{
 		wait_command_user();
 		printf("command %d\n",t_cmd.type);
+		sprintf(buf,"task %d",t_cmd.type);
+		log_event(t_log,0,buf);
 		if (t_cmd.isremote){
 		sprintf(remote,"%d",t_cmd.type);
 		amodem_msg_send(remote);}

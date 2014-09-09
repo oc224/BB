@@ -1,9 +1,3 @@
-/*
- * test_exp.c
- *
- *  Created on: Jul 25, 2014
- *      Author: root
- */
 #include "scheduler.h"
 #include "system.h"
 #include "acoustic_modem.h"
