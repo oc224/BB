@@ -7,6 +7,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <pthread.h>
+
 #define BUFSIZE 100/*default size for buffer*/
 #define SERIAL_TIMEOUT 2000/*default timeout for reading modem*/
 #define AMODEM_PATH "/home/root/log/AMODEM.TXT"
@@ -20,6 +22,7 @@ amodem modem;/*a struct that contains the status of modem or some useful informa
 amodem_msg msg_local;/*a list that contains latest msg from (local) modem*/
 amodem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
+static void amodem_readthread(void *arg);
 
 int amodem_ffs_clear(){
 /*clear ffs system, high usage ie. 98% of ffs system make the modem
@@ -48,16 +51,16 @@ int amodem_msg_send(const char *str){
 
 return SUCCESS;
 }
+
 void amodem_print(int msec){
 /*print all the text from serial port*/
 int Niter=msec/N_ITER_DIV,delay=0;
-char buf[BUFSIZE];
+char* new_msg;
 
 while(delay<Niter){
-if (amodem_gets(buf,BUFSIZE)==FAIL){
+if ((new_msg=amodem_msg_pull(&msg_local))!=NULL) printf("%s\n",new_msg);
 delay++;
 usleep(WAIT_INTVAL);
-}else printf("%s\n",buf);
 }
 }
 
@@ -75,24 +78,8 @@ int amodem_msg_add(amodem_msg *msg_list ,char *msg_str){
 	return SUCCESS;
 }
 
-int amodem_wait_remote(char *buf,int bufsize,int msec){
-/*read msg from remote list and store in buf until timeout (miliseconds)*/
-int delay=0,Niter=msec/N_ITER_DIV;
-
-while(delay<Niter){//before timeout
-if (msg_remote.N_unread>0){/*read the oldest msg from remote msg list*/
-if (buf!=NULL)strcpy(buf,MSG_PULL(msg_remote));
-msg_remote.N_unread--;
-return SUCCESS;
-}
-
-amodem_gets(NULL,0);
-usleep(WAIT_INTVAL);
-delay++;
-}
-
-printf("wait remote timeout\n");
-return FAIL;
+int amodem_wait_remote(char *buf, int bufsize, int msec) {
+return amodem_wait_msg(&msg_remote,NULL,msec,buf,bufsize);
 }
 
 void amodem_msg_show(amodem_msg * list){
@@ -107,7 +94,8 @@ void amodem_msg_show(amodem_msg * list){
 
 int amodem_init(){
 	int i;
-
+	pthread_attr_t attr;
+	pthread_t t_read;
 	/*init the struct variable*/
 	/*init msg list (remote & local)*/
 	msg_local.i=0;
@@ -118,6 +106,9 @@ int amodem_init(){
 	msg_local.text[i]=strdup("");
 	msg_remote.text[i]=strdup("");
 	}
+	// open modem read thread
+	pthread_attr_init(&attr);
+	pthread_create(&t_read,&attr,(void *)amodem_readthread,NULL);
 	/*init modem*/
 	modem.latest_tx_stamp[0]=0;
 	modem.latest_rx_fname[0]=0;
@@ -137,6 +128,30 @@ int amodem_init(){
 	return FAIL;
 	}
 	return SUCCESS;
+}
+
+static void amodem_readthread(void *arg){
+char dump[BUFSIZE];
+int n;
+
+while(1){
+
+        n=RS232_PollComport(modem.fd,dump,BUFSIZE);
+        if (n<1) continue;
+        /*store to input buffer*/
+        dump[n-1]=0;/*remove newline char*/
+
+        /*return if text = user <>*/
+
+        /*store to msg list (local & remote)*/
+        if (strstr(dump,"DATA")==NULL)  amodem_msg_add(&msg_local,dump);
+        else   amodem_msg_add(&msg_remote,strstr(dump,":")+1);
+
+	/*if msg from remote , show it*/
+
+	/*if go slave request, be slave*/
+
+}
 }
 
 int amodem_open() {
@@ -223,45 +238,9 @@ int amodem_play(char * filename) {
 
 inline int amodem_puts(const char*msg){
 	// write a line to serial port
+	msg_local.N_unread=0;
+	msg_remote.N_unread=0;
 	return RS232_SendBuf(modem.fd,msg,strlen(msg));
-}
-
-int amodem_gets(char* buf,int size){
-	/* read a line of text from serial port
-	Input
-		*buf can be char array ready for store the string 
-		or NULL
-		*size the array size of buf
-	Output
-	 	*buf the text read will be stored at buf
-		*the the text read will be copy to msg or msg_remote
-		*the newline char is removed.
-	 	*return FAIL or n char read*/
-	char dump[BUFSIZE];
-	int n;
-
-	if (buf!=NULL)buf[0]=0;/*make sure input buffer clear if this function fail*/
-	n=RS232_PollComport(modem.fd,dump,BUFSIZE);
-	if (n<1){
-		return FAIL;
-	}
-	/*store to input buffer*/
-	dump[n-1]=0;/*remove newline char*/
-	if (buf!=NULL)strcpy(buf,dump);
-
-	/*return if text = user <>*/
-	/*if ((strstr(dump,"user")!=NULL)&(strlen(dump)<11)){
-	printf("debug : prompt\n");
-	return n;
-	}*/
-	/*store to msg list (local & remote)*/
-	dump[n-1]=0;/*remove newline char*/
-	if (strstr(dump,"DATA")==NULL)	amodem_msg_add(&msg_local,dump);
-	else{
-	//sscanf(dump,"DATA(%*d):%s",buf2);//TODO
-	amodem_msg_add(&msg_remote,strstr(dump,":")+1);}
-
-	return n;
 }
 
 int amodem_mode_select(char mode){
@@ -381,27 +360,23 @@ int amodem_sync_clock_gps(int sec) {
 
 int amodem_sync_status() {
 	// to check if modem is sync
-	char buf[BUFSIZE];
-	int n, delay = 0, Niter=2000/N_ITER_DIV;;
+	char* new_msg;
+	int delay = 0, Niter=2000/N_ITER_DIV;;
 
 	amodem_puts("sync\r");
 
 	while(delay<Niter) { //before timeout
-		n=amodem_gets(buf,BUFSIZE);
-		if (n<1)
-			delay++;
-		else {
-			if (n<BUFSIZE) {
-				if (strcasestr(buf,"eA")) {
-					amodem_gets(buf,BUFSIZE);
-					printf("sync status is: 	%s",buf);
-					return n;
-				}
+		if ((new_msg=amodem_msg_pull(&msg_local))!=NULL) {
+			if (strcasestr(new_msg,"eA")) {
+				new_msg=amodem_msg_pull(&msg_local);
+				printf("sync status is: 	%s",new_msg);
+				return SUCCESS;
 			} else {
 				printf("can get the info of sync\n");
 				return FAIL;
 			}
 		}
+		delay++;
 		usleep(WAIT_INTVAL);
 	}
 	// timeout
@@ -430,38 +405,49 @@ int amodem_wait_ack(char *keyword,int timeout){
 return amodem_wait_info(keyword,timeout,NULL,0);
 }
 
+char* amodem_msg_pull(amodem_msg* msg){
+/*point to oldest unread msg*/
+char* ret;
+if (msg->N_unread==0) ret=NULL;
+ret = msg->text[(msg->i+LIST_SIZE+msg->N_unread-1)%LIST_SIZE];
+msg->N_unread--;
+return ret;
+}
+
 int amodem_wait_info(char *key_word, int timeout, char *info,
+		int info_size) {
+return amodem_wait_msg(&msg_local,key_word,timeout,info,info_size);
+}
+
+
+int amodem_wait_msg(amodem_msg *msg,char *key_word, int timeout, char *info,
 		int info_size) {
 	/*block until key_word prompt or timout(miliseconds), if key_word prompt, 
 	store that line contained key_word to info, the output info is a string
 	(end with a NULL char)
 	*/
-	char buf[BUFSIZE];
+
+	char *new_msg;
 	int delay=0;
 	int Niter=timeout/N_ITER_DIV;
-	if (info!=NULL)info[0]=0;/*make sure input buffer clear when this funtion fail*/
-	msg_local.N_unread=0;
+	int is_copy=(info!=NULL);
+	int is_nullkeyword=(key_word==NULL);
+	int ret=FAIL;
+
+	if (is_copy) info[0]=0;/*make sure input buffer clear when this funtion fail*/
+
 	while(delay<Niter) {//before timeout
-		amodem_gets(buf,BUFSIZE);
-		if (msg_local.N_unread<1) {
-			delay++;
-		} else {//got new msg
+		if ((new_msg=amodem_msg_pull(msg))!=NULL) {//got new msg
 			//new msg match
-			if (key_word==NULL){
-			if (info!=NULL) strncpy(info,msg_local.text[msg_local.i],info_size);
-			return SUCCESS;
-			}
-			if (strcasestr(msg_local.text[msg_local.i],key_word)!=NULL) {
-			if (info!=NULL) strncpy(info,msg_local.text[msg_local.i],info_size);
-			return SUCCESS;
-			}
+			if ((is_nullkeyword)||(strcasestr(new_msg,key_word)!=NULL)) {
+			ret=SUCCESS;
+			break;	}
 		}
 		usleep(WAIT_INTVAL);
 		delay++;
 	}
-	// timeout
-	printf("info timeout\n");
-	return FAIL;
+	if ((ret==SUCCESS)&&(is_copy)) strncpy(info,new_msg,info_size);
+	return ret;
 }
 
 

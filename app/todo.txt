@@ -2,7 +2,9 @@
 2. integrate master&slave(dynamic master/slave)
 3. in-situ DSP
 4. data manage
-5. log sys
+5. log sys, 0906
 6. error handling
 7. socket from station to control PC
 8. pps input on gpio pin, beagleboard gps time source
+9. amodem read thread
+10. scheduler clean up
