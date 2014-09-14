@@ -1,4 +1,4 @@
-#include "acoustic_modem.h"
+#include "amodem.h"
 #include "ms.h"
 #include "system.h"
 #include "scheduler.h"
@@ -16,23 +16,23 @@ char buf[BUFSIZE];
 /*sync*/
 master_sync();
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 /*play*/
 amodem_play("t1.wav");
 /*wait ack*/
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 /*send stamp*/
-amodem_msg_send(modem.latest_tx_stamp+8);
+amodem_puts_remote(modem.latest_tx_stamp+8);
 /*wait*/
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 /*sync*/
 master_sync();
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 /*record*/
 amodem_record(1000);
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 /*recv stamp*/
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 printf("Remote TX @ %s\n",buf);
@@ -48,12 +48,12 @@ amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 /*record*/
 amodem_record(1000);
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 /*recv stamp*/
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 printf("Remote TX @ %s\n",buf);
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 /*sync*/
 slave_sync();
 /*wait ack*/
@@ -63,7 +63,7 @@ amodem_play("t1.wav");
 /*wait ack*/
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 /*send stamp*/
-amodem_msg_send(modem.latest_tx_stamp+8);
+amodem_puts_remote(modem.latest_tx_stamp+8);
 return 0;
 }
 
@@ -72,7 +72,7 @@ char buf[BUFSIZE];
 /*sync*/
 master_sync();
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 /*play*/
 amodem_play("t1.wav");
 /*wait ack*/
@@ -93,11 +93,11 @@ amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 /*record*/
 amodem_record(1000);
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 /*play*/
 amodem_play("t1.wav");
 /*send stamp*/
-amodem_msg_send(modem.latest_tx_stamp+8);
+amodem_puts_remote(modem.latest_tx_stamp+8);
 return 0;}
 
 int master_con(){
@@ -132,7 +132,7 @@ int slave_quick(){
 /*record*/
 amodem_record(1000);
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 /*play*/
 amodem_play("t1.wav");
 return 0;
@@ -147,7 +147,7 @@ clock[0]=amodem_sync_clock_gps(10);
 time[0]=amodem_sync_time_gps();
 /*active wait response*/
 for (i=0;i<3;i++){
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 if (amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS){
 sscanf(buf,"%d %d",clock+1,time+1);
 break;}}
@@ -166,29 +166,12 @@ time=amodem_sync_time_gps();
 sprintf(buf,"%d %d",clock,time);
 printf("sync time done: %d %d\n",clock,time);
 /*passive response*/
-if (amodem_wait_remote(NULL,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS)amodem_msg_send(buf);
+if (amodem_wait_remote(NULL,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS)amodem_puts_remote(buf);
 return 0;
 }
 
 void help(){
-system("cat /home/root/config/help.txt");
-/*
-printf("talk\n");
-printf("con\n");
-printf("");
-printf("play\n");
-printf("record\n");
-printf("sync\n");
-printf("help\n");
-printf("wr --wait remote msg\n");
-printf("clearffs\n");
-printf("upload\n");
-                printf("wr\n");
-                printf("sr\n");
-                printf("clearffs\n");
-                printf("showmsg\n");
-*/
-}
+system("cat /home/root/config/help.txt");}
 
 int play(const char *buf){
 char txname[40];
@@ -227,11 +210,11 @@ return SUCCESS;
 }
 
 
-int msg_send(){
+int puts_remote(){
 char msg[80];
 printf("enter msg :");
 fgets(msg,80,stdin);
-return amodem_msg_send(msg);
+return amodem_puts_remote(msg);
 }
 
 int wait_remote(){
@@ -254,6 +237,6 @@ amodem_puts("\r");
 amodem_puts("reboot\r");
 sleep(25);
 /*send ack*/
-amodem_msg_send(ACK);
+amodem_puts_remote(ACK);
 return 0;
 }

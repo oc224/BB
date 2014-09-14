@@ -1,5 +1,5 @@
-#ifndef ACOUSTIC_MODEM
-#define ACOUSTIC_MODEM
+#ifndef AMODEM
+#define AMODEM
 #include <stdio.h>
 #include "log.h"
 #define amodem_serial_baudrate 115200
@@ -52,35 +52,42 @@ int amodem_init();/*init amodem*/
 int amodem_open();/*open the serial port*/
 inline void amodem_close();/*close the serial port*/
 
+/*low level io*/
+int amodem_msg_push(amodem_msg *msg_list ,char *msg_str);
+char* amodem_msg_pop(amodem_msg* msg);
+char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,int info_size);
+int amodem_puts(const char*msg);/**/
+
+/*io*/
+#define amodem_wait_local(key_word,mSec,info,info_size) amodem_wait_msg(&msg_local,key_word,mSec,info,info_size)
+#define amodem_wait_remote(buf,bufsize,mSec) amodem_wait_msg(&msg_remote,NULL,mSec,buf,bufsize)
+#define amodem_wait_local_ack(keyword,mSec) amodem_wait_msg(&msg_local,keyword,mSec,NULL,0)
 void amodem_msg_show(amodem_msg *);/*show msg list*/
-int amodem_msg_add(amodem_msg*,char *msg_str);/*add to msg list*/
 
-int amodem_wait_ack(char*,int);/*wait local msg ack*/
-int amodem_wait_info(char *key_word, int timeout, char *info,int info_size);/*wait local msg info*/
-int amodem_wait_remote(char*,int,int);/*wait remote*/
-inline int amodem_puts(const char*msg);/**/
-char* amodem_msg_pull(amodem_msg* msg);
-
+/*exp*/
 int amodem_play(char * filename);
 int amodem_record(int duration_mili);
 
+/*status*/
 int amodem_status();
 void amodem_status_show();
 
+/*config*/
 int amodem_print_configs(char * filepath); // save cfg all output for future ref
 int amodem_cfg_set(const char *);
 #define amodem_cfg_deploy() amodem_cfg_set(CFG_DEPLOY);
 #define amodem_cfg_devel() amodem_cfg_set(CFG_DEVEL);
 
-int amodem_wait_msg(amodem_msg *msg,char *key_word, int timeout, char *info, int info_size);
+/*sync*/
 int amodem_sync_clock_gps(int);
 int amodem_sync_time_gps();
 int amodem_is_clock_Sync(int);
 int amodem_sync_status();
 
+/*file management*/
 int amodem_upload_file(const char *fname);/*upload a file in /sd on the modem*/
-int amodem_msg_send(const char*msg);/*send msg to remote*/
-
 int amodem_ffs_clear();/*clean up ffs*/
+
+int amodem_puts_remote(const char*msg);/*send msg to remote*/
 void amodem_print(int);/*show msg from remote*/
 #endif

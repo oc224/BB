@@ -1,6 +1,6 @@
 #include "log.h"
 #include "system.h"
-#include "acoustic_modem.h"
+#include "amodem.h"
 #include "ms.h"
 #include <stdio.h>
 #include <string.h>
@@ -24,7 +24,7 @@ int wait_command_user()
 	buf[0]=0;
 
 	/*console prompt*/
-	printf("%s<%d>:",t_node.name, cnt);
+	printf("%s%d>:",t_node.name, cnt);
 	fgets(buf, BUFSIZE, stdin);
 	sscanf(buf,"%s",arg0);
 	//printf("debug %s\n",arg0);
@@ -113,7 +113,7 @@ int main()
 		log_event(t_log,0,buf_log);
 		if (t_cmd.isremote){
 		sprintf(remote,"%d",t_cmd.type);
-		amodem_msg_send(remote);}
+		amodem_puts_remote(remote);}
 		switch (t_cmd.type)
 		{
 		case TALK://ok
@@ -147,7 +147,7 @@ int main()
 		upload(buf);
 		break;
 		case SEND_REMOTE://ok
-		msg_send();
+		//msg_send();
 		break;
 		case MSG_SHOW://ok
 		amodem_msg_show(&msg_local);

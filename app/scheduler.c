@@ -6,7 +6,7 @@
 #include <string.h>
 #include <time.h>
 #include <signal.h>
-#include "acoustic_modem.h"
+#include "amodem.h"
 #include "scheduler.h"
 #define BUFSIZE 128
 

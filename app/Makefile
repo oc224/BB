@@ -1,16 +1,23 @@
-CC=arm-linux-gnueabi-gcc
+COMPILER=arm-linux-gnueabi-
+CC=$(COMPILER)gcc
+AR=$(COMPILER)ar
+#CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall
 
-all:data_upload exp unicon master slave
+all:master
 unicon.o:unicon.c
 	$(CC) $(CFLAGS) -c unicon.c
 unicon:unicon.o rs232.o acoustic_modem.o log.o
 	$(CC) $(CFLAGS) -o ./bin/unicon unicon.o rs232.o acoustic_modem.o log.o -pthread
 rs232.o:rs232.c
 	$(CC) $(CFLAGS) -c rs232.c
-acoustic_modem.o:acoustic_modem.c
-	$(CC) $(CFLAGS) -c acoustic_modem.c -pthread
+amodem.o:amodem.c
+	$(CC) $(CFLAGS) -c amodem.c -pthread
+amodem_io.o:amodem_io.c
+	$(CC) $(CFLAGS) -c amodem_io.c
+libamodem.a:amodem.o amodem_io.o rs232.o
+	$(AR) rcs libamodem.a amodem.o amodem_io.o rs232.o
 wireless_modem.o:wireless_modem.c wireless_modem.h
 	$(CC) $(CFLAGS) -c wireless_modem.c rs232.o
 w_test.o:w_test.c
@@ -37,8 +44,8 @@ slave:slave.o rs232.o acoustic_modem.o system.o ms.o scheduler.o log.o
 	$(CC) $(CFLAGS) -o ./bin/slave slave.o rs232.o acoustic_modem.o system.o ms.o scheduler.o log.o -lrt -pthread
 slave.o:slave.c
 	$(CC) $(CFLAGS) -c slave.c
-master:master.o acoustic_modem.o rs232.o system.o ms.o scheduler.o log.o
-	$(CC) $(CFLAGS) -o ./bin/master master.o acoustic_modem.o rs232.o system.o ms.o scheduler.o log.o -lrt -pthread
+master:master.o libamodem.a system.o ms.o scheduler.o log.o
+	$(CC) $(CFLAGS) -o ./bin/master master.o libamodem.a system.o ms.o scheduler.o log.o -lrt -pthread
 ms.o:ms.c
 	$(CC) $(CFLAGS) -c ms.c
 master.o:master.c
