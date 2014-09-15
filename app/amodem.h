@@ -4,12 +4,19 @@
 #include "log.h"
 #define amodem_serial_baudrate 115200
 #define amodem_dev_path "/dev/ttyUSB2"
-#define ONLINE_COMMAND 1600000 /*Time it takes from online mode to command mode*/
+#define PATH_AMODEM "/home/root/log/AMODEM.TXT"
+#define PATH_TX "/home/root/log/TXLOG.TXT"
+#define PATH_RX "/home/root/log/RXLOG.TXT"
+#define TIMEOUT_SERIAL 2000/*default timeout for reading modem*/
+#define TIMEOUT_SYNC 15
+#define TIMEOUT_COPY 60000
+#define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
+#define DELAY_COMMAND 1
+#define DELAY_ONLINE 1
+#define DELAY_AFTER_MODE_SWAP 1
 #define WAIT_INTVAL 100000 /*inteval time for reading serial port*/
 #define N_ITER_DIV (WAIT_INTVAL/1000)
-#define COMMAND_DELAY 200000 /*Latency of entering command mode*/
 #define GPSPIPE_TIME 8 /*seconds that gpspipe feed modem*/
-#define WAIT_TXTIME 5000
 #define LIST_SIZE 16
 #define TX_SIZE 32
 #define CFG_DEPLOY "/home/root/config/modem_cfg_deploy.txt"
@@ -51,6 +58,7 @@ extern amodem_msg msg_remote;
 int amodem_init();/*init amodem*/
 int amodem_open();/*open the serial port*/
 inline void amodem_close();/*close the serial port*/
+int amodem_mode_select(char);
 
 /*low level io*/
 int amodem_msg_push(amodem_msg *msg_list ,char *msg_str);

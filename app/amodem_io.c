@@ -70,7 +70,30 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
 }
 
 int amodem_puts_remote(const char*msg){
-return 0;}
+
+/* write msg acoustically to remote modems*/
+// go to online mode
+amodem_mode_select('o');
+// send msg
+amodem_puts(msg);
+// go back to command mode
+amodem_mode_select('c');
+	/*amodem_puts("ato\r");
+        if (amodem_wait_local_ack("connect",2*TIMEOUT_SERIAL)==NULL){
+                fprintf(stderr,"msg_send, fail to enter online mode\n");
+                return FAIL;
+        }
+        usleep(DELAY_ATO);
+        if (amodem_wait_local_ack("forwarding",2*TIMEOUT_SERIAL)==NULL){
+                fprintf(stderr,"msg_send, fail to forward msg\n");
+                return FAIL;
+        }
+        usleep(ONLINE_COMMAND);
+
+        amodem_puts("+++\r");
+        usleep(COMMAND_DELAY);*/
+        return SUCCESS;
+}
 
 int amodem_puts(const char*msg){
         // write a line to serial port

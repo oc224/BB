@@ -148,7 +148,7 @@ time[0]=amodem_sync_time_gps();
 /*active wait response*/
 for (i=0;i<3;i++){
 amodem_puts_remote(ACK);
-if (amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS){
+if (amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)!=NULL){
 sscanf(buf,"%d %d",clock+1,time+1);
 break;}}
 /*show result*/
@@ -166,7 +166,7 @@ time=amodem_sync_time_gps();
 sprintf(buf,"%d %d",clock,time);
 printf("sync time done: %d %d\n",clock,time);
 /*passive response*/
-if (amodem_wait_remote(NULL,BUFSIZE,REMOTE_TIMEOUT)==SUCCESS)amodem_puts_remote(buf);
+if (amodem_wait_remote(NULL,BUFSIZE,REMOTE_TIMEOUT)!=NULL)amodem_puts_remote(buf);
 return 0;
 }
 

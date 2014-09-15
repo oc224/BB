@@ -9,15 +9,7 @@
 #include <time.h>
 #include <pthread.h>
 
-#define PATH_AMODEM "/home/root/log/AMODEM.TXT"
-#define PATH_TX "/home/root/log/TXLOG.TXT"
-#define PATH_RX "/home/root/log/RXLOG.TXT"
-#define TIMEOUT_SERIAL 2000/*default timeout for reading modem*/
-#define TIMEOUT_SYNC 15
-#define TIMEOUT_COPY 60000
-#define DELAY_ATO 500000
-#define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
-#define BUFSIZE 100/*default size for buffer*/
+#define BUFSIZE 128
 
 amodem modem;/*a struct that contains the status of modem or some useful information*/
 amodem_msg msg_local;/*a list that contains latest msg from (local) modem*/
@@ -193,7 +185,7 @@ int amodem_play(char * filename) {
 	}
 	// get time stamp
 	//TODO buffer time is random
-	if (amodem_wait_local("tx",WAIT_TXTIME, buf, BUFSIZE)!=NULL) {
+	if (amodem_wait_local("tx",TIMEOUT_SERIAL, buf, BUFSIZE)!=NULL) {
 		printf("local tx time : %s\n", buf);
 		strcpy(modem.latest_tx_stamp,buf);
 		fprintf(modem.tx_p,"%s,%s\n",filename,buf);
@@ -208,37 +200,27 @@ int amodem_play(char * filename) {
 }
 
 int amodem_mode_select(char mode){
-//usleep()
+int ret=SUCCESS;
 switch (mode){
-case 'o':
+case 'o'://online mode
 amodem_puts("ato\r");
-if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)==NULL)
+sleep(DELAY_ONLINE);
+if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)==NULL) ret = FAIL;
 break;
-case 'c':
+
+case 'c'://command mode
 amodem_puts("+++");
-//usleep()
+sleep(DELAY_COMMAND);
 amodem_puts("at\r");
-if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)==NULL)
+if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)==NULL) ret = FAIL;
+break;
+
+default:
+fprintf(stderr,"error %s\n",__func__);
 break;
 }
-
-
-	/* write msg acoustically to remote modems*/
-	amodem_puts("ato\r");
-	if (amodem_wait_local_ack("connect",2*TIMEOUT_SERIAL)==NULL){
-		fprintf(stderr,"msg_send, fail to enter online mode\n");
-		return FAIL;
-	}
-	usleep(DELAY_ATO);
-	if (amodem_wait_local_ack("forwarding",2*TIMEOUT_SERIAL)==NULL){
-		fprintf(stderr,"msg_send, fail to forward msg\n");
-		return FAIL;
-	}
-	usleep(ONLINE_COMMAND);
-
-	amodem_puts("+++\r");
-	usleep(COMMAND_DELAY);
-	return SUCCESS;
+sleep(DELAY_AFTER_MODE_SWAP);
+return ret;
 }
 
 int amodem_record(int duration) {
