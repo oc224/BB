@@ -11,7 +11,6 @@
 #define BUFSIZE 128
 
 static schedule modem_schedule;
-//this_node t_node;
 
 #define CLOCKID CLOCK_REALTIME
 #define SIG SIGRTMIN
@@ -27,7 +26,7 @@ int scheduler_init() {
 
 	/* Establish handler for timer signal */
 
-	printf("Establishing handler for signal %d\n", SIG);
+//	printf("Establishing handler for signal %d\n", SIG);
 	sa.sa_flags = SA_SIGINFO;
 	sa.sa_sigaction = scheduler_exce;
 	sigemptyset(&sa.sa_mask);
@@ -198,8 +197,11 @@ void scheduler_exce(int sig, siginfo_t *si, void *uc) {
 
 int scheduler_start(int hh,int mm, int ss,char type) {
 	/*input
-	type a -> TIMER_ABSTIMER
-		r -> RELATIVE */
+	if type = a
+	the first scheduler will be at hh:mm:ss.0
+	if type = r
+	the first schedule will be 3 seconds later, hh, mm, ss are ignored
+	*/
 	struct timespec now_clock;
 	struct tm start_time;
 	long seconds;
@@ -209,6 +211,7 @@ int scheduler_start(int hh,int mm, int ss,char type) {
 	start_time=*localtime(&now);
 	start_time.tm_hour=hh;start_time.tm_min=mm;start_time.tm_sec=ss;
 	time(&now);
+
 	switch(type){
 	case 'a':
 	seconds=difftime(mktime(&start_time),now);
@@ -246,7 +249,7 @@ int scheduler_start(int hh,int mm, int ss,char type) {
 	return FAIL;
 	break;
 	}
-	    if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
+        if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
          errExit("timer_settime");
 
     printf("scheduler start\n");
