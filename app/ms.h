@@ -4,36 +4,7 @@
 #define WAIT_THEN_PLAY (100*MILI)
 #define SLEEP_BEFORE_RECORD (700*MILI)
 #define SLEEP_AFTER_SYNC 2
-#define REMOTE_TIMEOUT 10000
-
-typedef char bool;
-
-typedef enum{
-	NONE,
-        TALK,//recipricol transmission, ok
-	ATALK,
-	CONVERSATION,
-	CONEND,
-	QUICK,
-	MSPLAY,//local modem play
-	MSRECORD,//local modem record
-	SYNCALL,//sync remote & local modem
-	HELP,//show help msg
-	UPLOAD,//upload local files
-	SEND_REMOTE,//send msg to remote modems
-	MSG_SHOW,//show msg & msg_remote
-	WAIT_REMOTE,//wait remote msg
-	CLEAR_FFS,//clear local ffs
-	STATUS,
-	GPSLOG,
-	RREBOOT
-}cmd_type;
-
-typedef struct{
-cmd_type type;
-bool isremote;
-}cmd;
-
+#define REMOTE_TIMEOUT 1000
 
 
 int master_talk();

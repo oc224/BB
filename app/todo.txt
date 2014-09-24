@@ -8,3 +8,4 @@
 8. pps input on gpio pin, beagleboard gps time source
 9. amodem read thread 9/15 
 10. scheduler clean up 9/15
+11. mode swap 9/15

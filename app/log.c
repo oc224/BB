@@ -18,7 +18,7 @@ return NULL;}
 t_logger->fp=fopen(path,"a");
 if (t_logger->fp==NULL){
 printf("open error\n");
-return NULL;}
+exit(FAIL);}
 
 //fill logger struct
 t_logger->level=DEFAULT_LEVEL;

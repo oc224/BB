@@ -1,0 +1,75 @@
+* setup TFTP-hpa on my ubtuntu
+sudo apt-get install tftpd-hpa
+oot@ubuntu:~# apt-get install tftpd-hpa
+修改設定檔 
+root@ubuntu:~# vim /etc/default/tftpd-hpa
+# /etc/default/tftpd-hpa
+TFTP_USERNAME="tftp"
+TFTP_DIRECTORY="/tftpboot"
+TFTP_ADDRESS="0.0.0.0:69"
+TFTP_OPTIONS="-l -c -s"
+建立共享目錄
+root@ubuntu:~# mkdir /tftpboot
+修改目錄下所有檔權限 (全開,以便上傳下載)
+root@ubuntu:~# chmod 777 -R /tftpboot
+修改目錄下所有檔擁有者及群組
+root@ubuntu:~# chown nobody.nogroup -R /tftpboot
+查看權限是否作用
+root@ubuntu:~# ls /tftpboot -ld
+drwxrwxrwx 2 nobody nogroup 4096 2011-10-10 09:51 /tftpboot
+建立一個下載用的測試檔 
+root@ubuntu:~# echo "This is a tftpd-hpa testfile" > /tftpboot/testfile
+重啟 tftpd-hpa 服務
+root@ubuntu:~# service tftpd-hpa restart
+確認 tftp(69埠) 是否監聽中 
+root@ubuntu:~# netstat -a | grep tftp
+udp        0      0 *:tftp                  *:*   
+root@ubuntu:~#
+2. VM本機連線測試
+建立一個即將上傳的檔案 
+root@ubuntu:~# echo "uploaded file" > 1.txt
+連線到 localhost ip 
+root@ubuntu:~# tftp 127.0.0.1
+顯示詳細過程 
+verbose
+抓取檔案 
+get testfile
+放檔案上去 
+put 1.txt
+離開 
+quit
+
+http://blog.xuite.net/arieslin2005blog/blog/53375149-%E5%AE%89%E8%A3%9D+Ubuntu+%E4%B8%8B%E4%BD%BF%E7%94%A8%E7%9A%84tftp+server+(tftpd-hpa+%E8%88%87+tftp-hpa)
+
+* setup bridge network of virtualbox 
+network
+bridge network
+en0, the inteface you access to the internet.
+
+https://www.virtualbox.org/manual/ch06.html#network_bridged
+
+
+
+* u-boot manually boot
+setenv usbnet_devaddr c8:a0:30:ac:e0:ef                                 
+setenv usbnet_hostaddr 08:00:27:5c:6b:22                                
+setenv usbethaddr 00:12:34:56:78:9a                            
+setenv ipaddr 192.168.0.234                                             
+setenv serverip 192.168.0.230                                           
+setenv gatewayip 192.168.0.1
+setenv netmask 255.255.255.0
+setenv hostname BB
+setenv console ttyO2,115200n8
+setenv rootpath /home/martin/BB/target_rootfs
+usb start   
+nfs ${loadaddr} ${serverip}:/home/martin/BB/target_rootfs/uImage
+tftp 0x80000000 uImage 
+
+bootm ${loadaddr}
+
+
+nfsargs=setenv bootargs console=ttyO2,115200n8 rw noinitrd vram=12M root=/dev/nfs nfsroot=192.168.0.102:/home/martin/BB/target_rootfs,nolock,rsize=1024,wsize=1024 ip=dhcp
+
+nfsargs=setenv bootargs console=ttyO2,115200n8 rw root=/dev/nfs nfsroot=192.168.0.102:/home/martin/BB/target_rootfs nfsrootdebug ip=dhcp
+
+setenv bootargs console=${console} ${optargs} root=/dev/nfs nfsroot=${serverip}:${rootpath},rw ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}:${hostname}
