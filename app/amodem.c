@@ -76,6 +76,7 @@ void amodem_msg_show(amodem_msg * list){
 	/*show msg list*/
 	int i;
 	printf("MSG LIST\n");
+	printf("N_unread = %d, i = %d\n",list->N_unread,list->i);
 	for (i=0;i<32;i++)printf("-");
 	printf("\n");
 	for (i=0;i<LIST_SIZE;i++)printf("%2d %s\n",i,list->text[i]);

@@ -88,10 +88,10 @@ int wait_command_user()
 	static int cnt=1;
 	char arg0[BUFSHORT];//first word in the line
 	char buf[BUFSIZE];//line console input
-	buf[0]=0;
 
 	/*console prompt*/
 	printf("%s%d>:","master", cnt);
+	buf[0]=0;
 	fgets(buf, BUFSIZE, stdin);
 
 	// task fill I
@@ -100,9 +100,8 @@ int wait_command_user()
 	free(task.cmd.arg);
 	task.cmd.arg=strdup(buf);
 
-	/*decode*/
+	//decode
 	sscanf(buf,"%s",arg0);
-	//printf("debug %s\n",arg0);
 	if (strcmp(arg0,"talk")==0){
 		task.cmd.type=TALK;
 		task.cmd.isremote=1;
@@ -166,6 +165,7 @@ int wait_command_user()
 
 int wait_command(){
 printf("msg_remote.N_unread=%d\n",msg_remote.N_unread);
+printf("msg_local.N_unread=%d\n",msg_local.N_unread);
 if (msg_remote.N_unread>0){
 task.mode=NSLAVE;
 }

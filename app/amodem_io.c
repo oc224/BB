@@ -98,6 +98,6 @@ amodem_mode_select('c');
 int amodem_puts(const char*msg){
         // write a line to serial port
         msg_local.N_unread=0;
-        msg_remote.N_unread=0;
+        //msg_remote.N_unread=0;
         return RS232_SendBuf(modem.fd,msg,strlen(msg));
 }
