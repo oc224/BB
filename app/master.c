@@ -7,16 +7,19 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <pthread.h>
 
 #define BUFSIZE 128
 #define BUFSHORT 20
 #define MASTER_LOGPATH "/root/log/master_log.txt"
+static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 typedef enum {NMASTER,NSLAVE} NODE_MODE;
 typedef char bool;
 
 
 typedef enum{
+	EMPTY,
         NONE,
         TALK,//recipricol transmission, ok
         ATALK,
@@ -30,8 +33,6 @@ typedef enum{
         UPLOAD,//upload local files
         SEND_REMOTE,//send msg to remote modems
         MSG_SHOW,//show msg & msg_remote
-        WAIT_REMOTE,//wait remote msg
-        CLEAR_FFS,//clear local ffs
         STATUS,
         GPSLOG,
         RREBOOT
@@ -69,118 +70,124 @@ int wait_command_master(){
                 ret = FAIL;
 
         /*return*/
-        if (ret!=FAIL)
+        if (ret!=FAIL){
                 cnt++;
+	pthread_mutex_lock(&mtx);
         task.cmd.type=ret;
 	free(task.cmd.arg);
 	task.cmd.arg=strdup(buf);
 	task.cmd.isremote=0;
+	pthread_mutex_unlock(&mtx);}
         return ret;
 }
 
-int wait_command_user()
+static void wait_command_user()
 {
 	/*
 	input from console
 	output to CMD field
 	*/
 
-	static int cnt=1;
+	int cnt=1;
 	char arg0[BUFSHORT];//first word in the line
 	char buf[BUFSIZE];//line console input
-
+	int type=EMPTY;
+	int isremote=0;
+	while (1){
 	/*console prompt*/
 	printf("%s%d>:","master", cnt);
-	buf[0]=0;
+	buf[0]=0;arg0[0]=0;
 	fgets(buf, BUFSIZE, stdin);
 
 	// task fill I
-	task.cmd.type=NONE;
-	task.cmd.isremote=0;
-	free(task.cmd.arg);
-	task.cmd.arg=strdup(buf);
+	type=EMPTY;
+	isremote=0;
 
-	//decode
+	//decode (special)
 	sscanf(buf,"%s",arg0);
+	if (strcmp(arg0,"+++")==0){
+	pthread_mutex_lock(&mtx);
+	task.mode=NMASTER;
+	pthread_mutex_unlock(&mtx);
+	printf("go to master mode\n");
+	continue;}
+	else if (strcmp(arg0,"---")==0){
+	pthread_mutex_lock(&mtx);
+	task.mode=NSLAVE;
+	pthread_mutex_unlock(&mtx);
+	printf("go to slave mode\n");
+	continue;}
+	else if (strcmp(arg0,"quit")==0){
+	printf("quit...\n");
+	amodem_end();
+	exit(0);
+	}
+
+	//decode (normal)
+	if (task.mode!=NMASTER){
+	printf("This node is not in master mode, unable to give command\n");
+	continue;}
+
 	if (strcmp(arg0,"talk")==0){
-		task.cmd.type=TALK;
-		task.cmd.isremote=1;
+		type=TALK;
+		isremote=1;
 	}else if (strcmp(arg0,"atalk")==0){
-		task.cmd.type=ATALK;
-		task.cmd.isremote=1;
+		type=ATALK;
+		isremote=1;
 	}else if (strcmp(arg0,"con")==0){
-		task.cmd.type=CONVERSATION;
-		task.cmd.isremote=1;
+		type=CONVERSATION;
+		isremote=1;
 	}else if (strcmp(arg0,"conend")==0){
-		task.cmd.type=CONEND;
-		task.cmd.isremote=1;
+		type=CONEND;
+		isremote=1;
 	}else if(strcmp(arg0,"play")==0){
-		task.cmd.type=MSPLAY;
-		task.cmd.isremote=0;
+		type=MSPLAY;
+		isremote=0;
 	}else if (strcmp(arg0,"record")==0){
-		task.cmd.type=MSRECORD;
-		task.cmd.isremote=0;
+		type=MSRECORD;
+		isremote=0;
 	}else if (strcmp("sync",arg0)==0){
-		task.cmd.type=SYNCALL;
-		task.cmd.isremote=1;
+		type=SYNCALL;
+		isremote=1;
 	}else if (strcmp("upload",arg0)==0){
-		task.cmd.type=UPLOAD;
-		task.cmd.isremote=0;
+		type=UPLOAD;
+		isremote=0;
 	}else if (strcmp("quick",arg0)==0){
-		task.cmd.type=QUICK;
-		task.cmd.isremote=1;
+		type=QUICK;
+		isremote=1;
 	}else if (strcmp("status",arg0)==0){
-		task.cmd.type=STATUS;
-		task.cmd.isremote=1;
+		type=STATUS;
+		isremote=1;
 	}else if (strcmp("sr",arg0)==0){
-		task.cmd.type=SEND_REMOTE;
-		task.cmd.isremote=0;
-	}else if (strcmp("wr",arg0)==0){
-		task.cmd.type=WAIT_REMOTE;
-		task.cmd.isremote=0;
+		type=SEND_REMOTE;
+		isremote=0;
 	}else if (strcmp("showmsg",arg0)==0){
-		task.cmd.type=MSG_SHOW;
-		task.cmd.isremote=0;
-	}else if (strcmp("clearffs",arg0)==0){
-		task.cmd.type=CLEAR_FFS;
-		task.cmd.isremote=0;
+		type=MSG_SHOW;
+		isremote=0;
 	}else if (strcmp("help",arg0)==0){
-		task.cmd.type=HELP;
-		task.cmd.isremote=0;
+		type=HELP;
+		isremote=0;
 	}else if (strcmp("gpslog",arg0)==0){
-		task.cmd.type=GPSLOG;
-		task.cmd.isremote=0;
+		type=GPSLOG;
+		isremote=0;
 	}else if (strcmp("rreboot",arg0)==0){
-		task.cmd.type=RREBOOT;
-		task.cmd.isremote=1;
+		type=RREBOOT;
+		isremote=1;
 	}else{
-		task.cmd.type=NONE;
-		task.cmd.isremote=0;
+		type=NONE;
+		isremote=0;
 	}
 	/*return*/
-	if (task.cmd.type>0)
-		cnt++;
-	return task.cmd.type;
-}
-
-int wait_command(){
-printf("msg_remote.N_unread=%d\n",msg_remote.N_unread);
-printf("msg_local.N_unread=%d\n",msg_local.N_unread);
-if (msg_remote.N_unread>0){
-task.mode=NSLAVE;
-}
-
-switch (task.mode){
-case NMASTER:
-return wait_command_user();
-break;
-case NSLAVE:
-return wait_command_master();
-break;
-default:
-sleep(1);
-return FAIL;
-break;
+	if (type>NONE){
+	cnt++;
+	pthread_mutex_lock(&mtx);
+	task.cmd.type=type;
+	task.cmd.isremote=isremote;
+	free(task.cmd.arg);
+	task.cmd.arg=strdup(buf);
+	//printf("type = %d\n",type);
+	//printf("command %d\n",task.cmd.type);
+	pthread_mutex_unlock(&mtx);}
 }
 }
 
@@ -215,35 +222,18 @@ break;
 
 logger *t_log;
 
-void u_interrupt(){
-unsigned char user;
-printf("M,S,Q ? \n");
-user=fgetc(stdin);
-switch (user){
-case 'M':
-task.mode=NMASTER;
-break;
-case 'S':
-task.mode=NSLAVE;
-break;
-case 'Q':
-exit(0);
-break;
-
-}
-//printf("user = %c\n",user);
-
-}
 int main()
 {
 	char remote[20];
 	char buf_log[BUFSIZE];
+        pthread_attr_t attr;
+        pthread_t t_read;
+
 	/*init cfg...*/
 	system_cfg_read();
 //	system_cfg_show();
 //	printf("NODE NAME : %s\n ",t_node.name);
 	amodem_init();
-//	amodem_open();
 //	scheduler_init();
 //	scheduler_read("/root/config/schedule.txt");
 //	scheduler_task_show();
@@ -252,20 +242,26 @@ int main()
 	log_event(t_log,0,"master program start");
 
 	//task init
+	pthread_mutex_lock(&mtx);
 	task.mode=NMASTER;
 	task.cmd.arg=strdup(" ");
-	task.cmd.type=NONE;
+	task.cmd.type=EMPTY;
 	task.cmd.isremote=0;
+	pthread_mutex_unlock(&mtx);
 
 	//signal
-	signal(SIGINT,u_interrupt);
+	//signal(SIGINT,u_interrupt);
+
+	//console thread
+        pthread_attr_init(&attr);
+        pthread_create(&t_read,&attr,(void *)wait_command_user,NULL);
+
 	while (1)
 	{
+		usleep(100000);
 		//wait command
-		if (wait_command()==FAIL)continue;
-
+		if (task.cmd.type==EMPTY)continue;
 		//log
-		printf("command %d\n",task.cmd.type);
 		sprintf(buf_log,"task %d",task.cmd.type);
 		log_event(t_log,0,buf_log);
 
@@ -307,16 +303,11 @@ int main()
 		upload(task.cmd.arg);
 		break;
 		case SEND_REMOTE://ok
+		amodem_puts_remote(task.cmd.arg);
 		break;
 		case MSG_SHOW://ok
 		amodem_msg_show(&msg_local);
 		amodem_msg_show(&msg_remote);
-		break;
-		case WAIT_REMOTE://ok
-		wait_remote(task.cmd.arg);
-		break;
-		case CLEAR_FFS:
-		amodem_ffs_clear();
 		break;
 		case STATUS:
 		break;
@@ -334,6 +325,11 @@ int main()
 			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
 			break;
 		}
+		pthread_mutex_lock(&mtx);
+		task.cmd.type=EMPTY;
+		free(task.cmd.arg);
+		task.cmd.arg=strdup(" ");
+		pthread_mutex_unlock(&mtx);
 	}
 
 amodem_close();

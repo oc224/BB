@@ -25,6 +25,9 @@
 typedef enum {
 	NOT_SYNC, QUALIFY, SYNC
 } amodem_sync_state;
+typedef enum{
+ONLINE,COMMAND
+}amodem_mode;
 
 typedef struct {
 	int fd;
@@ -33,6 +36,7 @@ typedef struct {
 	float mdm_bat; // ref modem manual mdm_battery
 	float rtc_bat; // ref modem manual rtc_battery
 	amodem_sync_state sync_state;
+	amodem_mode mode;
 	char latest_tx_stamp[TX_SIZE];
 	char latest_rx_fname[TX_SIZE];
 	char def_tx_wav[TX_SIZE];
@@ -71,6 +75,7 @@ int amodem_puts(const char*msg);/**/
 #define amodem_wait_remote(buf,bufsize,mSec) amodem_wait_msg(&msg_remote,NULL,mSec,buf,bufsize)
 #define amodem_wait_local_ack(keyword,mSec) amodem_wait_msg(&msg_local,keyword,mSec,NULL,0)
 void amodem_msg_show(amodem_msg *);/*show msg list*/
+int amodem_puts_remote(const char*msg);
 
 /*exp*/
 int amodem_play(char * filename);

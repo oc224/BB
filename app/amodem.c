@@ -31,6 +31,7 @@ while(1){
         /*return if text = user <>*/
 
         /*store to msg list (local & remote)*/
+	if (strstr(dump,"user")!=NULL) modem.mode=COMMAND;
         if (strstr(dump,"DATA")==NULL)  amodem_msg_push(&msg_local,dump);//local
         else   {//remote
         remote_msg=strstr(dump,":")+1;
@@ -72,6 +73,7 @@ void amodem_print(int msec){
 /*print all the text from serial port*/
 
 }
+
 void amodem_msg_show(amodem_msg * list){
 	/*show msg list*/
 	int i;
@@ -206,15 +208,21 @@ switch (mode){
 case 'o'://online mode
 amodem_puts("ato\r");
 sleep(DELAY_ONLINE);
-if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)==NULL) ret = FAIL;
+if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)==NULL) {
+ret = FAIL;
+printf("fail to go online mode\n");
+}
 break;
 
 case 'c'://command mode
 amodem_puts("+++");
-sleep(DELAY_COMMAND);
+tcdrain(modem.fd);
+sleep(1);
 amodem_puts("at\r");
-if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)==NULL) ret = FAIL;
-break;
+if (amodem_wait_local_ack("OK",TIMEOUT_SERIAL)==NULL){
+ ret = FAIL;
+printf("fail to go to command mode\n");
+break;}
 
 default:
 fprintf(stderr,"error %s\n",__func__);
