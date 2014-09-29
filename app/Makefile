@@ -4,7 +4,7 @@ AR=$(COMPILER)ar
 #CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall
-TARGET=192.168.0.108
+TARGET=192.168.0.107
 
 all:master
 unicon.o:unicon.c

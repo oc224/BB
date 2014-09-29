@@ -73,21 +73,22 @@ int amodem_puts_remote(const char*msg){
 
 /* write msg acoustically to remote modems*/
 // go to online mode
-//amodem_mode_select('o');
-amodem_puts("ato\r");
-sleep(1);
+amodem_mode_select('o',3);
 // send msg
 amodem_puts(msg);
-sleep(3);
 // go back to command mode
-amodem_puts("+++");
-//amodem_mode_select('c');
-        return SUCCESS;
+amodem_mode_select('c',3);
+return SUCCESS;
+
+/*amodem_puts("ato\r");
+sleep(1);
+sleep(3);
+amodem_puts("+++");*/
 }
 
 int amodem_puts(const char*msg){
         // write a line to serial port
-        msg_local.N_unread=0;
+        //msg_local.N_unread=0;
         //msg_remote.N_unread=0;
         RS232_SendBuf(modem.fd,msg,strlen(msg));
 	return tcdrain(modem.fd);

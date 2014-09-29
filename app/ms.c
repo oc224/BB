@@ -197,6 +197,7 @@ return amodem_record(1000);
 
 int upload(const char *buf){
 char fname[40];
+/*default fname*/
 if (sscanf(buf,"%*s %s",fname)<1){
 fprintf(stdout,"download last data\n");
 strcpy(fname,modem.latest_rx_fname);

@@ -11,6 +11,7 @@
 #define TIMEOUT_SYNC 15
 #define TIMEOUT_COPY 60000
 #define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
+#define DELAY_BEFORE_MODE_SWAP 1
 #define DELAY_COMMAND 1
 #define DELAY_ONLINE 1
 #define DELAY_AFTER_MODE_SWAP 1
@@ -31,6 +32,7 @@ ONLINE,COMMAND
 
 typedef struct {
 	int fd;
+	int readthread_permit;
 	float board_temp; //ref modem manual, atv
 	float dsp_bat;
 	float mdm_bat; // ref modem manual mdm_battery
@@ -62,7 +64,7 @@ extern amodem_msg msg_remote;
 int amodem_init();/*init amodem*/
 int amodem_open();/*open the serial port*/
 inline void amodem_close();/*close the serial port*/
-int amodem_mode_select(char);
+int amodem_mode_select(char,int);
 
 /*low level io*/
 int amodem_msg_push(amodem_msg *msg_list ,char *msg_str);

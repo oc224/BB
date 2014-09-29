@@ -12,7 +12,8 @@
 #define BUFSIZE 128
 #define BUFSHORT 20
 #define MASTER_LOGPATH "/root/log/master_log.txt"
-static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mtx_task = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mtx_stdin = PTHREAD_MUTEX_INITIALIZER;
 
 typedef enum {NMASTER,NSLAVE} NODE_MODE;
 typedef char bool;
@@ -72,12 +73,12 @@ int wait_command_master(){
         /*return*/
         if (ret!=FAIL){
                 cnt++;
-	pthread_mutex_lock(&mtx);
+	pthread_mutex_lock(&mtx_task);
         task.cmd.type=ret;
 	free(task.cmd.arg);
 	task.cmd.arg=strdup(buf);
 	task.cmd.isremote=0;
-	pthread_mutex_unlock(&mtx);}
+	pthread_mutex_unlock(&mtx_task);}
         return ret;
 }
 
@@ -94,10 +95,14 @@ static void wait_command_user()
 	int type=EMPTY;
 	int isremote=0;
 	while (1){
+	usleep(10000);
 	/*console prompt*/
+	if (task.cmd.type!=EMPTY) continue;
+	pthread_mutex_lock(&mtx_stdin);
 	printf("%s%d>:","master", cnt);
 	buf[0]=0;arg0[0]=0;
 	fgets(buf, BUFSIZE, stdin);
+	pthread_mutex_unlock(&mtx_stdin);
 
 	// task fill I
 	type=EMPTY;
@@ -106,15 +111,15 @@ static void wait_command_user()
 	//decode (special)
 	sscanf(buf,"%s",arg0);
 	if (strcmp(arg0,"+++")==0){
-	pthread_mutex_lock(&mtx);
+	pthread_mutex_lock(&mtx_task);
 	task.mode=NMASTER;
-	pthread_mutex_unlock(&mtx);
+	pthread_mutex_unlock(&mtx_task);
 	printf("go to master mode\n");
 	continue;}
 	else if (strcmp(arg0,"---")==0){
-	pthread_mutex_lock(&mtx);
+	pthread_mutex_lock(&mtx_task);
 	task.mode=NSLAVE;
-	pthread_mutex_unlock(&mtx);
+	pthread_mutex_unlock(&mtx_task);
 	printf("go to slave mode\n");
 	continue;}
 	else if (strcmp(arg0,"quit")==0){
@@ -178,16 +183,15 @@ static void wait_command_user()
 		isremote=0;
 	}
 	/*return*/
-	if (type>NONE){
+	if (type>EMPTY){
+	pthread_mutex_lock(&mtx_task);
 	cnt++;
-	pthread_mutex_lock(&mtx);
 	task.cmd.type=type;
 	task.cmd.isremote=isremote;
 	free(task.cmd.arg);
 	task.cmd.arg=strdup(buf);
-	//printf("type = %d\n",type);
-	//printf("command %d\n",task.cmd.type);
-	pthread_mutex_unlock(&mtx);}
+	pthread_mutex_unlock(&mtx_task);
+	}
 }
 }
 
@@ -242,15 +246,12 @@ int main()
 	log_event(t_log,0,"master program start");
 
 	//task init
-	pthread_mutex_lock(&mtx);
+	pthread_mutex_lock(&mtx_task);
 	task.mode=NMASTER;
 	task.cmd.arg=strdup(" ");
 	task.cmd.type=EMPTY;
 	task.cmd.isremote=0;
-	pthread_mutex_unlock(&mtx);
-
-	//signal
-	//signal(SIGINT,u_interrupt);
+	pthread_mutex_unlock(&mtx_task);
 
 	//console thread
         pthread_attr_init(&attr);
@@ -260,7 +261,7 @@ int main()
 	{
 		usleep(100000);
 		//wait command
-		if (task.cmd.type==EMPTY)continue;
+		if (task.cmd.type==EMPTY) continue;
 		//log
 		sprintf(buf_log,"task %d",task.cmd.type);
 		log_event(t_log,0,buf_log);
@@ -270,6 +271,7 @@ int main()
 		sprintf(remote,"REQ%d",task.cmd.type);
 		amodem_puts_remote(remote);}
 
+		pthread_mutex_lock(&mtx_stdin);
 		switch (task.cmd.type)
 		{
 		case TALK://ok
@@ -325,11 +327,14 @@ int main()
 			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
 			break;
 		}
-		pthread_mutex_lock(&mtx);
+		pthread_mutex_unlock(&mtx_stdin);
+
+		//update task
+		pthread_mutex_lock(&mtx_task);
 		task.cmd.type=EMPTY;
 		free(task.cmd.arg);
 		task.cmd.arg=strdup(" ");
-		pthread_mutex_unlock(&mtx);
+		pthread_mutex_unlock(&mtx_task);
 	}
 
 amodem_close();

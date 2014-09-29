@@ -22,7 +22,13 @@ char dump[BUFSIZE];
 char *remote_msg;
 int n;
 while(1){
-        n=RS232_PollComport(modem.fd,dump,BUFSIZE);
+/*        if (modem.readthread_permit!=1){
+	sleep(1);
+	printf("closed..\n");
+	continue;
+	}*/
+	usleep(10000);
+	n=RS232_PollComport(modem.fd,dump,BUFSIZE);
         if (n<1) continue;
         //printf("%s",dump);
         /*store to input buffer*/
@@ -31,7 +37,6 @@ while(1){
         /*return if text = user <>*/
 
         /*store to msg list (local & remote)*/
-	if (strstr(dump,"user")!=NULL) modem.mode=COMMAND;
         if (strstr(dump,"DATA")==NULL)  amodem_msg_push(&msg_local,dump);//local
         else   {//remote
         remote_msg=strstr(dump,":")+1;
@@ -70,10 +75,16 @@ return SUCCESS;
 }
 
 void amodem_print(int msec){
+char *string;
+int i;
 /*print all the text from serial port*/
-
+for (i=0;i<msec;i++){
+string=amodem_msg_pop(&msg_local);
+if (string!=NULL) printf("%s\n",string);
+usleep(1000);
 }
 
+}
 void amodem_msg_show(amodem_msg * list){
 	/*show msg list*/
 	int i;
@@ -81,7 +92,7 @@ void amodem_msg_show(amodem_msg * list){
 	printf("N_unread = %d, i = %d\n",list->N_unread,list->i);
 	for (i=0;i<32;i++)printf("-");
 	printf("\n");
-	for (i=0;i<LIST_SIZE;i++)printf("%2d %s\n",i,list->text[i]);
+	for (i=0;i<LIST_SIZE;i++)printf("%2d %s\n",i,list->text[(list->i+i)%LIST_SIZE]);
 	printf("\n");
 }
 
@@ -125,11 +136,13 @@ int amodem_init(){
 	log_event(modem.com_logger,0,"amodem init");
 	//open serial port
 	amodem_open();
+	amodem_mode_select('c',3);
 	return SUCCESS;
 }
 
 int amodem_open() {
 	//open serial port, go to command mode, issue at (attention), then check response
+//	modem.readthread_permit=1;
 	if ((modem.fd=RS232_OpenComport(amodem_dev_path, amodem_serial_baudrate))<1) {
 		printf("Acoustic modem, Fail to open.\n");//error
 		return FAIL;
@@ -139,6 +152,7 @@ int amodem_open() {
 
 inline void amodem_close() {
 	//close serial port
+//	modem.readthread_permit=0;
 	RS232_CloseComport(modem.fd);
 }
 
@@ -202,34 +216,40 @@ int amodem_play(char * filename) {
 	}
 }
 
-int amodem_mode_select(char mode){
-int ret=SUCCESS;
+int amodem_mode_select(char mode,int N_retry){
+int i;
+//if in command mode
+if (mode=='c'){
+amodem_puts("at\r");
+if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)!=NULL) return SUCCESS;}
+
+for (i=0;i<N_retry;i++){
+sleep(DELAY_BEFORE_MODE_SWAP);
+
 switch (mode){
 case 'o'://online mode
 amodem_puts("ato\r");
 sleep(DELAY_ONLINE);
-if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)==NULL) {
-ret = FAIL;
-printf("fail to go online mode\n");
-}
+if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)!=NULL) {
+sleep(DELAY_AFTER_MODE_SWAP);
+return SUCCESS;}
 break;
 
 case 'c'://command mode
 amodem_puts("+++");
-tcdrain(modem.fd);
-sleep(1);
+sleep(DELAY_COMMAND);
 amodem_puts("at\r");
-if (amodem_wait_local_ack("OK",TIMEOUT_SERIAL)==NULL){
- ret = FAIL;
-printf("fail to go to command mode\n");
-break;}
-
+if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)!=NULL) {
+sleep(DELAY_AFTER_MODE_SWAP);
+return SUCCESS;}
+break;
 default:
 fprintf(stderr,"error %s\n",__func__);
-break;
+return FAIL;
 }
-sleep(DELAY_AFTER_MODE_SWAP);
-return ret;
+}
+
+return FAIL;
 }
 
 int amodem_record(int duration) {
@@ -265,7 +285,7 @@ duration in mili seconds
 	fflush(modem.rx_p);
 	return SUCCESS;
 	}else{
-	fprintf(stderr, "amodem, record msg (filename.log) missing\n");
+	fprintf(stderr, "%s, record msg (filename.log) missing\n",__func__);
 	return FAIL;
 	}
 }
