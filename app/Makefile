@@ -4,7 +4,8 @@ AR=$(COMPILER)ar
 #CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
 CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfpu=neon -ftree-vectorize -ffast-math
-TARGET=192.168.0.107
+TARGET=192.168.0.213
+TARGET2=192.168.0.214
 LIBNE10=-I ./include/ -L ./lib -lNE10 -lm -mfpu=neon
 
 all:master
@@ -84,3 +85,4 @@ clean:
 	
 deploy:
 	rsync -avz ./bin/ root@$(TARGET):~/bin/.
+	rsync -avz ./bin/ root@$(TARGET2):~/bin/.
