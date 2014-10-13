@@ -2,6 +2,7 @@
 #include "amodem.h"
 #include "common.h"
 #include "ms.h"
+#include "signal.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +37,8 @@ typedef enum{
         MSG_SHOW,//show msg & msg_remote
         STATUS,
         GPSLOG,
-        RREBOOT
+        RREBOOT,
+	XCROSS
 }cmd_type;
 
 //command info
@@ -178,12 +180,15 @@ static void wait_command_user()
 	}else if (strcmp("rreboot",arg0)==0){
 		type=RREBOOT;
 		isremote=1;
+	}else if (strcmp("xcross",arg0)==0){
+		type=XCROSS;
+		isremote=0;
 	}else{
 		type=NONE;
 		isremote=0;
 	}
 	/*return*/
-	if (type>EMPTY){
+	if (type>NONE){
 	pthread_mutex_lock(&mtx_task);
 	cnt++;
 	task.cmd.type=type;
@@ -224,6 +229,18 @@ break;
 }
 }
 
+int xcross(){
+char fname[40];
+char output[40];
+sscanf(task.cmd.arg,"%*s %s",fname);
+strcpy(output,fname);
+strcpy(strstr(output,".wav"),".out");
+printf("proc %s, output %s ...\n",fname,output);
+
+wav2CIR(fname,"T1_raw.wav",output);
+return SUCCESS;
+}
+
 logger *t_log;
 
 int main()
@@ -233,14 +250,9 @@ int main()
         pthread_attr_t attr;
         pthread_t t_read;
 
-	/*init cfg...*/
-	system_cfg_read();
-//	system_cfg_show();
-//	printf("NODE NAME : %s\n ",t_node.name);
+	//amodem init
 	amodem_init();
-//	scheduler_init();
-//	scheduler_read("/root/config/schedule.txt");
-//	scheduler_task_show();
+	//log init
 	t_log=log_open(MASTER_LOGPATH);
 	log_show(t_log);
 	log_event(t_log,0,"master program start");
@@ -319,9 +331,12 @@ int main()
 		case RREBOOT:
 		master_rreboot();
 		break;
+		case XCROSS:
+		xcross();
+		break;
 		case NONE:
-		amodem_puts(task.cmd.arg);
-		amodem_print(1000);
+		//amodem_puts(task.cmd.arg);
+		//amodem_print(1000);
 		break;
 		default:
 			fprintf(stderr, "ERROR: please input readable command (small letter)\n");

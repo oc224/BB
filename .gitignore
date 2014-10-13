@@ -4,3 +4,5 @@ bin/*
 .cproject
 .project
 *.project
+app/bin/
+
