@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include "master.h"
 #include "amodem.h"
 #include "rs232.h"
 #include "common.h"
@@ -15,18 +16,14 @@ amodem modem;/*a struct that contains the status of modem or some useful informa
 amodem_msg msg_local;/*a list that contains latest msg from (local) modem*/
 amodem_msg msg_remote;/*a list that contains latest msg from (remote) modem*/
 
-static void amodem_readthread(void *arg);
-
+//extern NODE_STATE node_state;
 static void amodem_readthread(void *arg){
 char dump[BUFSIZE];
 char *remote_msg;
 int n;
+int type;
 while(1){
-/*        if (modem.readthread_permit!=1){
-	sleep(1);
-	printf("closed..\n");
-	continue;
-	}*/
+
 	usleep(10000);
 	n=RS232_PollComport(modem.fd,dump,BUFSIZE);
         if (n<1) continue;
@@ -44,15 +41,23 @@ while(1){
         /*if msg from remote , show it*/
         printf("Remote : %s\n",remote_msg);
         /*if go slave request, be slave*/
+	remote_msg=strstr(dump,"REQ");
+	if (remote_msg!=NULL){
+	node_mode_swap(NSLAVE);
+	remote_msg+=3;
+	sscanf(remote_msg,"%d",&type);
+	task_push(type,0,"",0);
+	}
         }
 }
 }
 
+/*
 int amodem_ffs_clear(){
-/*clear ffs system, high usage ie. 98% of ffs system make the modem
-behave strange
-rm *.log file and *.wav file except *t*.wav file
-*/
+//clear ffs system, high usage ie. 98% of ffs system make the modem
+//behave strange
+//rm *.log file and *.wav file except *t*.wav file
+
 char fname[80];
 amodem_puts("ls /ffs/ \r");
 while (amodem_wait_local(NULL,TIMEOUT_SERIAL,fname,80)!=NULL){
@@ -73,6 +78,7 @@ fname[0]=0;
 }
 return SUCCESS;
 }
+*/
 
 void amodem_print(int msec){
 char *string;
@@ -136,7 +142,7 @@ int amodem_init(){
 	log_event(modem.com_logger,0,"amodem init");
 	//open serial port
 	amodem_open();
-	amodem_mode_select('c',3);
+	//amodem_mode_select('c',3);
 	return SUCCESS;
 }
 
@@ -176,7 +182,7 @@ int amodem_cfg_set(const char *fname) {
 
 	/*store cfg*/
 	amodem_puts("cfg store\r");
-	if (amodem_wait_local_ack("stored", TIMEOUT_SERIAL) == NULL) {
+	if (amodem_wait_local_ack("stored", TIMEOUT_SERIAL) == FAIL) {
 		fprintf(stderr, "amodem, cfg fail to store\n");
 		return FAIL;
 	}
@@ -196,7 +202,7 @@ int amodem_play(char * filename) {
 		printf("amodem, send command error\n");
 		return FAIL;
 	}
-	if (amodem_wait_local_ack("buffering", TIMEOUT_SERIAL) == NULL) {
+	if (amodem_wait_local_ack("buffering", TIMEOUT_SERIAL) == FAIL) {
 		fprintf(stderr, "amodem, fail to play waveform\n");
 		return FAIL;
 	}
@@ -219,18 +225,19 @@ int amodem_play(char * filename) {
 int amodem_mode_select(char mode,int N_retry){
 int i;
 //if in command mode
-if (mode=='c'){
+/*if (mode=='c'){
 amodem_puts("at\r");
-if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)!=NULL) return SUCCESS;}
-
+if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)!=FAIL) return SUCCESS;}
+*/
 for (i=0;i<N_retry;i++){
+
 sleep(DELAY_BEFORE_MODE_SWAP);
 
 switch (mode){
 case 'o'://online mode
 amodem_puts("ato\r");
 sleep(DELAY_ONLINE);
-if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)!=NULL) {
+if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)!=FAIL) {
 sleep(DELAY_AFTER_MODE_SWAP);
 return SUCCESS;}
 break;
@@ -239,7 +246,7 @@ case 'c'://command mode
 amodem_puts("+++");
 sleep(DELAY_COMMAND);
 amodem_puts("at\r");
-if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)!=NULL) {
+if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)!=FAIL) {
 sleep(DELAY_AFTER_MODE_SWAP);
 return SUCCESS;}
 break;
@@ -315,7 +322,7 @@ int amodem_sync_clock_gps(int sec) {
 	// sync modem clock source
 	// Confirm clock source for the modem
 	amodem_puts("@SyncPPS\r");
-	if (amodem_wait_local_ack("2", TIMEOUT_SERIAL) !=NULL) {
+	if (amodem_wait_local_ack("2", TIMEOUT_SERIAL) !=FAIL) {
 		amodem_puts("@SyncPPS=4\r");
 		printf("amodem, syncpps source is not gps, reset the source...\n");
 		printf("sync..., this will take 30 seconds or more...\n");
@@ -364,7 +371,7 @@ int amodem_is_clock_Sync(int sec) {
 	// check every X sec
 	for (i = 0; i < sec/(TIMEOUT_SERIAL/1000); i++) {
 		amodem_puts("sync\r");
-		if (amodem_wait_local_ack("synchronized", TIMEOUT_SERIAL)!=NULL) {
+		if (amodem_wait_local_ack("synchronized", TIMEOUT_SERIAL)!=FAIL) {
 			modem.sync_state=SYNC;
 			return SUCCESS;
 		}

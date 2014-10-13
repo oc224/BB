@@ -108,7 +108,7 @@ int RS232_OpenComport(const char* devname,int baudrate)
 		break;
 	}
 
-	fd = open(devname, O_RDWR | O_NOCTTY );//O_NDELAY
+	fd = open(devname, O_RDWR | O_NOCTTY| O_NDELAY );//O_NDELAY
 	if(fd==-1)
 	{
 		perror("unable to open comport ");

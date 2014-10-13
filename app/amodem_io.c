@@ -69,6 +69,19 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
         return ret;
 }
 
+
+int amodem_wait_local_ack(char * keyword,int mSec){
+char *str;
+str=amodem_wait_msg(&msg_local,keyword,mSec,NULL,0);
+if (str==NULL) return FAIL;
+else {
+printf("get %s\n",str);
+return SUCCESS;
+}
+//return (str==NULL)? FAIL:SUCCESS; 
+//if (str==NULL) return FAIL;
+}
+
 int amodem_puts_remote(const char*msg){
 
 /* write msg acoustically to remote modems*/
@@ -76,20 +89,15 @@ int amodem_puts_remote(const char*msg){
 amodem_mode_select('o',3);
 // send msg
 amodem_puts(msg);
+amodem_wait_local_ack("Forwarding",2000);
 // go back to command mode
 amodem_mode_select('c',3);
 return SUCCESS;
-
-/*amodem_puts("ato\r");
-sleep(1);
-sleep(3);
-amodem_puts("+++");*/
 }
 
 int amodem_puts(const char*msg){
         // write a line to serial port
         //msg_local.N_unread=0;
         //msg_remote.N_unread=0;
-        RS232_SendBuf(modem.fd,msg,strlen(msg));
-	return tcdrain(modem.fd);
+	return RS232_SendBuf(modem.fd,msg,strlen(msg));
 }

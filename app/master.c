@@ -2,6 +2,7 @@
 #include "amodem.h"
 #include "common.h"
 #include "ms.h"
+#include "master.h"
 #include "signal.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,74 +15,60 @@
 #define BUFSHORT 20
 #define MASTER_LOGPATH "/root/log/master_log.txt"
 static pthread_mutex_t mtx_task = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mtx_state = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t mtx_stdin = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mtx_on_task = PTHREAD_MUTEX_INITIALIZER;
 
-typedef enum {NMASTER,NSLAVE} NODE_MODE;
-typedef char bool;
+logger *t_log;
+TASK task_select,task_pool[2];
+NODE_MODE node_mode ;
 
+int task_push(int type,int isremote,char *arg,int slot){//13ok
+if (task_pool[slot].type!=EMPTY) return FAIL;
+pthread_mutex_lock(&mtx_task);
+strcpy(task_pool[slot].arg,arg);
+task_pool[slot].type=type;
+task_pool[slot].isremote=isremote;
+pthread_mutex_unlock(&mtx_task);
+return SUCCESS;
+}
 
-typedef enum{
-	EMPTY,
-        NONE,
-        TALK,//recipricol transmission, ok
-        ATALK,
-        CONVERSATION,
-        CONEND,
-        QUICK,
-        MSPLAY,//local modem play
-        MSRECORD,//local modem record
-        SYNCALL,//sync remote & local modem
-        HELP,//show help msg
-        UPLOAD,//upload local files
-        SEND_REMOTE,//send msg to remote modems
-        MSG_SHOW,//show msg & msg_remote
-        STATUS,
-        GPSLOG,
-        RREBOOT,
-	XCROSS
-}cmd_type;
+void task_pop(){//13ok
+pthread_mutex_lock(&mtx_task);
+if (task_pool[0].type!=EMPTY) {
+task_select.type=task_pool[0].type;
+task_select.isremote=task_pool[0].isremote;
+strcpy(task_select.arg,task_pool[0].arg);
+task_pool[0].type=EMPTY;
+}else if (task_pool[1].type!=EMPTY) {
+task_select.type=task_pool[1].type;
+task_select.isremote=task_pool[1].isremote;
+strcpy(task_select.arg,task_pool[1].arg);
+task_pool[1].type=EMPTY;
+}else {
+task_select.type=EMPTY;
+}
+pthread_mutex_unlock(&mtx_task);
+printf("task no.%d\n",task_select.type);
+};
 
-//command info
-typedef struct{
-cmd_type type;
-bool isremote;
-char *arg;
-}CMD;
+void node_mode_swap(int mode){//13ok
+pthread_mutex_lock(&mtx_state);
 
-//info (status, info)
-typedef struct{
-NODE_MODE mode;
-CMD cmd;
-}node_task;
+switch (mode){
+case NMASTER:
+node_mode=NMASTER;
+printf("go to master mode\n");
+break;
+case NSLAVE:
+node_mode=NSLAVE;
+printf("go to slave mode\n");
+break;
+default:
+break;
+}
 
-node_task task;
-
-int wait_command_master(){
-	/*
-	input remote
-	output to CMD field
-	*/
-        int ret=FAIL;
-        static int cnt=1;
-        char buf[BUFSIZE];
-
-        if (amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)==NULL)return FAIL;
-        printf("remote:%s \n",buf);
-
-        /*decode*/
-        if (sscanf(buf,"%d",&ret) < 1)
-                ret = FAIL;
-
-        /*return*/
-        if (ret!=FAIL){
-                cnt++;
-	pthread_mutex_lock(&mtx_task);
-        task.cmd.type=ret;
-	free(task.cmd.arg);
-	task.cmd.arg=strdup(buf);
-	task.cmd.isremote=0;
-	pthread_mutex_unlock(&mtx_task);}
-        return ret;
+pthread_mutex_unlock(&mtx_state);
 }
 
 static void wait_command_user()
@@ -97,14 +84,11 @@ static void wait_command_user()
 	int type=EMPTY;
 	int isremote=0;
 	while (1){
-	usleep(10000);
+	pthread_mutex_lock(&mtx_on_task);
 	/*console prompt*/
-	if (task.cmd.type!=EMPTY) continue;
-	pthread_mutex_lock(&mtx_stdin);
 	printf("%s%d>:","master", cnt);
 	buf[0]=0;arg0[0]=0;
 	fgets(buf, BUFSIZE, stdin);
-	pthread_mutex_unlock(&mtx_stdin);
 
 	// task fill I
 	type=EMPTY;
@@ -112,17 +96,13 @@ static void wait_command_user()
 
 	//decode (special)
 	sscanf(buf,"%s",arg0);
-	if (strcmp(arg0,"+++")==0){
-	pthread_mutex_lock(&mtx_task);
-	task.mode=NMASTER;
-	pthread_mutex_unlock(&mtx_task);
-	printf("go to master mode\n");
+	if (strcmp(arg0,"++++")==0){
+	node_mode_swap(NMASTER);
+	pthread_mutex_unlock(&mtx_on_task);
 	continue;}
-	else if (strcmp(arg0,"---")==0){
-	pthread_mutex_lock(&mtx_task);
-	task.mode=NSLAVE;
-	pthread_mutex_unlock(&mtx_task);
-	printf("go to slave mode\n");
+	else if (strcmp(arg0,"----")==0){
+	node_mode_swap(NSLAVE);
+	pthread_mutex_unlock(&mtx_on_task);
 	continue;}
 	else if (strcmp(arg0,"quit")==0){
 	printf("quit...\n");
@@ -131,8 +111,9 @@ static void wait_command_user()
 	}
 
 	//decode (normal)
-	if (task.mode!=NMASTER){
+	if (node_mode!=NMASTER){
 	printf("This node is not in master mode, unable to give command\n");
+	pthread_mutex_unlock(&mtx_on_task);
 	continue;}
 
 	if (strcmp(arg0,"talk")==0){
@@ -189,34 +170,32 @@ static void wait_command_user()
 	}
 	/*return*/
 	if (type>NONE){
-	pthread_mutex_lock(&mtx_task);
 	cnt++;
-	task.cmd.type=type;
-	task.cmd.isremote=isremote;
-	free(task.cmd.arg);
-	task.cmd.arg=strdup(buf);
-	pthread_mutex_unlock(&mtx_task);
+	task_push(type,isremote,buf,1);
 	}
+	pthread_mutex_unlock(&mtx_on_task);
+	usleep(10000);
+
 }
 }
 
 int atalk(){
 char buf[BUFSIZE];
-switch (task.mode){
+switch (node_mode){
 case NMASTER:
 /*play*/
 amodem_play("t1.wav");
 /*wait ack*/
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 /*record*/
-amodem_record(1000);
+amodem_record(2000);
 /*recv stamp*/
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 printf("Remote TX @ %s\n",buf);
 break;
 case NSLAVE:
 /*record*/
-amodem_record(1000);
+amodem_record(2000);
 /*send ack*/
 amodem_puts_remote(ACK);
 /*play*/
@@ -232,7 +211,7 @@ break;
 int xcross(){
 char fname[40];
 char output[40];
-sscanf(task.cmd.arg,"%*s %s",fname);
+sscanf(task_select.arg,"%*s %s",fname);
 strcpy(output,fname);
 strcpy(strstr(output,".wav"),".out");
 printf("proc %s, output %s ...\n",fname,output);
@@ -241,7 +220,6 @@ wav2CIR(fname,"T1_raw.wav",output);
 return SUCCESS;
 }
 
-logger *t_log;
 
 int main()
 {
@@ -258,12 +236,10 @@ int main()
 	log_event(t_log,0,"master program start");
 
 	//task init
-	pthread_mutex_lock(&mtx_task);
-	task.mode=NMASTER;
-	task.cmd.arg=strdup(" ");
-	task.cmd.type=EMPTY;
-	task.cmd.isremote=0;
-	pthread_mutex_unlock(&mtx_task);
+	task_push(EMPTY,0," ",0);
+	task_push(EMPTY,0," ",1);
+
+	node_mode_swap(NMASTER);
 
 	//console thread
         pthread_attr_init(&attr);
@@ -271,25 +247,29 @@ int main()
 
 	while (1)
 	{
-		usleep(100000);
+		sleep(1);
+		task_pop();
 		//wait command
-		if (task.cmd.type==EMPTY) continue;
+		if (task_select.type==EMPTY) {
+		continue;}
+		pthread_mutex_lock(&mtx_on_task);
+
+		// Doing tasks
 		//log
-		sprintf(buf_log,"task %d",task.cmd.type);
+		sprintf(buf_log,"task %d",task_select.type);
 		log_event(t_log,0,buf_log);
 
 		// notify remote
-		if (task.cmd.isremote){
-		sprintf(remote,"REQ%d",task.cmd.type);
+		if (task_select.isremote){
+		sprintf(remote,"REQ%d",task_select.type);
 		amodem_puts_remote(remote);}
-
-		pthread_mutex_lock(&mtx_stdin);
-		switch (task.cmd.type)
+		//do task
+		switch (task_select.type)
 		{
-		case TALK://ok
+		case TALK:
 		master_talk();
 		break;
-		case ATALK://ok
+		case ATALK:
 		atalk();
 		break;
 		case CONVERSATION:
@@ -301,26 +281,28 @@ int main()
 		case QUICK:
 		master_quick();
 		break;
-		case MSPLAY://ok
-		play(task.cmd.arg);
+		case MSPLAY:
+		play(task_select.arg);
 		break;
-		case MSRECORD://ok
-		record(task.cmd.arg);
+		case MSRECORD:
+		record(task_select.arg);
 		break;
-		case SYNCALL://ok
+		case SYNCALL:
 		master_sync();
 		break;
 		case HELP:
 		help();
 		break;
 		case UPLOAD:
-		upload(task.cmd.arg);
+		upload(task_select.arg);
 		break;
-		case SEND_REMOTE://ok
-		amodem_puts_remote(task.cmd.arg);
+		case SEND_REMOTE:
+		amodem_puts_remote(task_select.arg);
 		break;
 		case MSG_SHOW://ok
+		printf("local msg\n");
 		amodem_msg_show(&msg_local);
+		printf("remote msg\n");
 		amodem_msg_show(&msg_remote);
 		break;
 		case STATUS:
@@ -339,19 +321,15 @@ int main()
 		//amodem_print(1000);
 		break;
 		default:
-			fprintf(stderr, "ERROR: please input readable command (small letter)\n");
-			break;
+		fprintf(stderr, "ERROR: please input readable command (small letter)\n");
+		break;
 		}
-		pthread_mutex_unlock(&mtx_stdin);
+		//task done
+		pthread_mutex_unlock(&mtx_on_task);
 
-		//update task
-		pthread_mutex_lock(&mtx_task);
-		task.cmd.type=EMPTY;
-		free(task.cmd.arg);
-		task.cmd.arg=strdup(" ");
-		pthread_mutex_unlock(&mtx_task);
+		usleep(10000);
+
 	}
 
-amodem_close();
 return 0;
 }

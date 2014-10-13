@@ -75,7 +75,8 @@ int amodem_puts(const char*msg);/**/
 /*io*/
 #define amodem_wait_local(key_word,mSec,info,info_size) amodem_wait_msg(&msg_local,key_word,mSec,info,info_size)
 #define amodem_wait_remote(buf,bufsize,mSec) amodem_wait_msg(&msg_remote,NULL,mSec,buf,bufsize)
-#define amodem_wait_local_ack(keyword,mSec) amodem_wait_msg(&msg_local,keyword,mSec,NULL,0)
+int amodem_wait_local_ack(char* keyword,int mSec);
+// amodem_wait_msg(&msg_local,keyword,mSec,NULL,0)
 void amodem_msg_show(amodem_msg *);/*show msg list*/
 int amodem_puts_remote(const char*msg);
 
