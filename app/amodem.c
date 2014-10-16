@@ -236,7 +236,7 @@ sleep(DELAY_BEFORE_MODE_SWAP);
 switch (mode){
 case 'o'://online mode
 amodem_puts("ato\r");
-sleep(DELAY_ONLINE);
+sleep(DELAY_MODE_TRANS);
 if (amodem_wait_local_ack("connect",TIMEOUT_SERIAL)!=FAIL) {
 sleep(DELAY_AFTER_MODE_SWAP);
 return SUCCESS;}
@@ -244,7 +244,7 @@ break;
 
 case 'c'://command mode
 amodem_puts("+++");
-sleep(DELAY_COMMAND);
+sleep(DELAY_MODE_TRANS);
 amodem_puts("at\r");
 if (amodem_wait_local_ack("ok",TIMEOUT_SERIAL)!=FAIL) {
 sleep(DELAY_AFTER_MODE_SWAP);

@@ -4,7 +4,7 @@
 #define WAIT_THEN_PLAY (100*MILI)
 #define SLEEP_BEFORE_RECORD (700*MILI)
 #define SLEEP_AFTER_SYNC 2
-#define REMOTE_TIMEOUT 1000
+#define REMOTE_TIMEOUT 10000
 
 
 int master_talk();

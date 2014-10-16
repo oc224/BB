@@ -138,6 +138,7 @@ printf("proc %s, output %s ...\n",fname,output);
 wav2CIR(fname,"T1_raw.wav",output);
 return SUCCESS;
 }
+
 int atalk(){
 char buf[BUFSIZE];
 switch (node_mode){
@@ -145,18 +146,101 @@ case NMASTER:
 /*play*/
 amodem_play("t1.wav");
 /*wait ack*/
-amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
+amodem_wait_remote("ACK",REMOTE_TIMEOUT,NULL,0);
+//sleep
+sleep(DELAY_MODE_SELECT-1);
 /*record*/
 amodem_record(2000);
 /*recv stamp*/
-amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
+sleep(4*DELAY_MODE_SELECT);
+//printf("wait info\n");
+amodem_wait_remote("TX",REMOTE_TIMEOUT,buf,BUFSIZE);
 printf("Remote TX @ %s\n",buf);
 break;
 case NSLAVE:
+//sleep
+sleep(DELAY_MODE_SELECT-1);
 /*record*/
 amodem_record(2000);
 /*send ack*/
 amodem_puts_remote(ACK);
+/*play*/
+amodem_play("t1.wav");
+/*send stamp*/
+amodem_puts_remote(modem.latest_tx_stamp);
+break;
+default:
+break;
+}
+}
+
+int btalk(){
+char buf[BUFSIZE];
+switch (node_mode){
+case NMASTER:
+//inform
+amodem_puts("atr210\r");
+sleep(9);
+amodem_wait_local_ack("Response",2000);
+/*play*/
+amodem_play("t1.wav");
+/*wait ack*/
+amodem_wait_local_ack("210",6000);
+//
+sleep(9);
+/*record*/
+amodem_record(2000);
+sleep(2);
+/*recv stamp*/
+amodem_wait_remote(":",REMOTE_TIMEOUT,buf,BUFSIZE);
+printf("Remote TX @ %s\n",buf);
+break;
+case NSLAVE:
+/*wait ack*/
+amodem_wait_local_ack("210",6000);
+sleep(9);
+/*record*/
+amodem_record(2000);
+//inform
+amodem_puts("atr210\r");
+sleep(9);
+amodem_wait_local_ack("Response",2000);
+/*play*/
+amodem_play("t1.wav");
+/*send stamp*/
+amodem_puts_remote(modem.latest_tx_stamp+8);
+break;
+default:
+break;
+}
+}
+int ctalk(){
+char buf[BUFSIZE];
+switch (node_mode){
+case NMASTER:
+/*play*/
+amodem_play("t1.wav");
+/*wait ack*/
+amodem_wait_local_ack("210",6000);
+//
+sleep(9);
+/*record*/
+amodem_record(2000);
+sleep(2);
+/*recv stamp*/
+amodem_wait_remote(":",REMOTE_TIMEOUT,buf,BUFSIZE);
+printf("Remote TX @ %s\n",buf);
+break;
+case NSLAVE:
+/*wait ack*/
+amodem_wait_local_ack("210",6000);
+sleep(9);
+/*record*/
+amodem_record(2000);
+//inform
+amodem_puts("atr210\r");
+sleep(9);
+amodem_wait_local_ack("Response",2000);
 /*play*/
 amodem_play("t1.wav");
 /*send stamp*/
@@ -196,8 +280,8 @@ void wait_command_user()
 	else if (strcmp(arg0,"----")==0){
 	node_mode_swap(NSLAVE);
 	return ;}
-	else if (strcmp(arg0,"quit")==0){
-	printf("quit...\n");
+	else if (strcmp(arg0,"exit")==0){
+	printf("exit...\n");
 	amodem_end();
 	exit(0);
 	}
@@ -284,7 +368,7 @@ break;
 
 }
 
-int task_push(int type,int isremote,char *arg,int slot){//13ok
+int task_push(int type,int isremote,char *arg,int slot){//16ok
 if (task_pool[slot].type!=EMPTY) return FAIL;
 strcpy(task_pool[slot].arg,arg);
 task_pool[slot].type=type;
@@ -292,7 +376,7 @@ task_pool[slot].isremote=isremote;
 return SUCCESS;
 }
 
-void task_pop(){//13ok
+void task_pop(){//16ok
 if (task_pool[0].type!=EMPTY) {
 task_select.type=task_pool[0].type;
 task_select.isremote=task_pool[0].isremote;
@@ -306,7 +390,7 @@ task_pool[1].type=EMPTY;
 }else {
 task_select.type=EMPTY;
 }
-printf("task no.%d\n",task_select.type);
+//printf("task no.%d\n",task_select.type);
 };
 
 void command_wait(){

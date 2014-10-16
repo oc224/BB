@@ -1,11 +1,11 @@
 1. multi-station
 2. integrate master&slave(dynamic master/slave)
-3. in-situ DSP
+3. in-situ DSP, ok
 4. data manage
-5. log sys, 0906
+5. log sys, 0906, ok
 6. error handling
 7. socket from station to control PC
 8. pps input on gpio pin, beagleboard gps time source
-9. amodem read thread 9/15 
-10. scheduler clean up 9/15
-11. mode swap 9/15
+9. amodem read thread 9/15 ,ok
+10. scheduler clean up 9/15, ok
+11. mode swap 9/15, working on

@@ -51,6 +51,7 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
         int Niter=mSec/100;
         int is_copy=(info!=NULL);
         int is_nullkeyword=(key_word==NULL);
+	int is_match;
         char* ret=NULL;
 
         if (is_copy) info[0]=0;/*make sure input buffer clear when this funtion fail*/
@@ -59,7 +60,12 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
                 usleep(100000);
                 delay++;
                 if ((new_msg=amodem_msg_pop(msg))!=NULL) {//got new msg
+			/*if (!is_nullkeyword){
+			is_match=(strcasestr(new_msg,key_word)!=NULL);
+			//printf("is match %d\n",is_match);
+			}*/
                         if ((is_nullkeyword)||(strcasestr(new_msg,key_word)!=NULL)) {
+//			printf("%s, got msg :%s\n",__func__,new_msg);
                         ret=new_msg;
                         break;  }
                 }
@@ -75,11 +81,9 @@ char *str;
 str=amodem_wait_msg(&msg_local,keyword,mSec,NULL,0);
 if (str==NULL) return FAIL;
 else {
-printf("get %s\n",str);
+//printf("%s, get %s\n",__func__,str);
 return SUCCESS;
 }
-//return (str==NULL)? FAIL:SUCCESS; 
-//if (str==NULL) return FAIL;
 }
 
 int amodem_puts_remote(const char*msg){
@@ -97,7 +101,5 @@ return SUCCESS;
 
 int amodem_puts(const char*msg){
         // write a line to serial port
-        //msg_local.N_unread=0;
-        //msg_remote.N_unread=0;
 	return RS232_SendBuf(modem.fd,msg,strlen(msg));
 }

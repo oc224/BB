@@ -1,0 +1,33 @@
+10/13 
+Building an New SD card (system)
+
+1. following the Archlinux's installation instructions
+2. set static network address
+nano /etc/systemd/network/eth0.network
+Modify the file, take below as reference.
+[Match]
+Name=eth0
+
+[Network]
+DNS=192.168.0.1
+Address=192.168.0.213/24
+Gateway=192.168.0.1
+#DHCP=both
+
+3. set a hostname
+nano /etc/hostname
+
+4. neccessary folder
+at home
+mkdir bin
+mkdir log
+
+5. neccessary package
+packman -S rsync
+packman -S minicom
+pacman -S lrzsz
+
+10/15
+install gpsd
+pacman -Syyu %update the system
+pacman -S gpsd

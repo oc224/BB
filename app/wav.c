@@ -17,7 +17,7 @@ long length;
 wav * t_wav=(wav *)malloc(sizeof(wav));
 /*open*/
 if ((FP=fopen(fname,"rb"))==NULL){
-fprintf(stderr,"fail to open .wav file\n");
+fprintf(stderr,"%s, fail to open %s file\n",fname,__func__);
 return NULL;
 }
 /*read header*/

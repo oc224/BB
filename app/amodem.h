@@ -12,9 +12,9 @@
 #define TIMEOUT_COPY 60000
 #define GPSPIPE "gpspipe -r -n 20 |grep 'GPGGA' >> /dev/ttyUSB2" /*feed modem gps GPGGA setence.*/
 #define DELAY_BEFORE_MODE_SWAP 1
-#define DELAY_COMMAND 1
-#define DELAY_ONLINE 1
+#define DELAY_MODE_TRANS 1
 #define DELAY_AFTER_MODE_SWAP 1
+#define DELAY_MODE_SELECT (DELAY_BEFORE_MODE_SWAP+DELAY_AFTER_MODE_SWAP+DELAY_MODE_TRANS)
 #define WAIT_INTVAL 100000 /*inteval time for reading serial port*/
 #define N_ITER_DIV (WAIT_INTVAL/1000)
 #define GPSPIPE_TIME 8 /*seconds that gpspipe feed modem*/
@@ -73,8 +73,8 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,int i
 int amodem_puts(const char*msg);/**/
 
 /*io*/
-#define amodem_wait_local(key_word,mSec,info,info_size) amodem_wait_msg(&msg_local,key_word,mSec,info,info_size)
-#define amodem_wait_remote(buf,bufsize,mSec) amodem_wait_msg(&msg_remote,NULL,mSec,buf,bufsize)
+#define amodem_wait_local(key_word,mSec,buf,bufsize) amodem_wait_msg(&msg_local,key_word,mSec,buf,bufsize)
+#define amodem_wait_remote(key_word,mSec,buf,bufsize) amodem_wait_msg(&msg_remote,key_word,mSec,buf,bufsize)
 int amodem_wait_local_ack(char* keyword,int mSec);
 // amodem_wait_msg(&msg_local,keyword,mSec,NULL,0)
 void amodem_msg_show(amodem_msg *);/*show msg list*/
