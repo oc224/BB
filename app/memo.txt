@@ -31,3 +31,13 @@ pacman -S lrzsz
 install gpsd
 pacman -Syyu %update the system
 pacman -S gpsd
+
+10/17
+
+ssh key
+http://blog.longwin.com.tw/2005/12/ssh_keygen_no_passwd/
+ssh-keygen -t rsa 或 ssh-keygen -d (dsa) => 產生出 id_rsa, id_rsa.pub
+scp id_rsa.pub server_hostname:~/.ssh/
+ssh server_hostname
+cat .ssh/id_rsa.pub >> .ssh/authorized_keys 即可
+這樣子就可以 key 認證登入, 不需輸入密碼.
