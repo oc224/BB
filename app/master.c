@@ -60,24 +60,24 @@ int main()
 		// notify remote
 		if (task_select.isremote){
 		sprintf(remote,"REQ%d",task_select.type);
-		amodem_puts_remote(remote);}
+		amodem_puts_remote(255,remote);}
 		//do task
 		switch (task_select.type)
 		{
 		case TALK:
-		master_talk();
+		//master_talk();
 		break;
 		case ATALK:
 		atalk();
 		break;
 		case CONVERSATION:
-		master_con();
+		//master_con();
 		break;
 		case CONEND:
-		master_conend();
+		//master_conend();
 		break;
 		case QUICK:
-		master_quick();
+		//master_quick();
 		break;
 		case MSPLAY:
 		play(task_select.arg);
@@ -86,7 +86,7 @@ int main()
 		record(task_select.arg);
 		break;
 		case SYNCALL:
-		master_sync();
+		//master_sync();
 		break;
 		case HELP:
 		help();
@@ -95,7 +95,7 @@ int main()
 		upload(task_select.arg);
 		break;
 		case SEND_REMOTE:
-		amodem_puts_remote(task_select.arg);
+		amodem_puts_remote(255,task_select.arg);
 		break;
 		case MSG_SHOW://ok
 		printf("local msg\n");
@@ -106,10 +106,10 @@ int main()
 		case STATUS:
 		break;
 		case GPSLOG:
-		system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
+		//system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
 		break;
 		case RREBOOT:
-		master_rreboot();
+		//master_rreboot();
 		break;
 		case XCROSS:
 		xcross();
@@ -163,11 +163,11 @@ sleep(DELAY_MODE_SELECT-1);
 /*record*/
 amodem_record(2000);
 /*send ack*/
-amodem_puts_remote(ACK);
+amodem_puts_remote(255,ACK);
 /*play*/
 amodem_play("t1.wav");
 /*send stamp*/
-amodem_puts_remote(modem.latest_tx_stamp);
+amodem_puts_remote(255,modem.latest_tx_stamp);
 break;
 default:
 break;
@@ -179,13 +179,13 @@ char buf[BUFSIZE];
 switch (node_mode){
 case NMASTER:
 //inform
-amodem_puts("atr210\r");
+amodem_puts_local("atr210\r");
 sleep(9);
-amodem_wait_local_ack("Response",2000);
+amodem_wait_ack(&msg_local,"Response",2000);
 /*play*/
 amodem_play("t1.wav");
 /*wait ack*/
-amodem_wait_local_ack("210",6000);
+amodem_wait_ack(&msg_local,"210",6000);
 //
 sleep(9);
 /*record*/
@@ -197,18 +197,18 @@ printf("Remote TX @ %s\n",buf);
 break;
 case NSLAVE:
 /*wait ack*/
-amodem_wait_local_ack("210",6000);
+amodem_wait_ack(&msg_local,"210",6000);
 sleep(9);
 /*record*/
 amodem_record(2000);
 //inform
-amodem_puts("atr210\r");
+amodem_puts_local("atr210\r");
 sleep(9);
-amodem_wait_local_ack("Response",2000);
+amodem_wait_ack(&msg_local,"Response",2000);
 /*play*/
 amodem_play("t1.wav");
 /*send stamp*/
-amodem_puts_remote(modem.latest_tx_stamp+8);
+amodem_puts_remote(255,modem.latest_tx_stamp+8);
 break;
 default:
 break;
@@ -221,7 +221,7 @@ case NMASTER:
 /*play*/
 amodem_play("t1.wav");
 /*wait ack*/
-amodem_wait_local_ack("210",6000);
+amodem_wait_ack(&msg_local,"210",6000);
 //
 sleep(9);
 /*record*/
@@ -233,18 +233,18 @@ printf("Remote TX @ %s\n",buf);
 break;
 case NSLAVE:
 /*wait ack*/
-amodem_wait_local_ack("210",6000);
+amodem_wait_ack(&msg_local,"210",6000);
 sleep(9);
 /*record*/
 amodem_record(2000);
 //inform
-amodem_puts("atr210\r");
+amodem_puts_local("atr210\r");
 sleep(9);
-amodem_wait_local_ack("Response",2000);
+amodem_wait_ack(&msg_local,"Response",2000);
 /*play*/
 amodem_play("t1.wav");
 /*send stamp*/
-amodem_puts_remote(modem.latest_tx_stamp+8);
+amodem_puts_remote(255,modem.latest_tx_stamp+8);
 break;
 default:
 break;

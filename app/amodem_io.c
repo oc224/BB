@@ -12,29 +12,34 @@
 #define BUFSIZE 100/*default size for buffer*/
 
 char* amodem_msg_pop(amodem_msg* msg){
-/*point to oldest unread msg*/
-char* ret;
+char* ret=NULL;
+//lock
+pthread_mutex_lock(&msg->msg_mutex);
+
 //init check
-if (msg->N_unread==0) return NULL;
+if (msg->N_unread>0) {
 //get pointer that point output string
 ret = msg->text[(msg->i-msg->N_unread+1+LIST_SIZE)%LIST_SIZE];
 // N_unread update
 msg->N_unread--;
+}
+//return
+pthread_mutex_unlock(&msg->msg_mutex);
 return ret;
 }
 
 int amodem_msg_push(amodem_msg *msg ,char *msg_str){
+//lock
+pthread_mutex_lock(&msg->msg_mutex);
 //put
-free(msg->text[msg->i]);
-msg->text[msg->i]=strdup(msg_str);
-
+memset((void *)msg->text[msg->i],0,sizeof(msg->text[msg->i]));
+strcpy(msg->text[msg->i],msg_str);
 // N_unread i update
-msg->i=(msg->i+1)%LIST_SIZE;
-if (msg->N_unread>=LIST_SIZE){
-printf("input msg list overrun\n");
-}else{
-msg->N_unread++;
-}
+if (msg->N_unread>0) msg->i=(msg->i+1)%LIST_SIZE;
+if (msg->N_unread>=LIST_SIZE) printf("%s,input msg list overrun\n",__func__);
+else msg->N_unread++;
+//return
+pthread_mutex_unlock(&msg->msg_mutex);
 return SUCCESS;
 }
 
@@ -51,7 +56,6 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
         int Niter=mSec/100;
         int is_copy=(info!=NULL);
         int is_nullkeyword=(key_word==NULL);
-	int is_match;
         char* ret=NULL;
 
         if (is_copy) info[0]=0;/*make sure input buffer clear when this funtion fail*/
@@ -59,47 +63,50 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
         while(delay<Niter) {//before timeout
                 usleep(100000);
                 delay++;
+		//printf("test\n");
                 if ((new_msg=amodem_msg_pop(msg))!=NULL) {//got new msg
-			/*if (!is_nullkeyword){
-			is_match=(strcasestr(new_msg,key_word)!=NULL);
-			//printf("is match %d\n",is_match);
-			}*/
                         if ((is_nullkeyword)||(strcasestr(new_msg,key_word)!=NULL)) {
-//			printf("%s, got msg :%s\n",__func__,new_msg);
                         ret=new_msg;
                         break;  }
                 }
         }
+
 	//return
         if ((ret!=NULL)&&(is_copy)) strncpy(info,new_msg,info_size);
         return ret;
 }
 
 
-int amodem_wait_local_ack(char * keyword,int mSec){
+int amodem_wait_ack(amodem_msg* msg,char * keyword,int mSec){
 char *str;
-str=amodem_wait_msg(&msg_local,keyword,mSec,NULL,0);
-if (str==NULL) return FAIL;
-else {
-//printf("%s, get %s\n",__func__,str);
+str=amodem_wait_msg(msg,keyword,mSec,NULL,0);
+if (str==NULL) {
+printf("%s,ack timeout\n",__func__);
+return FAIL;
+}else
 return SUCCESS;
-}
+
 }
 
-int amodem_puts_remote(const char*msg){
+int amodem_puts_remote(int addr,const char*msg){
 
 /* write msg acoustically to remote modems*/
 // go to online mode
+char buf[36];
+//addr
+sprintf(buf,"@remoteaddr=%d",addr);
+amodem_puts_local(buf);
+
 amodem_mode_select('o',3);
 // send msg
-amodem_puts(msg);
-amodem_wait_local_ack("Forwarding",2000);
+amodem_puts_local(msg);
+amodem_wait_ack(&msg_local,"Forwarding",2000);
 // go back to command mode
 amodem_mode_select('c',3);
 return SUCCESS;
 }
 
-int amodem_puts(const char*msg){
+int amodem_puts_local(const char*msg){
         // write a line to serial port
 	return RS232_SendBuf(modem.fd,msg,strlen(msg));
 }

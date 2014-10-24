@@ -11,93 +11,93 @@
 //TODO upload_data upgrade
 //TODO send time stamp
 
-int master_talk(){
+/*int master_talk(){
 char buf[BUFSIZE];
-/*sync*/
+//sync
 master_sync();
-/*send ack*/
-amodem_puts_remote(ACK);
-/*play*/
+//send ack
+amodem_puts_remote(255,ACK);
+//play
 amodem_play("t1.wav");
-/*wait ack*/
-amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-/*send stamp*/
-amodem_puts_remote(modem.latest_tx_stamp+8);
-/*wait*/
-amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-/*sync*/
+//wait ack
+amodem_wait_remote(ACK,buf,BUFSIZE,REMOTE_TIMEOUT);
+//send stamp
+amodem_puts_remote(255,modem.latest_tx_stamp+8);
+//wait
+amodem_wait_remote(ACK,buf,BUFSIZE,REMOTE_TIMEOUT);
+//sync
 master_sync();
-/*send ack*/
-amodem_puts_remote(ACK);
-/*record*/
+//send ack
+amodem_puts_remote(255,ACK);
+//record
 amodem_record(1000);
-/*send ack*/
-amodem_puts_remote(ACK);
-/*recv stamp*/
+//send ack
+amodem_puts_remote(255,ACK);
+//recv stamp
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 printf("Remote TX @ %s\n",buf);
 return 0;
-}
-
+}*/
+/*
 int slave_talk(){
 char buf[BUFSIZE];
-/*sync*/
+//sync
 slave_sync();
-/*wait ack*/
+//wait ack
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-/*record*/
+//record
 amodem_record(1000);
-/*send ack*/
-amodem_puts_remote(ACK);
-/*recv stamp*/
+//send ack
+amodem_puts_remote(255,ACK);
+//recv stamp
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 printf("Remote TX @ %s\n",buf);
-/*send ack*/
-amodem_puts_remote(ACK);
-/*sync*/
+//send ack
+amodem_puts_remote(255,ACK);
+//sync
 slave_sync();
-/*wait ack*/
+//wait ack
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-/*play*/
+//play
 amodem_play("t1.wav");
-/*wait ack*/
+//wait ack
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-/*send stamp*/
-amodem_puts_remote(modem.latest_tx_stamp+8);
+//send stamp
+amodem_puts_remote(255,modem.latest_tx_stamp+8);
 return 0;
-}
+}*/
 
-int master_atalk(){
+/*int master_atalk(){
 char buf[BUFSIZE];
-/*sync*/
+//sync
 master_sync();
-/*send ack*/
-amodem_puts_remote(ACK);
-/*play*/
+//send ack
+amodem_puts_remote(255,ACK);
+//play
 amodem_play("t1.wav");
-/*wait ack*/
-amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-/*record*/
+//wait ack
+amodem_wait_ack(&msg_remote,ACK,REMOTE_TIMEOUT);
+//record
 amodem_record(1000);
-/*recv stamp*/
+//recv stamp
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
 printf("Remote TX @ %s\n",buf);
 return 0;}
 
 int slave_atalk(){
 char buf[BUFSIZE];
-/*sync*/
+//sync
 slave_sync();
-/*wait ack*/
+//wait ack
 amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT);
-/*record*/
+//record
 amodem_record(1000);
-/*send ack*/
-amodem_puts_remote(ACK);
-/*play*/
+//send ack
+amodem_puts_remote(255,ACK);
+//play
 amodem_play("t1.wav");
-/*send stamp*/
-amodem_puts_remote(modem.latest_tx_stamp+8);
+//send stamp
+amodem_puts_remote(255,modem.latest_tx_stamp+8);
 return 0;}
 
 int master_con(){
@@ -116,62 +116,65 @@ return 0;
 int slave_conend(){
 scheduler_stop();
 return 0;
-}
-
+}*/
+/*
 int master_quick(){
-/*play*/
+//play
 amodem_play("t1.wav");
-/*wait ack*/
+//wait ack
 amodem_wait_remote(NULL,0,REMOTE_TIMEOUT);
-/*record*/
+//record
 amodem_record(1000);
 return 0;
 }
 
 int slave_quick(){
-/*record*/
+//record
 amodem_record(1000);
-/*send ack*/
-amodem_puts_remote(ACK);
-/*play*/
+//send ack
+amodem_puts_remote(255,ACK);
+//play
 amodem_play("t1.wav");
 return 0;
-}
+}*/
 
 int master_sync(){
 int i;
 char buf[BUFSIZE];
 int clock[2],time[2];
-/*local sync*/
+//local sync
 clock[0]=amodem_sync_clock_gps(10);
 time[0]=amodem_sync_time_gps();
-/*active wait response*/
+//active wait response
 for (i=0;i<3;i++){
-amodem_puts_remote(ACK);
-if (amodem_wait_remote(buf,BUFSIZE,REMOTE_TIMEOUT)!=NULL){
+amodem_puts_remote(255,ACK);
+if (amodem_wait_remote(NULL,REMOTE_TIMEOUT,buf,BUFSIZE)!=NULL){
 sscanf(buf,"%d %d",clock+1,time+1);
 break;}}
-/*show result*/
+//show result
+printf("\n\nSYNC\n");
+printf("----------------------------------------\n");
 printf("Local : Clock %d , Time %d\n",clock[0],time[0]);
 printf("Remote : Clock %d , Time %d\n ",clock[1],time[1]);
+printf("----------------------------------------\n");
 return 0;
 }
 
 int slave_sync(){
 char buf[BUFSIZE];
 int clock,time;
-/*local sync*/
+//local sync
 clock=amodem_sync_clock_gps(10);
 time=amodem_sync_time_gps();
 sprintf(buf,"%d %d",clock,time);
 printf("sync time done: %d %d\n",clock,time);
-/*passive response*/
-if (amodem_wait_remote(NULL,BUFSIZE,REMOTE_TIMEOUT)!=NULL)amodem_puts_remote(buf);
+//passive response
+if (amodem_wait_remote(NULL,REMOTE_TIMEOUT,buf,BUFSIZE)!=NULL)amodem_puts_remote(255,buf);
 return 0;
 }
 
 void help(){
-system("cat /home/root/config/help.txt");}
+system("cat /root/config/help.txt");}
 
 int play(const char *buf){
 char txname[40];
@@ -197,25 +200,26 @@ return amodem_record(1000);
 
 int upload(const char *buf){
 char fname[40];
-/*default fname*/
+//input (default fname)
 if (sscanf(buf,"%*s %s",fname)<1){
 fprintf(stdout,"download last data\n");
 strcpy(fname,modem.latest_rx_fname);
-}
+//upload log
 amodem_upload_file(fname);
-
+//upload wav
 strcpy(strstr(fname,"log"),"wav");
-printf("download %s as well? (y or n)\n",fname);
-if (fgetc(stdin)=='y') return amodem_upload_file(fname);
+amodem_upload_file(fname);
+}else
+amodem_upload_file(buf);
 return SUCCESS;
 }
 
-
-int puts_remote(){
+/*
+int puts_remote(255,){
 char msg[80];
 printf("enter msg :");
 fgets(msg,80,stdin);
-return amodem_puts_remote(msg);
+return amodem_puts_remote(255,msg);
 }
 
 int wait_remote(){
@@ -223,13 +227,13 @@ char buf[80];
 amodem_wait_remote(buf,80,REMOTE_TIMEOUT);
 printf("%s\n",buf);
 return 0;
-}
-
+}*/
+/*
 int master_rreboot(){
-printf("this will take 25 seconds, wait\n");
-sleep(25);
-/*wait ack*/
-amodem_wait_remote(NULL,0,REMOTE_TIMEOUT);
+printf("this will take 30 seconds, wait\n");
+sleep(30);
+//wait ack
+amodem_wait_remote(ACK,0,REMOTE_TIMEOUT);
 return 0;
 }
 
@@ -237,7 +241,8 @@ int slave_rreboot(){
 amodem_puts("\r");
 amodem_puts("reboot\r");
 sleep(25);
-/*send ack*/
-amodem_puts_remote(ACK);
+//send ack
+amodem_puts_remote(255,ACK);
 return 0;
 }
+*/

@@ -3,11 +3,11 @@ CC=$(COMPILER)gcc
 AR=$(COMPILER)ar
 #CC=arm-linux-gnueabi-gcc
 #CC=arm-linux-gnueabihf-gcc-4.8
-CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfpu=neon -ftree-vectorize -ffast-math
+CFLAGS= -march=armv7-a -mcpu=cortex-a8  -Wall -mfpu=neon
 TARGET1=charlie
 TARGET2=dylan
 TARGET3=master
-LIBNE10=-I ./include/ -L ./lib -lNE10 -lm -mfpu=neon
+LIBNE10=-I ./include/ -L ./lib -lNE10 -lm -mfpu=neon -ftree-vectorize -ffast-math
 
 all:master
 unicon.o:unicon.c
