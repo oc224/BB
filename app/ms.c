@@ -210,7 +210,7 @@ amodem_upload_file(fname);
 strcpy(strstr(fname,"log"),"wav");
 amodem_upload_file(fname);
 }else
-amodem_upload_file(buf);
+amodem_upload_file(fname);
 return SUCCESS;
 }
 

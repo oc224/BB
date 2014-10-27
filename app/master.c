@@ -26,116 +26,152 @@ int xcross();
 int atalk();
 int task_push(int type,int isremote,char *arg,int slot);
 void task_pop();
+int command_exec();
 
 int main()
 {
-	char remote[20];
-	char buf_log[BUFSIZE];
-        pthread_attr_t attr;
-        pthread_t t_read;
+//amodem init
+amodem_init();
+//log init
+t_log=log_open(MASTER_LOGPATH);
+log_show(t_log);
+log_event(t_log,0,"master program start");
 
-	//amodem init
-	amodem_init();
-	//log init
-	t_log=log_open(MASTER_LOGPATH);
-	log_show(t_log);
-	log_event(t_log,0,"master program start");
+//task init
+task_push(EMPTY,0," ",0);
+task_push(EMPTY,0," ",1);
 
-	//task init
-	task_push(EMPTY,0," ",0);
-	task_push(EMPTY,0," ",1);
+node_mode_swap(NMASTER);
 
-	node_mode_swap(NMASTER);
+while (1)
+{
+	//GATHER COMMAND
+	command_wait();
 
-	while (1)
-	{
-		//GATHER COMMAND
-		command_wait();
-
-		//Do the tasks
-		//log
-		sprintf(buf_log,"task %d",task_select.type);
-		log_event(t_log,0,buf_log);
-
-		// notify remote
-		if (task_select.isremote){
-		sprintf(remote,"REQ%d",task_select.type);
-		amodem_puts_remote(255,remote);}
-		//do task
-		switch (task_select.type)
-		{
-		case TALK:
-		//master_talk();
-		break;
-		case ATALK:
-		atalk();
-		break;
-		case CONVERSATION:
-		//master_con();
-		break;
-		case CONEND:
-		//master_conend();
-		break;
-		case QUICK:
-		//master_quick();
-		break;
-		case MSPLAY:
-		play(task_select.arg);
-		break;
-		case MSRECORD:
-		record(task_select.arg);
-		break;
-		case SYNCALL:
-		//master_sync();
-		break;
-		case HELP:
-		help();
-		break;
-		case UPLOAD:
-		upload(task_select.arg);
-		break;
-		case SEND_REMOTE:
-		amodem_puts_remote(255,task_select.arg);
-		break;
-		case MSG_SHOW://ok
-		printf("local msg\n");
-		amodem_msg_show(&msg_local);
-		printf("remote msg\n");
-		amodem_msg_show(&msg_remote);
-		break;
-		case STATUS:
-		break;
-		case GPSLOG:
-		//system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
-		break;
-		case RREBOOT:
-		//master_rreboot();
-		break;
-		case XCROSS:
-		xcross();
-		break;
-		case NONE:
-		//amodem_puts(task.cmd.arg);
-		//amodem_print(1000);
-		break;
-		default:
-		//fprintf(stderr, "ERROR: please input readable command (small letter)\n");
-		break;
-		}
-
-	}
+	//Command exec
+	command_exec();
+}
 
 return 0;
 }
+
+int command_exec(){
+char remote[20];
+char buf_log[BUFSIZE];
+//log
+sprintf(buf_log,"task %d",task_select.type);
+log_event(t_log,0,buf_log);
+
+// notify remote
+if (task_select.isremote){
+sprintf(remote,"REQ%d",task_select.type);
+amodem_puts_remote(255,remote);}
+
+//do task
+switch (task_select.type)
+{
+case TALK:
+//master_talk();
+break;
+case ATALK:
+ctalk();
+break;
+case CONVERSATION:
+//master_con();
+break;
+case CONEND:
+//master_conend();
+break;
+case QUICK:
+//master_quick();
+break;
+case MSPLAY:
+play(task_select.arg);
+break;
+case MSRECORD:
+record(task_select.arg);
+break;
+case SYNCALL:
+//master_sync();
+break;
+case HELP:
+help();
+break;
+case UPLOAD:
+upload(task_select.arg);
+break;
+case ANAL:
+data_anal();
+break;
+case SEND_REMOTE:
+amodem_puts_remote(255,task_select.arg);
+break;
+case MSG_SHOW://ok
+printf("local msg\n");
+amodem_msg_show(&msg_local);
+printf("remote msg\n");
+amodem_msg_show(&msg_remote);
+break;
+case STATUS:
+break;
+case GPSLOG:
+//system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
+break;
+case RREBOOT:
+//master_rreboot();
+break;
+case XCROSS:
+xcross();
+break;
+case NONE:
+amodem_puts_local(task_select.arg);
+amodem_print(1000);
+break;
+default:
+//fprintf(stderr, "ERROR: please input readable command (small letter)\n");
+break;
+}
+
+
+}
+int data_anal(){
+//upload data xcross...
+char fname[40];
+//char fname[40];
+char path_out[120],path_in[120];
+
+//input (default fname)
+strcpy(fname,modem.latest_rx_fname);
+//upload log
+amodem_upload_file(fname);
+//upload wav
+strcpy(strstr(fname,"log"),"wav");
+amodem_upload_file(fname);
+
+//input fname
+//sscanf(task_select.arg,"%*s %s",fname);
+sprintf(path_in,"%s/%s",PATH_RAW_DATA,fname);
+strcpy(path_out,path_in);
+strcpy(strstr(path_out,".wav"),".out");
+printf("proc %s, output %s ...\n",fname,path_out);
+
+wav2CIR(path_in,"T1_raw.wav",path_out);
+
+return SUCCESS;
+
+
+}
 int xcross(){
 char fname[40];
-char output[40];
+char path_out[120],path_in[120];
+//input fname
 sscanf(task_select.arg,"%*s %s",fname);
-strcpy(output,fname);
-strcpy(strstr(output,".wav"),".out");
-printf("proc %s, output %s ...\n",fname,output);
+sprintf(path_in,"%s/%s",PATH_RAW_DATA,fname);
+strcpy(path_out,path_in);
+strcpy(strstr(path_out,".wav"),".out");
+printf("proc %s, output %s ...\n",fname,path_out);
 
-wav2CIR(fname,"T1_raw.wav",output);
+wav2CIR(path_in,"T1_raw.wav",path_out);
 return SUCCESS;
 }
 
@@ -218,33 +254,17 @@ int ctalk(){
 char buf[BUFSIZE];
 switch (node_mode){
 case NMASTER:
-/*play*/
+//inform remotes
+amodem_puts_local("atr3\r");
+sleep(10);
+//play
 amodem_play("t1.wav");
-/*wait ack*/
-amodem_wait_ack(&msg_local,"210",6000);
-//
-sleep(9);
-/*record*/
-amodem_record(2000);
-sleep(2);
-/*recv stamp*/
-amodem_wait_remote(":",REMOTE_TIMEOUT,buf,BUFSIZE);
-printf("Remote TX @ %s\n",buf);
 break;
 case NSLAVE:
-/*wait ack*/
-amodem_wait_ack(&msg_local,"210",6000);
+//wait
 sleep(9);
 /*record*/
-amodem_record(2000);
-//inform
-amodem_puts_local("atr210\r");
-sleep(9);
-amodem_wait_ack(&msg_local,"Response",2000);
-/*play*/
-amodem_play("t1.wav");
-/*send stamp*/
-amodem_puts_remote(255,modem.latest_tx_stamp+8);
+amodem_record(3000);
 break;
 default:
 break;
@@ -261,19 +281,19 @@ void wait_command_user()
 	static int cnt=1;
 	char arg0[BUFSHORT];//first word in the line
 	char buf[BUFSIZE];//line console input
-	int type=EMPTY;
+	int type;
 	int isremote=0;
 	/*console prompt*/
 	printf("%s%d>:","master", cnt);
 	buf[0]=0;arg0[0]=0;
 	fgets(buf, BUFSIZE, stdin);
+	sscanf(buf,"%s",arg0);
 
 	// task fill I
 	type=EMPTY;
 	isremote=0;
 
 	//decode (special)
-	sscanf(buf,"%s",arg0);
 	if (strcmp(arg0,"++++")==0){
 	node_mode_swap(NMASTER);
 	return;}
@@ -296,7 +316,7 @@ void wait_command_user()
 		isremote=1;
 	}else if (strcmp(arg0,"atalk")==0){
 		type=ATALK;
-		isremote=1;
+		isremote=0;
 	}else if (strcmp(arg0,"con")==0){
 		type=CONVERSATION;
 		isremote=1;
@@ -314,6 +334,9 @@ void wait_command_user()
 		isremote=1;
 	}else if (strcmp("upload",arg0)==0){
 		type=UPLOAD;
+		isremote=0;
+	}else if (strcmp("anal",arg0)==0){
+		type=ANAL;
 		isremote=0;
 	}else if (strcmp("quick",arg0)==0){
 		type=QUICK;
@@ -344,7 +367,7 @@ void wait_command_user()
 		isremote=0;
 	}
 	/*return*/
-	if (type>NONE){
+	if (type>EMPTY){
 	cnt++;
 	task_push(type,isremote,buf,1);
 	}

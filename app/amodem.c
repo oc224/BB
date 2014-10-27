@@ -12,9 +12,9 @@
 
 #define BUFSIZE 128
 
-amodem modem;/*a struct that contains the status of modem or some useful information*/
-amodem_msg msg_local;//={.N = 0, .head = NULL, .tail = NULL};/*a list that contains latest msg from (local) modem*/
-amodem_msg msg_remote;//={.N = 0, .head = NULL, .tail = NULL};/*a list that contains latest msg from (remote) modem*/
+amodem modem={.board_temp = 0, .dsp_bat = 0, .mdm_bat = 0, .rtc_bat = 0};/*a struct that contains the status of modem or some useful information*/
+amodem_msg msg_local={.N_unread = 0, .i = 0};/*a list that contains latest msg from (local) modem*/
+amodem_msg msg_remote={.N_unread = 0, .i = 0};/*a list that contains latest msg from (remote) modem*/
 
 //extern NODE_STATE node_state;
 static void amodem_readthread(void *arg){
@@ -34,6 +34,14 @@ while(1){
         dump[n-2]='\0';/*remove newline char*/
 
         /*return if text = user <>*/
+
+	// packet for address signal
+	if (strstr(dump,"$Packet ")!=NULL){
+	sscanf(dump,"%*s %*s %*s %d",&type);
+	printf("recv command %d\n",type);
+	node_mode_swap(NSLAVE);
+	task_push(type,0,"",0);
+	}
 
         /*store to msg list (local & remote)*/
         if (strstr(dump,"DATA")==NULL)  amodem_msg_push(&msg_local,dump);//local
@@ -107,12 +115,6 @@ void amodem_msg_show(amodem_msg * list){
 int amodem_init(){
 	pthread_attr_t attr;
 	pthread_t t_read;
-	/*init the struct variable*/
-	/*init msg list (remote & local)*/
-	msg_local.i=0;
-	msg_local.N_unread=0;
-	msg_remote.i=0;
-	msg_remote.N_unread=0;
 	// open modem read thread
 	pthread_attr_init(&attr);
 	pthread_create(&t_read,&attr,(void *)amodem_readthread,NULL);
@@ -121,10 +123,6 @@ int amodem_init(){
 	modem.latest_rx_fname[0]=0;
 	modem.def_tx_wav[0]=0;
 	modem.sync_state=NOT_SYNC;
-	modem.board_temp=0;
-	modem.dsp_bat=0;
-	modem.mdm_bat=0;
-	modem.rtc_bat=0;
 	/*TX / RX log*/
 	if ((modem.tx_p=fopen(PATH_TX,"a"))==NULL){
 	fprintf(stderr,"fail to open TX log\n");
@@ -234,12 +232,15 @@ break;
 
 case 'c'://command mode
 amodem_puts_local("+++");
+usleep(10000);
+amodem_puts_local("\r");
 sleep(DELAY_MODE_TRANS);
 amodem_puts_local("at\r");
 if (amodem_wait_ack(&msg_local,"ok",TIMEOUT_SERIAL)!=FAIL) {
 sleep(DELAY_AFTER_MODE_SWAP);
 return SUCCESS;}
 break;
+
 default:
 fprintf(stderr,"error %s\n",__func__);
 return FAIL;

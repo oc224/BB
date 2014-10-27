@@ -88,3 +88,6 @@ deploy:
 	rsync -avz ./bin/ root@$(TARGET1):~/bin/.
 	rsync -avz ./bin/ root@$(TARGET2):~/bin/.
 	rsync -avz ./bin/ root@$(TARGET3):~/bin/.
+
+get:
+	rsync -avz root@$(TARGET1):~/*.out ./.
