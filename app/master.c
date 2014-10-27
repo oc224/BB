@@ -14,6 +14,8 @@
 #define BUFSIZE 128
 #define BUFSHORT 20
 #define MASTER_LOGPATH "/root/log/master_log.txt"
+#define GUARD_HEAD 1
+#define GUARD_TAIL 1
 
 logger *t_log;
 TASK task_select,task_pool[2];
@@ -134,7 +136,7 @@ break;
 
 
 }
-int data_anal(){
+int data_anal(DATA_COOK *dc){
 //upload data xcorr...
 char fname[40];
 //char fname[40];
@@ -155,7 +157,7 @@ strcpy(path_out,path_in);
 strcpy(strstr(path_out,".wav"),".out");
 printf("proc %s, output %s ...\n",fname,path_out);
 
-wav2CIR(path_in,"T1_raw.wav",path_out);
+wav2CIR(path_in,"T1_raw.wav",path_out,dc);
 
 return SUCCESS;
 
@@ -164,6 +166,7 @@ return SUCCESS;
 int xcorr(){
 char fname[40];
 char path_out[120],path_in[120];
+DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
 //input fname
 sscanf(task_select.arg,"%*s %s",fname);
 sprintf(path_in,"%s/%s.wav",PATH_RAW_DATA,fname);
@@ -171,7 +174,7 @@ strcpy(path_out,path_in);
 strcpy(strstr(path_out,".wav"),".out");
 printf("proc %s, output %s ...\n",fname,path_out);
 
-wav2CIR(path_in,"T1_raw.wav",path_out);
+wav2CIR(path_in,"T1_raw.wav",path_out,&dc);
 return SUCCESS;
 }
 
@@ -250,21 +253,46 @@ default:
 break;
 }
 }
+
 int ctalk(){
+DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
 char buf[BUFSIZE];
+char *dc_send=(char *)malloc(sizeof(DATA_COOK)+1);
 switch (node_mode){
 case NMASTER:
 //inform remotes
 amodem_puts_local("atr3\r");
-sleep(10);
+sleep(11);
 //play
 amodem_play("t1.wav");
+sleep(1);
+//recv dc
+amodem_puts_local("@verbose=1\r");
+sleep(1);
+amodem_mode_select('o',3);
+sleep(60);
+amodem_wait_msg(&msg_local,NULL,10000,dc_send,sizeof(DATA_COOK)+1);
+amodem_mode_select('c',3);
+amodem_puts_local("@verbose=3\r");
+DATA_COOK_show((DATA_COOK*)dc_send);
 break;
 case NSLAVE:
 //wait
-sleep(9);
-/*record*/
-amodem_record(3000);
+sleep(9-GUARD_HEAD);
+//record
+amodem_record(2000+GUARD_TAIL*1000);
+//
+sleep(1);
+//anal
+data_anal(&dc);
+//send dc back
+amodem_mode_select('o',3);
+memcpy(dc_send,&dc,sizeof(DATA_COOK));
+dc_send[sizeof(DATA_COOK)]=0;
+amodem_puts_local(dc_send);
+sleep(2);
+amodem_mode_select('c',3);
+DATA_COOK_show((DATA_COOK *)dc_send);
 break;
 default:
 break;

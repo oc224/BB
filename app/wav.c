@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "common.h"
 #include "NE10.h"
 #include "wav.h"
 #define FP t_wav->fp
@@ -58,7 +59,7 @@ for (i=0;i<L;i++){
 //read file
 if (fread(data,2,2,FP)<2){
 printf("%s error\n",__func__);
-return -1;
+return FAIL;
 break;
 }
 //store
@@ -74,7 +75,7 @@ for (i=L-1;i>-1;i--){
 //read file
 if (fread(data,2,2,FP)<2){
 printf("%s error\n",__func__);
-return -1;
+return FAIL;
 break;
 }
 //store
@@ -86,10 +87,10 @@ return L-i;
 break;
 
 default:
-return -1;
+return FAIL;
 break;
 }
-return -1;
+return FAIL;
 }
 
 int wav_close(wav* t_wav){
