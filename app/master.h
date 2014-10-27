@@ -15,12 +15,12 @@ typedef enum{
         HELP,//show help msg
         UPLOAD,//upload local files
 	ANAL,
+        XCORR,
         SEND_REMOTE,//send msg to remote modems
         MSG_SHOW,//show msg & msg_remote
         STATUS,
         GPSLOG,
-        RREBOOT,
-        XCROSS
+        RREBOOT
 }cmd_type;
 
 //Task info

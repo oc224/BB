@@ -7,13 +7,67 @@
 #include "signal.h"
 #include "NE10.h"
 #include "arm_neon.h"
+#define MODEM_BW 10240
+
+
+int f32_findpeak(ne10_float32_t *input,int N,ne10_float32_t *avg,ne10_float32_t *max,int *i,int *i_offset){
+int j;
+//printf("N = %d\n",N);
+for (j=0;j<N;j++){
+(*i)++;
+
+if (isnan(input[j])) continue;
+//printf("%f %f  %f %f %f\n",input[j],*avg,input[j]-*avg,(float)(*i),(input[j]-(*avg))/(float)(*i));
+*avg += (input[j]-*avg)/(float)(*i);
+if (input[j]>*max){
+*max=input[j];
+*i_offset=*i-1;
+}
+}
+
+return 0;
+}
+int f32_findpeak_end(const char *fname,ne10_float32_t avg,ne10_float32_t max,int i_offset){
+ne10_float32_t snr;
+FILE *fp;
+char buf[100];
+int hh,mm;
+float ss,offset;
+
+snr = max / avg;
+offset=(float)i_offset/(float)MODEM_BW;
+//if (snr > threshold)printf("peak dectected\n");
+//printf("snr %f, avg %f, max, %.4f\n max @%.4f sec, (sample index %d)\n",snr,avg,max,offset,i_offset);
+printf("%20s %f\n","SNR : ",snr);
+printf("%20s %f\n","AVG : ",avg);
+printf("%20s %f\n","MAX : ",max);
+printf("%20s %f\n","OFFSET (msec) : ",offset*1000);
+printf("%20s %d\n","I_OFFSET : ",i_offset);
+
+//open log file
+//printf("open %s...\n",fname);
+fp=fopen(fname,"r");
+if (fp==NULL){
+fprintf(stderr,"%s,fail to open %s\n",__func__,fname);
+return FAIL;}
+//read
+fgets(buf,100,fp);
+fgets(buf,100,fp);
+fclose(fp);
+sscanf(buf,"%*s %*s %d:%d:%f",&hh,&mm,&ss);
+
+//return
+printf("%20s %d:%d:%f\n","record time : ",hh,mm,ss);
+printf("%20s %d:%d:%f\n","RX time : ",hh,mm,ss+offset);
+return SUCCESS;
+}
 
 int findpeak(const char *fname,float threshold){
 // fname = .out file
 // threshold for determine value max/avg
 FILE *fp;
 ne10_float32_t t_value, avg = 0, max=0, snr;
-int i = 1, i_max;
+int i = 0, i_offset;
 //open
 fp=fopen(fname,"rb");
 if (fp==NULL){
@@ -24,19 +78,20 @@ return FAIL;}
 while (fread(&t_value,4,1,fp)){
 i++;
 if (isnan(t_value)) continue;
-//printf("read %f\n",t_value);
+
 //sum max
 avg += (t_value-avg)/(float)i;
 if (t_value>max){
 max=t_value;
-i_max=i-2;}
+i_offset=i-1;}
 }
+
 fclose(fp);
 snr = max / avg;
 if (snr > threshold)printf("peak dectected\n");
-printf("snr %f, avg %f, max, %.4f\n max @%.4f sec, (sample index %d)\n",snr,avg,max,(float)i_max/(float)10240,i_max);
+printf("snr %f, avg %f, max, %.4f\n max @%.4f sec, (sample offset %d)\n",snr,avg,max,(float)i_offset/(float)10240,i_offset);
 
-return i_max;
+return i_offset;
 }
 
 
@@ -86,6 +141,21 @@ out[i].i = in1[i].r*in2[i].i+in1[i].i*in2[i].r;
 return 0;
 }
 
+int cpx_mul_conj(ne10_fft_cpx_float32_t *out,ne10_fft_cpx_float32_t* in1,ne10_fft_cpx_float32_t * in2,int N){
+// output length N array out equal to complex multiplication of in1 and in2
+//ne10_mul_float(out,in1,in2,(ne10_ufloat32_t)N);
+//float32x4x2_t i1=vld2q_f32(in1);
+//float32x4x2_t i2=vld2q_f32(in2);
+
+int i;
+for (i=0;i<N;i++){
+out[i].r = in1[i].r*in2[i].r+in1[i].i*in2[i].i;
+out[i].i = -in1[i].r*in2[i].i+in1[i].i*in2[i].r;
+}
+//ne10_vmul_vec2f((ne10_vec2f_t *)out,(ne10_vec2f_t *)in1,(ne10_vec2f_t *)in2,N/2);
+return 0;
+}
+
 
 int f32_add(ne10_float32_t  *out,ne10_float32_t  * in1,ne10_float32_t * in2,int N){
 ne10_add_float_neon(out,in1,in2,N);
@@ -120,6 +190,8 @@ FILE *fp_out;
 ne10_fft_cpx_float32_t *H,*X,*tmp,*buck;
 ne10_float32_t *buck1,*buck2,*swap_tmp;
 ne10_fft_cfg_float32_t p;
+ne10_float32_t avg = 0, max = 0;
+int j = 0,j_offset = 0;
 wav_tx=wav_open(tx);
 wav_rx=wav_open(rx);
 uint16_t *dump;//store to file ptr
@@ -176,16 +248,19 @@ cpx_abs(buck1,buck,N);
 
 //result_puts(upper half p_cross+buf)
 f32_add(buck2,buck1,buck2+L,L);
-
+//int f32_findpeak(ne10_float32_t *input,int N,&avg,&max,&i,&i_offset);
 //data_st(fp_out,buck2,sizeof(ne10_float32_t),L);
 if (i==0){
 data_st(fp_out,buck2+M-1,sizeof(ne10_float32_t),L-M+1);
+f32_findpeak(buck2+M-1,L-M+1,&avg,&max,&j,&j_offset);
 }else{
 data_st(fp_out,buck2,sizeof(ne10_float32_t),L);
+f32_findpeak(buck2,L,&avg,&max,&j,&j_offset);
 };
 
 if(is_rx_eof){
 data_st(fp_out,buck1+L,sizeof(ne10_float32_t),L);
+f32_findpeak(buck1+L,L,&avg,&max,&j,&j_offset);
 break;}
 
 /*swap*/
@@ -200,7 +275,8 @@ i = i+L;
 strcpy(flog,rx);
 strcpy(strstr(flog,".wav"),".log");
 //rx time
-rx_time(flog,findpeak(out,10.0));
+f32_findpeak_end(flog,avg,max,j_offset);
+//rx_time(flog,findpeak(out,10.0));
 
 NE10_FREE(H);
 NE10_FREE(X);

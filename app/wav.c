@@ -57,7 +57,7 @@ case NORMAL:
 for (i=0;i<L;i++){
 //read file
 if (fread(data,2,2,FP)<2){
-printf("%s error\n",__func__); 
+printf("%s error\n",__func__);
 return -1;
 break;
 }

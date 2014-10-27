@@ -22,7 +22,7 @@ NODE_MODE node_mode ;
 void command_wait();
 void wait_command_user();
 void node_mode_swap(int mode);
-int xcross();
+int xcorr();
 int atalk();
 int task_push(int type,int isremote,char *arg,int slot);
 void task_pop();
@@ -120,8 +120,8 @@ break;
 case RREBOOT:
 //master_rreboot();
 break;
-case XCROSS:
-xcross();
+case XCORR:
+xcorr();
 break;
 case NONE:
 amodem_puts_local(task_select.arg);
@@ -135,7 +135,7 @@ break;
 
 }
 int data_anal(){
-//upload data xcross...
+//upload data xcorr...
 char fname[40];
 //char fname[40];
 char path_out[120],path_in[120];
@@ -161,12 +161,12 @@ return SUCCESS;
 
 
 }
-int xcross(){
+int xcorr(){
 char fname[40];
 char path_out[120],path_in[120];
 //input fname
 sscanf(task_select.arg,"%*s %s",fname);
-sprintf(path_in,"%s/%s",PATH_RAW_DATA,fname);
+sprintf(path_in,"%s/%s.wav",PATH_RAW_DATA,fname);
 strcpy(path_out,path_in);
 strcpy(strstr(path_out,".wav"),".out");
 printf("proc %s, output %s ...\n",fname,path_out);
@@ -359,8 +359,8 @@ void wait_command_user()
 	}else if (strcmp("rreboot",arg0)==0){
 		type=RREBOOT;
 		isremote=1;
-	}else if (strcmp("xcross",arg0)==0){
-		type=XCROSS;
+	}else if (strcmp("xcorr",arg0)==0){
+		type=XCORR;
 		isremote=0;
 	}else{
 		type=NONE;
