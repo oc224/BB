@@ -1,11 +1,14 @@
 1. multi-station
-2. integrate master&slave(dynamic master/slave)
+2. integrate master&slave(dynamic master/slave), abandone
 3. in-situ DSP, ok
 4. data manage
 5. log sys, 0906, ok
-6. error handling
+6. error handling,
 7. socket from station to control PC
 8. pps input on gpio pin, beagleboard gps time source
-9. amodem read thread 9/15 ,ok
-10. scheduler clean up 9/15, ok
-11. mode swap 9/15, working on
+9. amodem read thread 9/15 ,ok, solve the push pop bug!
+10. scheduler clean up 9/15, ??
+11. mode swap 9/15, working on, seem to work fine10/29
+12. tx file
+13. default setting
+14. probing before exp

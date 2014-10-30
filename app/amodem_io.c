@@ -81,7 +81,7 @@ int amodem_wait_ack(amodem_msg* msg,char * keyword,int mSec){
 char *str;
 str=amodem_wait_msg(msg,keyword,mSec,NULL,0);
 if (str==NULL) {
-printf("%s,ack timeout\n",__func__);
+printf("%s,ack timeout (%s)\n",__func__,keyword);
 return FAIL;
 }else
 return SUCCESS;
@@ -94,7 +94,7 @@ int amodem_puts_remote(int addr,const char*msg){
 // go to online mode
 char buf[36];
 //addr
-sprintf(buf,"@remoteaddr=%d",addr);
+sprintf(buf,"@remoteaddr=%d\r",addr);
 amodem_puts_local(buf);
 
 amodem_mode_select('o',3);

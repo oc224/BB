@@ -29,7 +29,6 @@ while(1){
 	n=RS232_PollComport(modem.fd,dump,BUFSIZE);
 	pthread_mutex_unlock(&modem.readthread);
         if (n<1) continue;
-        //printf("%s",dump);
         /*store to input buffer*/
         dump[n-2]='\0';/*remove newline char*/
 
@@ -40,8 +39,7 @@ while(1){
 	sscanf(dump,"%*s %*s %*s %d",&type);
 	printf("recv command %d\n",type);
 	node_mode_swap(NSLAVE);
-	task_push(type,0,"",0);
-	}
+	task_push(type,0,"",0);}
 
         /*store to msg list (local & remote)*/
         if (strstr(dump,"DATA")==NULL)  amodem_msg_push(&msg_local,dump);//local
@@ -56,8 +54,7 @@ while(1){
 	node_mode_swap(NSLAVE);
 	remote_msg+=3;
 	sscanf(remote_msg,"%d",&type);
-	task_push(type,0,"",0);
-	}
+	task_push(type,0,"",0);}
         }
 }
 }
@@ -67,7 +64,6 @@ int amodem_ffs_clear(){
 //clear ffs system, high usage ie. 98% of ffs system make the modem
 //behave strange
 //rm *.log file and *.wav file except *t*.wav file
-
 char fname[80];
 amodem_puts_local("ls /ffs/ \r");
 while (amodem_wait_local(NULL,TIMEOUT_SERIAL,fname,80)!=NULL){
@@ -87,20 +83,19 @@ usleep(100000);
 fname[0]=0;
 }
 return SUCCESS;
-}
-*/
+}*/
+
 
 void amodem_print(int msec){
+//print all the text from serial port
 char *string;
 int i;
-/*print all the text from serial port*/
 for (i=0;i<msec;i++){
 string=amodem_msg_pop(&msg_local);
 if (string!=NULL) printf("%s\n",string);
-usleep(1000);
+usleep(1000);}
 }
 
-}
 void amodem_msg_show(amodem_msg * list){
 	/*show msg list*/
 	int i;
@@ -137,14 +132,14 @@ int amodem_init(){
 	log_event(modem.com_logger,0,"amodem init");
 	//open serial port
 	amodem_open();
-	//amodem_mode_select('c',3);
+	amodem_mode_select('c',3);
 	return SUCCESS;
 }
 
 int amodem_open() {
 	//open serial port, go to command mode, issue at (attention), then check response
 	if ((modem.fd=RS232_OpenComport(amodem_dev_path, amodem_serial_baudrate))<1) {
-		printf("Acoustic modem, Fail to open.\n");//error
+		printf("%s, Fail to open.\n",__func__);//error
 		return FAIL;
 	}
 	return SUCCESS;
@@ -225,7 +220,7 @@ switch (mode){
 case 'o'://online mode
 amodem_puts_local("ato\r");
 sleep(DELAY_MODE_TRANS);
-if (amodem_wait_ack(&msg_local,"connect",TIMEOUT_SERIAL)!=FAIL) {
+if (amodem_wait_ack(&msg_local,"CONNECT",TIMEOUT_SERIAL)!=FAIL) {
 sleep(DELAY_AFTER_MODE_SWAP);
 return SUCCESS;}
 break;
@@ -440,24 +435,25 @@ int amodem_upload_file(const char *fname){
 	sprintf(buf,"rb -vv >%s<%s",amodem_dev_path,amodem_dev_path);
 	ret=system(buf);//SET PWD TO BE SPECIFIC PATH
 	pthread_mutex_unlock(&modem.readthread);
-	printf("rb return %d\n",ret);
+	//printf("rb return %d\n",ret);
+
+	//open
+	amodem_open();
+
+	//rm file in ffs
+	sprintf(buf,"rm /ffs/%s\r",fname);
+	amodem_puts_local(buf);
+	if (amodem_wait_ack(&msg_local,"Ok",TIMEOUT_SERIAL)==FAIL) fprintf(stderr,"fail to remove file in /ffs/\n");
+
+	if (ret!=0){
+		fprintf(stderr,"%s, rb error\n",__func__);
+		return FAIL;
+	}
 
 	// mv
 	sprintf(buf,"mv ./%s %s",fname,PATH_RAW_DATA);
 	system(buf);
-	//open
-	amodem_open();
-	if (ret!=0){
-		printf("fail to use y modem protocol\n");
-		return FAIL;
-	}
-	//rm /ffs/xx
-	sprintf(buf,"rm /ffs/%s\r",fname);
-	amodem_puts_local(buf);
-	if (amodem_wait_ack(&msg_local,"Ok",TIMEOUT_SERIAL)==FAIL){
-	fprintf(stderr,"fail to remove file in /ffs/\n");
-	return FAIL;
-	}
+
 
 	return SUCCESS;
 }

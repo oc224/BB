@@ -3,3 +3,62 @@
 use ssh key
 housing done
 3 stations env
+
+10/27
+Charlie : atalk, tx
+Dylan : rx, anal_data, send back the result
+done...
+C->D(ms)
+3.3
+3.6
+3.3
+3.4
+3.4
+
+D->C(ms)
+3.5
+3.5
+3.6
+3.4
+3.3
+
+72 sec for one round
+?C->D 3.44ms
+?D->C 3.56ms
+
+D->C 3.53ms
+C->D 3.47ms
+
+
+D->C 3.51ms
+C->D 
+
+D->C 3.47ms
+C->D 3.406ms
+
+D->C 3.63ms
+C->D 3.37ms
+
+D->C 3.480ms
+C->D 3.559ms
+
+D->C 4.02ms
+C->D 3.54ms
+
+
+10/29
+596.977 ms (1 sec error?)
+
+
+C->D 3.416ms l1  wav
+C->D 816.9ms l10 wav
+C->D 3.577ms l1  wav
+C->D 403.456ms l10 wav
+C->D 996.4ms l5  wav
+C->D 398.5ms l2  wav (clock error ?)
+C->D 3.519ms l2  wav
+C->D 3.543ms l3  wav
+C->D -3.3ms  l4 wav (error ?)
+C->D 3.551ms l4 wav
+C->D -3.517  l5 wav
+C->D 3.534ms l1 wav
