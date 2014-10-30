@@ -83,8 +83,7 @@ int amodem_mode_select(char,int);
 /*low level io*/
 int amodem_msg_push(amodem_msg *msg_list ,char *msg_str);
 char* amodem_msg_pop(amodem_msg* msg);
-char* amodem_
-wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,int info_size);
+char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,int info_size);
 void amodem_msg_show(amodem_msg *);/*show msg list*/
 
 /*io*/

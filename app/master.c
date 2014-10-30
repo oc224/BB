@@ -16,19 +16,23 @@
 #define MASTER_LOGPATH "/root/log/master_log.txt"
 #define GUARD_HEAD 0
 #define GUARD_TAIL 0
+#define ADDR_BROADCAST 255
 
 logger *t_log;
-TASK task_select,task_pool[2];
-NODE_MODE node_mode ;
+TASK task;
+
+struct SETTING{
+float guard_time_head;
+float guard_time_tail;
+int no_mseq;
+int local_addr;
+}set;
 
 void command_wait();
+int command_exec();
 void wait_command_user();
-void node_mode_swap(int mode);
 int xcorr();
 int atalk();
-int task_push(int type,int isremote,char *arg,int slot);
-void task_pop();
-int command_exec();
 
 int main()
 {
@@ -39,11 +43,7 @@ t_log=log_open(MASTER_LOGPATH);
 log_show(t_log);
 log_event(t_log,0,"master program start");
 
-//task init
-task_push(EMPTY,0," ",0);
-task_push(EMPTY,0," ",1);
 
-node_mode_swap(NMASTER);
 
 while (1)
 {
@@ -61,22 +61,22 @@ int command_exec(){
 char remote[20];
 char buf_log[BUFSIZE];
 //log
-sprintf(buf_log,"task %d",task_select.type);
+sprintf(buf_log,"task %d",task.type);
 log_event(t_log,0,buf_log);
 
 // notify remote
-if (task_select.isremote){
-sprintf(remote,"REQ%d",task_select.type);
+if (task.isremote){
+sprintf(remote,"REQ%d",task.type);
 amodem_puts_remote(ADDR_BROADCAST,remote);}
 
 //do task
-switch (task_select.type)
+switch (task.type)
 {
 case TALK:
 //master_talk();
 break;
 case ATALK:
-ctalk();
+ctalk_master();
 break;
 case CONVERSATION:
 //master_con();
@@ -88,10 +88,10 @@ case QUICK:
 //master_quick();
 break;
 case MSPLAY:
-play(task_select.arg);
+play(task.arg);
 break;
 case MSRECORD:
-record(task_select.arg);
+record(task.arg);
 break;
 case SYNCALL:
 //master_sync();
@@ -100,13 +100,13 @@ case HELP:
 help();
 break;
 case UPLOAD:
-upload(task_select.arg);
+upload(task.arg);
 break;
 case ANAL:
 data_anal();
 break;
 case SEND_REMOTE:
-amodem_puts_remote(ADDR_BROADCAST,task_select.arg);
+amodem_puts_remote(ADDR_BROADCAST,task.arg);
 break;
 case MSG_SHOW://ok
 printf("local msg\n");
@@ -126,7 +126,7 @@ case XCORR:
 xcorr();
 break;
 case NONE:
-amodem_puts_local(task_select.arg);
+amodem_puts_local(task.arg);
 amodem_print(700);
 break;
 default:
@@ -153,7 +153,7 @@ strcpy(strstr(fname,"log"),"wav");
 amodem_upload_file(fname);
 
 //input fname
-//sscanf(task_select.arg,"%*s %s",fname);
+//sscanf(task.arg,"%*s %s",fname);
 sprintf(path_in,"%s/%s",PATH_RAW_DATA,fname);
 strcpy(path_out,path_in);
 strcpy(strstr(path_out,".wav"),".out");
@@ -176,7 +176,7 @@ char fname[40];
 char path_out[120],path_in[120];
 DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
 //input fname
-sscanf(task_select.arg,"%*s %s",fname);
+sscanf(task.arg,"%*s %s",fname);
 sprintf(path_in,"%s/%s.wav",PATH_RAW_DATA,fname);
 strcpy(path_out,path_in);
 strcpy(strstr(path_out,".wav"),".out");
@@ -192,88 +192,10 @@ wav2CIR(path_in,buf,path_out,&dc);
 return SUCCESS;
 }
 
-int atalk(){
-char buf[BUFSIZE];
-switch (node_mode){
-case NMASTER:
-/*play*/
-amodem_play("t1.wav");
-/*wait ack*/
-amodem_wait_remote("ACK",REMOTE_TIMEOUT,NULL,0);
-//sleep
-sleep(DELAY_MODE_SELECT-1);
-/*record*/
-amodem_record(2000);
-/*recv stamp*/
-sleep(4*DELAY_MODE_SELECT);
-//printf("wait info\n");
-amodem_wait_remote("TX",REMOTE_TIMEOUT,buf,BUFSIZE);
-printf("Remote TX @ %s\n",buf);
-break;
-case NSLAVE:
-//sleep
-sleep(DELAY_MODE_SELECT-1);
-/*record*/
-amodem_record(2000);
-/*send ack*/
-amodem_puts_remote(ADDR_BROADCAST,ACK);
-/*play*/
-amodem_play("t1.wav");
-/*send stamp*/
-amodem_puts_remote(ADDR_BROADCAST,modem.latest_tx_stamp);
-break;
-default:
-break;
-}
-}
-
-int btalk(){
-char buf[BUFSIZE];
-switch (node_mode){
-case NMASTER:
-//inform
-amodem_puts_local("atr210\r");
-sleep(9);
-amodem_wait_ack(&msg_local,"Response",2000);
-/*play*/
-amodem_play("t1.wav");
-/*wait ack*/
-amodem_wait_ack(&msg_local,"210",6000);
-//
-sleep(9);
-/*record*/
-amodem_record(2000);
-sleep(2);
-/*recv stamp*/
-amodem_wait_remote(":",REMOTE_TIMEOUT,buf,BUFSIZE);
-printf("Remote TX @ %s\n",buf);
-break;
-case NSLAVE:
-/*wait ack*/
-amodem_wait_ack(&msg_local,"210",6000);
-sleep(9);
-/*record*/
-amodem_record(2000);
-//inform
-amodem_puts_local("atr210\r");
-sleep(9);
-amodem_wait_ack(&msg_local,"Response",2000);
-/*play*/
-amodem_play("t1.wav");
-/*send stamp*/
-amodem_puts_remote(ADDR_BROADCAST,modem.latest_tx_stamp+8);
-break;
-default:
-break;
-}
-}
-
-int ctalk(){
+int ctalk_master(){
 DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
 char buf[BUFSIZE];
 char *dc_send=(char *)malloc(sizeof(DATA_COOK)+1);
-switch (node_mode){
-case NMASTER:
 //inform remotes
 amodem_puts_local("atr3\r");
 sleep(11);
@@ -284,18 +206,13 @@ sleep(10);
 amodem_record(GUARD_HEAD+2000+GUARD_TAIL*1000);
 //anal
 data_anal(&dc);
+return 0;
+}
 
-//recv dc
-//amodem_puts_local("@verbose=1\r");
-//sleep(1);
-//amodem_mode_select('o',3);
-//sleep(60);
-//amodem_wait_msg(&msg_local,NULL,10000,dc_send,sizeof(DATA_COOK)+1);
-//amodem_mode_select('c',3);
-//amodem_puts_local("@verbose=3\r");
-//DATA_COOK_show((DATA_COOK*)dc_send);
-break;
-case NSLAVE:
+int ctalk_slave(){
+DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
+char buf[BUFSIZE];
+char *dc_send=(char *)malloc(sizeof(DATA_COOK)+1);
 //wait
 sleep(9-GUARD_HEAD);
 //record
@@ -304,7 +221,7 @@ amodem_record(GUARD_HEAD+2000+GUARD_TAIL*1000);
 sleep(10-GUARD_HEAD-2-GUARD_TAIL);
 //
 amodem_play("t1.wav");
-//anal
+//anal send back
 data_anal(&dc);
 sprintf(buf,"SNR = %4.1f, RX %d:%d:%f\n",dc.snr,dc.hh,dc.mm,dc.ss+dc.offset);
 amodem_mode_select('o',3);
@@ -313,19 +230,6 @@ sleep(2);
 amodem_puts_local(modem.latest_tx_stamp);
 sleep(2);
 amodem_mode_select('c',3);
-//amodem_puts_remote(ADDR_BROADCAST,buf);
-//send dc back
-//amodem_mode_select('o',3);
-//memcpy(dc_send,&dc,sizeof(DATA_COOK));
-//dc_send[sizeof(DATA_COOK)]=0;
-//amodem_puts_local(dc_send);
-//sleep(2);
-//amodem_mode_select('c',3);
-//DATA_COOK_show((DATA_COOK *)dc_send);
-break;
-default:
-break;
-}
 }
 
 void wait_command_user()
@@ -351,22 +255,12 @@ void wait_command_user()
 	isremote=0;
 
 	//decode (special)
-	if (strcmp(arg0,"++++")==0){
-	node_mode_swap(NMASTER);
-	return;}
-	else if (strcmp(arg0,"----")==0){
-	node_mode_swap(NSLAVE);
-	return ;}
-	else if (strcmp(arg0,"exit")==0){
+	if (strcmp(arg0,"exit")==0){
 	printf("exit...\n");
 	amodem_end();
 	exit(0);
 	}
 
-	//decode (normal)
-	if (node_mode!=NMASTER){
-	printf("This node is not in master mode, unable to give command\n");
-	return ;}
 
 	if (strcmp(arg0,"talk")==0){
 		type=TALK;
@@ -426,62 +320,14 @@ void wait_command_user()
 	/*return*/
 	if (type>EMPTY){
 	cnt++;
-	task_push(type,isremote,buf,1);
+	task.type=type;
+	task.isremote=isremote;
 	}
 
 
 }
 
-void node_mode_swap(int mode){//13ok
-switch (mode){
-case NMASTER:
-node_mode=NMASTER;
-printf("go to master mode\n");
-break;
-case NSLAVE:
-node_mode=NSLAVE;
-printf("go to slave mode\n");
-break;
-default:
-break;
-}
-
-}
-
-int task_push(int type,int isremote,char *arg,int slot){//16ok
-if (task_pool[slot].type!=EMPTY) return FAIL;
-strcpy(task_pool[slot].arg,arg);
-task_pool[slot].type=type;
-task_pool[slot].isremote=isremote;
-return SUCCESS;
-}
-
-void task_pop(){//16ok
-if (task_pool[0].type!=EMPTY) {
-task_select.type=task_pool[0].type;
-task_select.isremote=task_pool[0].isremote;
-strcpy(task_select.arg,task_pool[0].arg);
-task_pool[0].type=EMPTY;
-}else if (task_pool[1].type!=EMPTY) {
-task_select.type=task_pool[1].type;
-task_select.isremote=task_pool[1].isremote;
-strcpy(task_select.arg,task_pool[1].arg);
-task_pool[1].type=EMPTY;
-}else {
-task_select.type=EMPTY;
-}
-//printf("task no.%d\n",task_select.type);
-};
-
 void command_wait(){
-while(1){
-task_pop();
-if (task_select.type != EMPTY) //task exist
-break;
-
-if (node_mode==NSLAVE){
-usleep(100000);
-continue;}else wait_command_user();
-
-}
+wait_command_user();
+//or wait_master
 }

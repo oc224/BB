@@ -1,4 +1,3 @@
-typedef enum {NMASTER,NSLAVE} NODE_MODE;
 typedef char bool;
 
 typedef enum{
@@ -29,7 +28,3 @@ cmd_type type;
 bool isremote;
 char arg[128];
 }TASK;
-
-void node_mode_swap(int mode);
-int task_push(int type,int isremote,char *arg,int slot);
-void task_pop();

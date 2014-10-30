@@ -16,7 +16,8 @@ amodem modem={.board_temp = 0, .dsp_bat = 0, .mdm_bat = 0, .rtc_bat = 0};/*a str
 amodem_msg msg_local={.N_unread = 0, .i = 0};/*a list that contains latest msg from (local) modem*/
 amodem_msg msg_remote={.N_unread = 0, .i = 0};/*a list that contains latest msg from (remote) modem*/
 
-//extern NODE_STATE node_state;
+extern TASK task;
+
 static void amodem_readthread(void *arg){
 char dump[BUFSIZE];
 char *remote_msg;
@@ -32,30 +33,36 @@ while(1){
         /*store to input buffer*/
         dump[n-2]='\0';/*remove newline char*/
 
+
         /*return if text = user <>*/
+
+        //store to msg list (local & remote)*/
+        if (strstr(dump,"DATA")==NULL)  amodem_msg_push(&msg_local,dump);//local
+        else   {//remote
+
+        remote_msg=strstr(dump,":")+1;
+        //if msg from remote , show it
+        printf("Remote : %s\n",remote_msg);
+
+        amodem_msg_push(&msg_remote,remote_msg);
 
 	// packet for address signal
 	if (strstr(dump,"$Packet ")!=NULL){
 	sscanf(dump,"%*s %*s %*s %d",&type);
 	printf("recv command %d\n",type);
-	node_mode_swap(NSLAVE);
-	task_push(type,0,"",0);}
+	task.type=type;
+	continue;}
 
-        /*store to msg list (local & remote)*/
-        if (strstr(dump,"DATA")==NULL)  amodem_msg_push(&msg_local,dump);//local
-        else   {//remote
-        remote_msg=strstr(dump,":")+1;
-        amodem_msg_push(&msg_remote,remote_msg);
-        /*if msg from remote , show it*/
-        printf("Remote : %s\n",remote_msg);
-        /*if go slave request, be slave*/
+
+        //if go slave request, be slave*/
 	remote_msg=strstr(dump,"REQ");
 	if (remote_msg!=NULL){
-	node_mode_swap(NSLAVE);
 	remote_msg+=3;
 	sscanf(remote_msg,"%d",&type);
-	task_push(type,0,"",0);}
+	task.type=type;
+	continue;
         }
+}
 }
 }
 
