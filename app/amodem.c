@@ -16,7 +16,6 @@ amodem modem={.board_temp = 0, .dsp_bat = 0, .mdm_bat = 0, .rtc_bat = 0};/*a str
 amodem_msg msg_local={.N_unread = 0, .i = 0};/*a list that contains latest msg from (local) modem*/
 amodem_msg msg_remote={.N_unread = 0, .i = 0};/*a list that contains latest msg from (remote) modem*/
 
-extern TASK task;
 
 static void amodem_readthread(void *arg){
 char dump[BUFSIZE];
@@ -33,6 +32,12 @@ while(1){
         /*store to input buffer*/
         dump[n-2]='\0';/*remove newline char*/
 
+	// packet for address signal
+	if (strstr(dump,"$Packet ")!=NULL){
+	sscanf(dump,"%*s %*s %*s %d",&type);
+	printf("recv command %d\n",type);
+	task_push(&task_recv_master,type,0," ");
+	continue;}
 
         /*return if text = user <>*/
 
@@ -46,23 +51,19 @@ while(1){
 
         amodem_msg_push(&msg_remote,remote_msg);
 
-	// packet for address signal
-	if (strstr(dump,"$Packet ")!=NULL){
-	sscanf(dump,"%*s %*s %*s %d",&type);
-	printf("recv command %d\n",type);
-	task.type=type;
-	continue;}
-
 
         //if go slave request, be slave*/
 	remote_msg=strstr(dump,"REQ");
 	if (remote_msg!=NULL){
 	remote_msg+=3;
 	sscanf(remote_msg,"%d",&type);
-	task.type=type;
+	printf("recv command %d\n",type);
+	task_push(&task_recv_master,type,0," ");
 	continue;
         }
+
 }
+
 }
 }
 
@@ -114,13 +115,12 @@ void amodem_msg_show(amodem_msg * list){
 	printf("\n");
 }
 
-int amodem_init(){
+int amodem_init(char* dev){
 	pthread_attr_t attr;
 	pthread_t t_read;
-	// open modem read thread
-	pthread_attr_init(&attr);
-	pthread_create(&t_read,&attr,(void *)amodem_readthread,NULL);
+
 	/*init modem*/
+	strcpy(modem.dev_path,dev);
 	modem.latest_tx_stamp[0]=0;
 	modem.latest_rx_fname[0]=0;
 	modem.def_tx_wav[0]=0;
@@ -139,13 +139,18 @@ int amodem_init(){
 	log_event(modem.com_logger,0,"amodem init");
 	//open serial port
 	amodem_open();
+	// open modem read thread
+	pthread_attr_init(&attr);
+	pthread_create(&t_read,&attr,(void *)amodem_readthread,NULL);
+	// command mode
 	amodem_mode_select('c',3);
 	return SUCCESS;
 }
 
 int amodem_open() {
+	printf("open %s\n",modem.dev_path);
 	//open serial port, go to command mode, issue at (attention), then check response
-	if ((modem.fd=RS232_OpenComport(amodem_dev_path, amodem_serial_baudrate))<1) {
+	if ((modem.fd=RS232_OpenComport(modem.dev_path, amodem_serial_baudrate))<1) {
 		printf("%s, Fail to open.\n",__func__);//error
 		return FAIL;
 	}
@@ -439,7 +444,7 @@ int amodem_upload_file(const char *fname){
 	amodem_close();
 	pthread_mutex_lock(&modem.readthread);
 	// rb
-	sprintf(buf,"rb -vv >%s<%s",amodem_dev_path,amodem_dev_path);
+	sprintf(buf,"rb -vv >%s<%s",modem.dev_path,modem.dev_path);
 	ret=system(buf);//SET PWD TO BE SPECIFIC PATH
 	pthread_mutex_unlock(&modem.readthread);
 	//printf("rb return %d\n",ret);

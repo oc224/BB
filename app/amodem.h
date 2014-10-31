@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include "log.h"
 #define amodem_serial_baudrate 115200
-#define amodem_dev_path "/dev/ttyUSB2"
+//#define amodem_dev_path "/dev/ttyUSB2"
 #define PATH_AMODEM "/root/log/AMODEM.TXT"
 #define PATH_TX "/root/log/TXLOG.TXT"
 #define PATH_RX "/root/log/RXLOG.TXT"
@@ -37,6 +37,7 @@ ONLINE,COMMAND
 
 typedef struct {
 	int fd;
+	char dev_path[20];
 	pthread_mutex_t readthread;//=PTHREAD_MUTEX_INITIALIZER;
 	float board_temp; //ref modem manual, atv
 	float dsp_bat;
@@ -52,14 +53,7 @@ typedef struct {
 	logger *com_logger;
 } amodem;
 
-typedef struct {
-} a_network;
 
-/*typedef struct {
-char *text;
-struct msg* next;
-
-}msg;*/
 typedef struct{
 	char text[LIST_SIZE][80];
 	int i;/*point to latest msg aka text[i] is latest msg*/
@@ -75,10 +69,11 @@ extern amodem modem;
 extern amodem_msg msg_local;
 extern amodem_msg msg_remote;
 
-int amodem_init();/*init amodem*/
+int amodem_init(char *);/*init amodem*/
 int amodem_open();/*open the serial port*/
 inline void amodem_close();/*close the serial port*/
 int amodem_mode_select(char,int);
+int amodem_end();
 
 /*low level io*/
 int amodem_msg_push(amodem_msg *msg_list ,char *msg_str);

@@ -3,8 +3,9 @@ typedef char bool;
 typedef enum{
         EMPTY,
         NONE,
-        TALK,//recipricol transmission, ok
+        TALK,//recipricol transmission
         ATALK,
+	PROB,
         CONVERSATION,
         CONEND,
         QUICK,
@@ -22,9 +23,27 @@ typedef enum{
         RREBOOT
 }cmd_type;
 
+
 //Task info
 typedef struct{
 cmd_type type;
 bool isremote;
 char arg[128];
 }TASK;
+
+int task_push(TASK*,cmd_type,bool,char *);
+int task_pop(TASK*,TASK *);
+
+extern TASK task_recv_master;
+
+//node
+typedef struct{
+char name[20];
+char amodem_addr[4];
+int id_mseq;
+int id_run;
+float snr;
+float travel_time;
+}NODE;
+
+NODE* NODE_read(char *);
