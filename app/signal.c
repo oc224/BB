@@ -8,6 +8,9 @@
 #include "NE10.h"
 #include "arm_neon.h"
 #define MODEM_BW 10240
+#define THRESHOLD 40.0
+#define FIRST_PEAK_DETECTED 1
+#define NO_PEAK_YET -1
 
 
 int DATA_COOK_show(DATA_COOK *dq){
@@ -20,22 +23,32 @@ printf("%20s %d:%d:%f\n","Record time : ",dq->hh,dq->mm,dq->ss);
 printf("%20s %d:%d:%f\n","RX time : ",dq->hh,dq->mm,dq->ss+dq->offset);
 }
 
-int f32_findpeak(ne10_float32_t *input,int N,ne10_float32_t *avg,ne10_float32_t *max,int *i,int *i_offset){
+int f32_findpeak(ne10_float32_t *input,int N,ne10_float32_t *avg,ne10_float32_t *max,int *i,int *i_offset,ne10_float32_t threshold){
+//input:
+//	input, N
+//output:
+//	avg
+//	max
+//	i
+//	i_offset
+ne10_float32_t det=(*avg)*threshold;
 int j;
-//printf("N = %d\n",N);
 for (j=0;j<N;j++){
 (*i)++;
 
 if (isnan(input[j])) continue;
 //printf("%f %f  %f %f %f\n",input[j],*avg,input[j]-*avg,(float)(*i),(input[j]-(*avg))/(float)(*i));
 *avg += (input[j]-*avg)/(float)(*i);
-if (input[j]>*max){
+if (input[j] > *max ){
 *max=input[j];
 *i_offset=*i-1;
+det = (*avg)*threshold;
+if (input[j] > det) return FIRST_PEAK_DETECTED;
+
 }
 }
 
-return 0;
+return NO_PEAK_YET;
 }
 int f32_findpeak_end(const char *fname,ne10_float32_t avg,ne10_float32_t max,int i_offset,DATA_COOK *dq){
 ne10_float32_t snr;
@@ -103,8 +116,6 @@ ne10_add_float_neon(out,in1,in2,N);
 return 0;
 }
 
-//int f32_peak()
-
 int cpx_add(ne10_fft_cpx_float32_t  *out,ne10_fft_cpx_float32_t  * in1,ne10_fft_cpx_float32_t * in2,int N){
 ne10_add_vec2f_neon((ne10_vec2f_t *)out,(ne10_vec2f_t *)in1,(ne10_vec2f_t *)in2,N);
 return 0;
@@ -133,6 +144,7 @@ ne10_float32_t *buck1,*buck2,*swap_tmp;
 ne10_fft_cfg_float32_t p;
 ne10_float32_t avg = 0, max = 0;
 int j = 0,j_offset = 0;
+int ispeak = 0;
 if ((wav_tx=wav_open(tx))==NULL){
 fprintf(stderr,"%s, unable to open tx wave %s\n",__func__,tx);
 return FAIL;}
@@ -195,17 +207,21 @@ cpx_abs(buck1,buck,N);
 //result_puts(upper half p_cross+buf)
 f32_add(buck2,buck1,buck2+L,L);
 
+//peak detection
+if (ispeak != FIRST_PEAK_DETECTED){
 if (i==0){
 data_st(fp_out,buck2+M-1,sizeof(ne10_float32_t),L-M+1);
-f32_findpeak(buck2+M-1,L-M+1,&avg,&max,&j,&j_offset);
+ispeak = f32_findpeak(buck2+M-1,L-M+1,&avg,&max,&j,&j_offset,THRESHOLD);
 }else{
 data_st(fp_out,buck2,sizeof(ne10_float32_t),L);
-f32_findpeak(buck2,L,&avg,&max,&j,&j_offset);
-};
+ispeak = f32_findpeak(buck2,L,&avg,&max,&j,&j_offset,THRESHOLD);
+}
+}
 
 if(is_rx_eof){
 data_st(fp_out,buck1+L,sizeof(ne10_float32_t),L);
-f32_findpeak(buck1+L,L,&avg,&max,&j,&j_offset);
+if (ispeak != FIRST_PEAK_DETECTED)
+	ispeak = f32_findpeak(buck1+L,L,&avg,&max,&j,&j_offset,THRESHOLD);
 break;}
 
 /*swap*/

@@ -1,12 +1,14 @@
 #include "amodem.h"
 #include "ms.h"
 #include "system.h"
+#include "signal.h"
 #include "scheduler.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 
+#define PATH_DEFAULT_TXNAME "/root/tx/mseq10_T1_l1.wav"
 #define BUFSIZE 80
 //TODO upload_data upgrade
 //TODO send time stamp
@@ -181,6 +183,7 @@ char txname[40];
 if (sscanf(buf,"%*s %s",txname)==1){
 return amodem_play(txname);
 }else if (strlen(modem.def_tx_wav)>3){
+printf("play default waveform %s\n",modem.def_tx_wav);
 return amodem_play(modem.def_tx_wav);
 }else{
 printf("no default tx filename\n");
@@ -212,6 +215,31 @@ amodem_upload_file(fname);
 }else
 amodem_upload_file(fname);
 return SUCCESS;
+}
+
+int recanal(){
+//record & anal
+char fname[40];
+char path_in[100],path_out[100];
+DATA_COOK dc;
+
+//record
+amodem_record(2000);
+sleep(2);
+
+//upload
+strcpy(fname,modem.latest_rx_fname);
+amodem_upload_file(fname);
+strcpy(strstr(fname,"log"),"wav");
+amodem_upload_file(fname);
+
+//anal
+sprintf(path_in,"/root/raw_data/%s",fname);
+strcpy(path_out,path_in);
+strcpy(strstr(path_out,".wav"),".out");
+wav2CIR(path_in,PATH_DEFAULT_TXNAME,path_out,&dc);
+
+return 0;
 }
 
 /*

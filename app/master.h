@@ -15,6 +15,7 @@ typedef enum{
         HELP,//show help msg
         UPLOAD,//upload local files
 	ANAL,
+	RECANAL,
         XCORR,
         SEND_REMOTE,//send msg to remote modems
         MSG_SHOW,//show msg & msg_remote

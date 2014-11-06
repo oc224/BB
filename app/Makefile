@@ -49,7 +49,7 @@ slave.o:master.c
 master:master.o libamodem.a  ms.o scheduler.o log.o signal.o wav.o
 	$(CC) $(CFLAGS) -o ./bin/master master.o ./lib/libamodem.a  ms.o log.o signal.o wav.o -lrt -pthread $(LIBNE10)
 ms.o:ms.c
-	$(CC) $(CFLAGS) -c ms.c
+	$(CC) $(CFLAGS) -c ms.c $(LIBNE10)
 master.o:master.c
 	$(CC) $(CLFAGS) -D CON_MASTER -c master.c $(LIBNE10)
 gps.o:gps.c
