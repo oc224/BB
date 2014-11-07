@@ -125,7 +125,7 @@ case ANAL:
 ret=data_anal(&dc,"");
 break;
 case RECANAL:
-ret=recanal();
+ret=recanal(task_exec.arg);
 break;
 case SEND_REMOTE:
 amodem_puts_remote(ADDR_BROADCAST,task_exec.arg);

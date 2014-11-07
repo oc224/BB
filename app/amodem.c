@@ -437,7 +437,7 @@ int amodem_upload_file(const char *fname){
 	return FAIL;
 	}
 	printf("copy done \n");
-	sleep(1);
+	sleep(2);
 
 	// issue ymodem send (sb)
 	sprintf(buf,"sb /ffs/%s\r",fname);

@@ -27,4 +27,4 @@ int msg_send();
 int wait_remote();
 int master_rreboot();
 int slave_rreboot();
-int recanal();
+int recanal(const char*);

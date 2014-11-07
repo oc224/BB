@@ -45,12 +45,3 @@ case 2
 
 endswitch
 
-
-
-
-
-
-%data=reshape(data,2,length(data)/2)';
-%data=data(:,1)+1i*data(:,2);
-
-

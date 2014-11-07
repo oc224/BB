@@ -5,4 +5,14 @@ bin/*
 .project
 *.project
 app/bin/
-
+u-boot*/
+target*/
+src/
+linux/
+kernel/
+*.out
+*orig
+*.tar.*
+rootfs/
+sd*/
+archlinux/

@@ -118,3 +118,15 @@ D->C	3.4ms	x = 60
 D->C	3.4ms	x = 60
 D->C	3.5ms	x = 10
 D->C	3.5ms	x = 1
+
+Done
+* filename .wav need not to input
+* default tx name
+* copy done  -> sb 1 sec 2 sec
+* first peak
+* recanal, default subroutine
+
+
+11-7 10:40
+C->D	3.6ms	1
+C->D 		lfm_T3_data_l30
