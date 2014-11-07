@@ -139,7 +139,7 @@ int j = 0;
 int N_out;
 int state = 20;
 int i_out=1;
-int i_max;
+int i_max=0;
 FILE *fp_out;
 ne10_fft_cpx_float32_t *H,*X,*tmp,*buck;
 ne10_float32_t *buck1,*buck2,*swap_tmp,*p_out;
@@ -227,11 +227,12 @@ data_st(fp_out,p_out,sizeof(ne10_float32_t),N_out);
 if (state > 0){
 // cal avg, compare max
 for (j=0;j<N_out;j++,i_out++){
+if (isnan(p_out[j])) continue;
 avg = (p_out[j]-avg)/(float)i_out;
 
 if (p_out[j] > max){
 max=p_out[j];
-i_max=i_out;
+i_max=i_out-1;
 if (p_out[j]>avg*THRESHOLD) state--;
 }
 }
