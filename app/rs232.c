@@ -34,7 +34,6 @@
 /* For more info and how to use this library, visit: http://www.teuniz.net/RS-232/ */
 
 #include "rs232.h"
-#include "system.h"
 #include <stdlib.h>
 
 //TODO TIMEOUT BUSYWAITING
@@ -104,15 +103,15 @@ int RS232_OpenComport(const char* devname,int baudrate)
 		case 1000000 : baudr = B1000000;
 		break;
 		default : printf("invalid baudrate\n");
-		return(1);
+		return OPEN_ERROR;
 		break;
 	}
 
-	fd = open(devname, O_RDWR | O_NOCTTY| O_NDELAY );//O_NDELAY
+	fd = open(devname, O_RDWR | O_NOCTTY| O_NDELAY );//O_NDELAY NONBLOCK
 	if(fd==-1)
 	{
 		perror("unable to open comport ");
-		return(1);
+		return OPEN_ERROR;
 	}
 
 	error = tcgetattr(fd, &old_port_settings);
@@ -120,7 +119,7 @@ int RS232_OpenComport(const char* devname,int baudrate)
 	{
 		close(fd);
 		perror("unable to read portsettings ");
-		return(1);
+		return OPEN_ERROR;
 	}
 	memset(&new_port_settings, 0, sizeof(new_port_settings)); /* clear the new struct */
 
@@ -138,13 +137,13 @@ int RS232_OpenComport(const char* devname,int baudrate)
 	{
 		close(fd);
 		perror("unable to adjust portsettings ");
-		return(1);
+		return OPEN_ERROR;
 	}
 
 	/*if(ioctl(fd, TIOCMGET, &status) == -1)
 	{
 		perror("unable to get portstatus");
-		return(1);
+		return OPEN_ERROR;
 	}*/
 
 	//status |= TIOCM_DTR; /* turn on DTR */
@@ -153,7 +152,7 @@ int RS232_OpenComport(const char* devname,int baudrate)
 	/*if(ioctl(fd, TIOCMSET, &status) == -1)
 	{
 		perror("unable to set portstatus");
-		return(1);
+		return OPEN_ERROR;
 	}*/
 
 	return(fd);

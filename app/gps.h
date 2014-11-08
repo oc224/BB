@@ -18,3 +18,6 @@ extern gps_info gps;
 int gps_update();
 void gps_show();
 void gps_log();
+
+int gps_dump_modem(const char*dev_gps,const char*sentence,char *buf,int N);
+int gps_PortSelect();

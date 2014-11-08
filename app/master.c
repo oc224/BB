@@ -112,7 +112,7 @@ break;
 case MSRECORD:
 ret=record(task_exec.arg);
 break;
-case SYNCALL:
+case SYNCTIME:
 //master_sync();
 break;
 case HELP:
@@ -137,9 +137,6 @@ printf("remote msg\n");
 amodem_msg_show(&msg_remote);
 break;
 case STATUS:
-break;
-case GPSLOG:
-//system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
 break;
 case RREBOOT:
 //master_rreboot();
@@ -345,8 +342,8 @@ void wait_command_user()
 	}else if (strcmp(arg0,"record")==0){
 		type=MSRECORD;
 		isremote=0;
-	}else if (strcmp("sync",arg0)==0){
-		type=SYNCALL;
+	}else if (strcmp("synctime",arg0)==0){
+		type=SYNCTIME;
 		isremote=1;
 	}else if (strcmp("upload",arg0)==0){
 		type=UPLOAD;
@@ -371,9 +368,6 @@ void wait_command_user()
 		isremote=0;
 	}else if (strcmp("help",arg0)==0){
 		type=HELP;
-		isremote=0;
-	}else if (strcmp("gpslog",arg0)==0){
-		type=GPSLOG;
 		isremote=0;
 	}else if (strcmp("rreboot",arg0)==0){
 		type=RREBOOT;

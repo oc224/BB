@@ -3,6 +3,7 @@
 #include "amodem.h"
 #include "rs232.h"
 #include "common.h"
+#include "gps.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

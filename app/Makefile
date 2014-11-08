@@ -20,8 +20,8 @@ amodem.o:amodem.c
 	$(CC) $(CFLAGS) -c amodem.c -pthread
 amodem_io.o:amodem_io.c
 	$(CC) $(CFLAGS) -c amodem_io.c
-libamodem.a:amodem.o amodem_io.o rs232.o
-	$(AR) rcs ./lib/libamodem.a amodem.o amodem_io.o rs232.o
+libamodem.a:amodem.o amodem_io.o rs232.o gps.o
+	$(AR) rcs ./lib/libamodem.a amodem.o amodem_io.o rs232.o gps.o
 wireless_modem.o:wireless_modem.c wireless_modem.h
 	$(CC) $(CFLAGS) -c wireless_modem.c rs232.o
 w_test.o:w_test.c
