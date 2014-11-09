@@ -3,6 +3,7 @@
 #include "amodem.h"
 #include "rs232.h"
 #include "common.h"
+#include "gps.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +12,7 @@
 #include <pthread.h>
 
 #define BUFSIZE 128
+#define DEFAULT_TXNAME "mseq10_T1_l1"
 
 amodem modem={.board_temp = 0, .dsp_bat = 0, .mdm_bat = 0, .rtc_bat = 0};/*a struct that contains the status of modem or some useful information*/
 amodem_msg msg_local={.N_unread = 0, .i = 0};/*a list that contains latest msg from (local) modem*/
@@ -123,7 +125,7 @@ int amodem_init(char* dev){
 	strcpy(modem.dev_path,dev);
 	modem.latest_tx_stamp[0]=0;
 	modem.latest_rx_fname[0]=0;
-	modem.def_tx_wav[0]=0;
+	strcpy(modem.def_tx_wav,DEFAULT_TXNAME);
 	modem.sync_state=NOT_SYNC;
 	/*TX / RX log*/
 	if ((modem.tx_p=fopen(PATH_TX,"a"))==NULL){
@@ -197,7 +199,7 @@ int amodem_play(char * filename) {
 	time(&bb_stamp);
 	// play
 	amodem_puts_local("\r");
-	sprintf(buf, "play /ffs/%s\r", filename); 
+	sprintf(buf, "play /ffs/%s.wav\r", filename); 
 	if (amodem_puts_local(buf)==FAIL) {
 		printf("amodem, send command error\n");
 		return FAIL;
@@ -436,7 +438,7 @@ int amodem_upload_file(const char *fname){
 	return FAIL;
 	}
 	printf("copy done \n");
-	sleep(1);
+	sleep(2);
 
 	// issue ymodem send (sb)
 	sprintf(buf,"sb /ffs/%s\r",fname);

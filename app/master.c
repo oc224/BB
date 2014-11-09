@@ -50,7 +50,7 @@ int command_exec();
 void wait_command_user();
 int xcorr();
 int ctalk();
-int data_anal(DATA_COOK *);
+int data_anal(DATA_COOK *,const char*);
 
 
 int main(int argc,char *argv[])
@@ -129,7 +129,7 @@ break;
 case MSRECORD:
 ret=record(task_exec.arg);
 break;
-case SYNCALL:
+case SYNCTIME:
 //master_sync();
 break;
 case HELP:
@@ -139,7 +139,10 @@ case UPLOAD:
 ret=upload(task_exec.arg);
 break;
 case ANAL:
-ret=data_anal(&dc);
+ret=data_anal(&dc,"");
+break;
+case RECANAL:
+ret=recanal(task_exec.arg);
 break;
 case SEND_REMOTE:
 amodem_puts_remote(ADDR_BROADCAST,task_exec.arg);
@@ -151,9 +154,6 @@ printf("remote msg\n");
 amodem_msg_show(&msg_remote);
 break;
 case STATUS:
-break;
-case GPSLOG:
-//system("gpspipe -r -n 12 | grep GPGGA >> /home/root/log/gpslog.txt");
 break;
 case RREBOOT:
 //master_rreboot();
@@ -173,7 +173,7 @@ break;
 return ret;
 }
 
-int data_anal(DATA_COOK *dc){
+int data_anal(DATA_COOK *dc,const char *txname){
 //upload data xcorr...
 char buf[BUFSIZE];
 char fname[40];
@@ -196,10 +196,14 @@ strcpy(strstr(path_out,".wav"),".out");
 printf("proc %s, output %s ...\n",fname,path_out);
 
 //enter tx wav
+if (strlen(txname)<2){
 fprintf(stdout,"tx wav:>");
 fgets(fname,40,stdin);
 fname[strlen(fname)-1]=0;
-sprintf(buf,"/root/tx/%s",fname);
+sprintf(buf,"/root/tx/%s",fname);}
+else{
+sprintf(buf,"/root/tx/%s",txname);
+}
 
 wav2CIR(path_in,buf,path_out,dc);
 
@@ -222,7 +226,7 @@ printf("proc %s, output %s ...\n",fname,path_out);
 fprintf(stdout,"tx wav:>");
 fgets(fname,40,stdin);
 fname[strlen(fname)-1]=0;
-sprintf(buf,"/root/tx/%s",fname);
+sprintf(buf,"/root/tx/%s.wav",fname);
 
 wav2CIR(path_in,buf,path_out,&dc);
 return SUCCESS;
@@ -318,7 +322,7 @@ sleep(10);
 //record
 amodem_record(GUARD_HEAD+2000+GUARD_TAIL*1000);
 //anal
-data_anal(&dc);
+data_anal(&dc,"mseq10_T1_l1.wav");
 return 0;
 #endif
 
@@ -334,7 +338,7 @@ sleep(10-GUARD_HEAD-2-GUARD_TAIL);
 //
 amodem_play("mseq10_T1_l1.wav");
 //anal send back
-data_anal(&dc);
+data_anal(&dc,"mseq10_T1_l1.wav");
 sprintf(buf,"SNR = %4.1f, RX %d:%d:%f\n",dc.snr,dc.hh,dc.mm,dc.ss+dc.offset);
 amodem_mode_select('o',3);
 amodem_puts_local(buf);
@@ -394,14 +398,17 @@ void wait_command_user()
 	}else if (strcmp(arg0,"record")==0){
 		type=MSRECORD;
 		isremote=0;
-	}else if (strcmp("sync",arg0)==0){
-		type=SYNCALL;
+	}else if (strcmp("synctime",arg0)==0){
+		type=SYNCTIME;
 		isremote=1;
 	}else if (strcmp("upload",arg0)==0){
 		type=UPLOAD;
 		isremote=0;
 	}else if (strcmp("anal",arg0)==0){
 		type=ANAL;
+		isremote=0;
+	}else if (strcmp("recanal",arg0)==0){
+		type=RECANAL;
 		isremote=0;
 	}else if (strcmp("quick",arg0)==0){
 		type=QUICK;
@@ -417,9 +424,6 @@ void wait_command_user()
 		isremote=0;
 	}else if (strcmp("help",arg0)==0){
 		type=HELP;
-		isremote=0;
-	}else if (strcmp("gpslog",arg0)==0){
-		type=GPSLOG;
 		isremote=0;
 	}else if (strcmp("rreboot",arg0)==0){
 		type=RREBOOT;

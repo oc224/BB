@@ -3,15 +3,18 @@
 #include <math.h>
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "gps.h"
 #include "system.h"
-
+#include "rs232.h"
 #define GPSPIPE_TPV "gpspipe -w -n 10|grep TPV"
 #define GPSPIPE_SKY "gpspipe -w -n 10|grep SKY"
 #define GPSPIPE_GPRMC "gpspipe -r -n 15|grep GPRMC"
 #define GPSPIPE_GPGGA "gpspipe -r -n 15|grep GPGGA"
 #define BUFSIZE 256
+#define BAUDRATE_GPS 4800
+#define SIZE_SENTENCE 200
 
 gps_info gps;
 
@@ -89,4 +92,56 @@ void gps_show(){
 
 void gps_log(){
 system("gpspipe -r -n 15|grep GP >> /home/root/log/GPS.TXT");
+}
+
+int gps_dump_modem(const char*dev_gps,const char*sentence,char *buf,int N){
+int fd;
+char sen[SIZE_SENTENCE];
+//open
+if((fd = RS232_OpenComport(dev_gps, BAUDRATE_GPS))==OPEN_ERROR){
+fprintf(stderr,"%s, fail to open %s\n",__func__,dev_gps);
+return FAIL;}
+
+//read key sentence
+do{
+while (RS232_PollComport(fd,sen,SIZE_SENTENCE)<1) usleep(1000);//wait sentence
+}while (strstr(sen,sentence)==NULL);
+strcpy(buf,sen);
+
+//return sentence
+RS232_CloseComport(fd);
+printf("get %s\n",sen);
+return SUCCESS;
+}
+
+int gps_PortSelect(){
+int fd;
+char dev_gps[20];
+int i_PortProb;
+int i_PortConfirm = -1;
+int isString;
+char buf[SIZE_SENTENCE];
+
+for (i_PortProb=0;i_PortProb<4;i_PortProb++){
+
+//open
+sprintf(dev_gps,"/dev/ttyUSB%d",i_PortProb);
+if((fd = RS232_OpenComport(dev_gps, BAUDRATE_GPS))==OPEN_ERROR){
+fprintf(stderr,"%s, fail to open %s\n",__func__,dev_gps);
+continue;}
+
+//read string
+sleep(3);
+isString = (RS232_PollComport(fd,buf,SIZE_SENTENCE-1)>0);
+RS232_CloseComport(fd);
+
+//is gps
+if ((isString)&&(strstr(buf,"GPGGA")!=NULL)) {
+i_PortConfirm = i_PortProb;
+break;}
+
+}
+//return
+printf("gps on port %d\n",i_PortConfirm);
+return i_PortConfirm;
 }

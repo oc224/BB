@@ -13,10 +13,11 @@ typedef enum{
         QUICK,
         MSPLAY,//local modem play
         MSRECORD,//local modem record
-        SYNCALL,//sync remote & local modem
+        SYNCTIME,//sync remote & local modem
         HELP,//show help msg
         UPLOAD,//upload local files
 	ANAL,
+	RECANAL,
         XCORR,
         SEND_REMOTE,//send msg to remote modems
         MSG_SHOW,//show msg & msg_remote

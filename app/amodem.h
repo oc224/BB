@@ -3,12 +3,9 @@
 #include <stdio.h>
 #include <pthread.h>
 #include "log.h"
+#include "common.h"
 #define amodem_serial_baudrate 115200
 //#define amodem_dev_path "/dev/ttyUSB2"
-#define PATH_AMODEM "/root/log/AMODEM.TXT"
-#define PATH_TX "/root/log/TXLOG.TXT"
-#define PATH_RX "/root/log/RXLOG.TXT"
-#define PATH_RAW_DATA "/root/raw_data"
 #define TIMEOUT_SERIAL 2000/*default timeout for reading modem*/
 #define TIMEOUT_SYNC 15
 #define TIMEOUT_COPY 10000
@@ -22,8 +19,6 @@
 #define GPSPIPE_TIME 8 /*seconds that gpspipe feed modem*/
 #define LIST_SIZE 16
 #define TX_SIZE 32
-#define CFG_DEPLOY "/root/config/modem_cfg_deploy.txt"
-#define CFG_DEVEL "/root/config/modem_cfg_devel.txt"
 #define SYNC_FALSE 0
 #define SYNC_TRUE 1
 typedef enum {

@@ -35,6 +35,7 @@
 
 #ifndef rs232_INCLUDED
 #define rs232_INCLUDED
+#define OPEN_ERROR 1
 
 #ifdef __cplusplus
 extern "C" {
