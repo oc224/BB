@@ -5,7 +5,6 @@
 #include "log.h"
 #include "common.h"
 #define amodem_serial_baudrate 115200
-//#define amodem_dev_path "/dev/ttyUSB2"
 #define TIMEOUT_SERIAL 2000/*default timeout for reading modem*/
 #define TIMEOUT_SYNC 15
 #define TIMEOUT_COPY 10000

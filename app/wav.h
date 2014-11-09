@@ -2,8 +2,15 @@
 #define WAV_H
 #include <stdio.h>
 #include "NE10.h"
+
 #define NORMAL 1
 #define REVERSE -1
+//THE wav.h is not generic wav reader, it's desined for
+//benthos modem data format (16bits, Dual Channel)
+//and NE10 library
+
+
+//wav meta-data structure
 typedef struct{
 int fs;
 int N_ch;

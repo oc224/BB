@@ -21,7 +21,7 @@ printf("%20s %d:%d:%f\n","Record time : ",dq->hh,dq->mm,dq->ss);
 printf("%20s %d:%d:%f\n","RX time : ",dq->hh,dq->mm,dq->ss+dq->offset);
 }
 
-int f32_findpeak_end(const char *fname,ne10_float32_t avg,ne10_float32_t max,int i_offset,DATA_COOK *dq){
+static int f32_findpeak_end(const char *fname,ne10_float32_t avg,ne10_float32_t max,int i_offset,DATA_COOK *dq){
 ne10_float32_t snr;
 FILE *fp;
 char buf[100];
@@ -62,12 +62,12 @@ dq->ss=ss;
 return SUCCESS;
 }
 
-int cpx_clear(ne10_fft_cpx_float32_t *in,int N){
+static int cpx_clear(ne10_fft_cpx_float32_t *in,int N){
 ne10_setc_float_neon((ne10_float32_t *)in,0.0,2*N);
 return 0;
 }
 
-int cpx_mul(ne10_fft_cpx_float32_t *out,ne10_fft_cpx_float32_t* in1,ne10_fft_cpx_float32_t * in2,int N){
+static int cpx_mul(ne10_fft_cpx_float32_t *out,ne10_fft_cpx_float32_t* in1,ne10_fft_cpx_float32_t * in2,int N){
 // output length N array out equal to complex multiplication of in1 and in2
 int i;
 for (i=0;i<N;i++){
@@ -77,17 +77,17 @@ out[i].i = in1[i].r*in2[i].i+in1[i].i*in2[i].r;
 return 0;
 }
 
-int f32_add(ne10_float32_t  *out,ne10_float32_t  * in1,ne10_float32_t * in2,int N){
+static int f32_add(ne10_float32_t  *out,ne10_float32_t  * in1,ne10_float32_t * in2,int N){
 ne10_add_float_neon(out,in1,in2,N);
 return 0;
 }
 
-int cpx_add(ne10_fft_cpx_float32_t  *out,ne10_fft_cpx_float32_t  * in1,ne10_fft_cpx_float32_t * in2,int N){
+static int cpx_add(ne10_fft_cpx_float32_t  *out,ne10_fft_cpx_float32_t  * in1,ne10_fft_cpx_float32_t * in2,int N){
 ne10_add_vec2f_neon((ne10_vec2f_t *)out,(ne10_vec2f_t *)in1,(ne10_vec2f_t *)in2,N);
 return 0;
 }
 
-int cpx_abs(ne10_float32_t * out,ne10_fft_cpx_float32_t *in,uint N){
+static int cpx_abs(ne10_float32_t * out,ne10_fft_cpx_float32_t *in,uint N){
 ne10_len_vec2f_neon(out,(ne10_vec2f_t *)in,N);
 return 0;
 }

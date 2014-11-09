@@ -10,7 +10,11 @@ time_t stamp;
 }logger;
 
 logger* log_open(const char*);
+
 int log_close(logger*);
+
 int log_event(logger*,unsigned int,const char*);
+
 void log_show(logger*);
+
 #endif

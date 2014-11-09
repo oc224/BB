@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "gps.h"
-#include "system.h"
+#include "common.h"
 #include "rs232.h"
 #define GPSPIPE_TPV "gpspipe -w -n 10|grep TPV"
 #define GPSPIPE_SKY "gpspipe -w -n 10|grep SKY"
