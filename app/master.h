@@ -1,3 +1,5 @@
+#ifndef MASTER_H
+#define MASTER_H
 typedef char bool;
 
 typedef enum{
@@ -36,14 +38,4 @@ int task_pop(TASK*,TASK *);
 
 extern TASK task_recv_master;
 
-//node
-typedef struct{
-char name[20];
-char amodem_addr[4];
-int id_mseq;
-int id_run;
-float snr;
-float travel_time;
-}NODE;
-
-NODE* NODE_read(char *);
+#endif

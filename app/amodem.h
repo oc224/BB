@@ -1,5 +1,5 @@
-#ifndef AMODEM
-#define AMODEM
+#ifndef AMODEM_H
+#define AMODEM_H
 #include <stdio.h>
 #include <pthread.h>
 #include "log.h"

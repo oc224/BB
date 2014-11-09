@@ -1,3 +1,5 @@
+#ifndef MS_H
+#define MS_H
 #define PREP "req"
 #define ACK "ack"
 #define MILI 1000
@@ -27,3 +29,4 @@ int msg_send();
 int wait_remote();
 int master_rreboot();
 int slave_rreboot();
+#endif

@@ -26,7 +26,24 @@ float guard_time_head;
 float guard_time_tail;
 int no_mseq;
 int local_addr;
+char hostname[20];
 }set;
+
+
+//NODE
+typedef struct{
+char name[20];
+char amodem_addr[4];
+int id_mseq;
+int id_run;
+int this_node;
+float snr;
+float travel_time;
+}NODE;
+
+NODE** NODE_read(const char *);
+void NODE_show(NODE **);
+NODE* NODE_lookup(NODE **,const char*);
 
 void command_wait();
 int command_exec();
@@ -34,22 +51,22 @@ void wait_command_user();
 int xcorr();
 int ctalk();
 int data_anal(DATA_COOK *);
-NODE* NODE_read(char *);
-void NODE_show(NODE *node);
-NODE* NODE_lookup(NODE *list,char* name);
 
 
 int main(int argc,char *argv[])
 {
-NODE *list,*node_target;
+NODE **list,*node_target;
 //NODE
 if ((list=NODE_read(" "))==NULL){
 fprintf(stderr,"fail to read node list\n");
 return FAIL;}
 
 NODE_show(list);
-//node_target=NODE_lookup(list,"master");
-//printf("debug,%s %d\n",node_target->name,node_target->id_mseq);
+node_target=NODE_lookup(list,"master");
+printf("debug,%s %d\n",node_target->name,node_target->id_mseq);
+
+//SET
+gethostname(set.hostname,19);
 
 
 //log init
@@ -213,29 +230,68 @@ return SUCCESS;
 
 int prob(){
 #ifdef CON_MASTER
-NODE* target;
+NODE** node;
 char buf[BUFSIZE];
-//seq call except myself
-
-//call target
-sprintf(buf,"atr%s",target->amodem_addr);
+int i;
+//call nodes
+for (i=0;node[i]!=NULL;i++)
+if(node[i]->this_node==0){
+//atr
+sprintf(buf,"atr%s\r",node[i]->amodem_addr);
 amodem_puts_local(buf);
-//wait
-sprintf(buf,"atx%s",target->amodem_addr);
+//wait report
+//atx
+sprintf(buf,"atx%s\r",node[i]->amodem_addr);
 amodem_puts_local(buf);
-//wait
+//wait report
+//store
+//node[i]->snr = 
+//node[i]->travel_time = 
+}
 
-//call next one
-//amodem_puts_local("atrx") signal
-//wait S1 report
+//cal S1 to prob
 
-
+return SUCCESS;
 #endif
 
 #ifdef CON_SLAVE
+NODE** node;
 //sleep
 //wait until signal
+int i;
+char buf[BUFSIZE];
 
+//call nodes
+for (i=0;node[i]!=NULL;i++)
+if(node[i]->this_node==0){
+//atr
+sprintf(buf,"atr%s\r",node[i]->amodem_addr);
+amodem_puts_local(buf);
+//wait report
+//atx
+sprintf(buf,"atx%s\r",node[i]->amodem_addr);
+amodem_puts_local(buf);
+//wait report
+//store
+//node[i]->snr = 
+//node[i]->travel_time = 
+}
+
+//report to master
+amodem_mode_select('o',3);
+
+sprintf(buf,"%s report\n",set.hostname);
+amodem_puts_local(buf);
+
+for (i=0;node[i]!=NULL;i++)
+if(node[i]->this_node==0){
+sprintf(buf,"%s, travel time =  %f, snr = %f\n",node[i]->name,node[i]->travel_time,
+node[i]->snr);
+amodem_puts_local(buf);
+}
+
+amodem_mode_select('c',3);
+return SUCCESS;
 #endif
 }
 
@@ -420,47 +476,66 @@ task->type=EMPTY;
 return SUCCESS;
 }
 
-NODE* NODE_read(char *file){
-NODE * list=NULL;
-list=(NODE *)malloc(sizeof(NODE)*4);
+NODE** NODE_read(const char *pathname){
+NODE ** list=NULL;
+int N=3;
+int i;
+int err;
+char hostname[20];
+gethostname(hostname,19);
 
-strcpy(list->name,"master");
-strcpy(list->amodem_addr,"210");
-list->id_mseq=1;
-list->id_run=1;
+list=(NODE **)malloc(sizeof(NODE *)*(N+1));
 
-strcpy((list+1)->name,"charlie");
-strcpy((list+1)->amodem_addr,"213");
-(list+1)->id_mseq=2;
-(list+1)->id_run=2;
 
-strcpy((list+2)->name,"dylan");
-strcpy((list+2)->amodem_addr,"214");
-(list+2)->id_mseq=3;
-(list+2)->id_run=3;
+list[0]=(NODE *)malloc(sizeof(NODE));
+strcpy(list[0]->name,"master");
+strcpy(list[0]->amodem_addr,"210");
+list[0]->id_mseq=1;
+list[0]->id_run=1;
+list[0]->this_node=0;
 
-list[3].name[0]=0;
+list[1]=(NODE *)malloc(sizeof(NODE));
+strcpy(list[1]->name,"charlie");
+strcpy(list[1]->amodem_addr,"213");
+list[1]->id_mseq=2;
+list[1]->id_run=2;
+list[1]->this_node=0;
 
+list[2]=(NODE *)malloc(sizeof(NODE));
+strcpy(list[2]->name,"dylan");
+strcpy(list[2]->amodem_addr,"214");
+list[2]->id_mseq=3;
+list[2]->id_run=3;
+list[2]->this_node=0;
+
+list[3]=NULL;
+
+//find this node in the list
+for (i=0;list[i]!=NULL;i++)
+if (strcmp(hostname,list[i]->name)==0) {
+err=-1;
+list[i]->this_node=1;}
+
+if (err==-1)
+printf("%s,can't find local node in the nodelist\n",__func__);
 
 return list;
 }
 
-void NODE_show(NODE *node){
+void NODE_show(NODE **node){
+int i;
 printf("%10s%10s%10s%10s\n","name","addr","id_mseq","id_run");
 printf("--------------------------------------------------\n");
-while (node->name[0]!=0){
-printf("%10s%10s%10d%10d\n",node->name,node->amodem_addr,node->id_mseq,node->id_run);
-node++;
+for (i=0;node[i]!=NULL;i++)
+printf("%10s%10s%10d%10d\n",node[i]->name,node[i]->amodem_addr,node[i]->id_mseq,node[i]->id_run);
 }
 
-}
-
-NODE* NODE_lookup(NODE *list,char* name){
+NODE* NODE_lookup(NODE **list,const char* name){
+int i;
 //look sequentail
-while (list->name[0]!=0){
-if (strcmp(list->name,name)==0) return list;
-list++;
-}
+for (i=0;list[i]!=NULL;i++)
+if (strcmp(list[i]->name,name)==0) return list[i];
+
 //fail
 printf("%s, node %s not found\n",__func__,name);
 return NULL;

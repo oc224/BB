@@ -1,3 +1,5 @@
+#ifndef WAV_H
+#define WAV_H
 #include <stdio.h>
 #include "NE10.h"
 #define NORMAL 1
@@ -16,3 +18,4 @@ void wav_show(wav*);
 int wav_read(wav*,ne10_fft_cpx_float32_t*,int,int);
 int wav_close(wav*);
 int data_st(FILE *fp,void* ptr,int size,int N);
+#endif

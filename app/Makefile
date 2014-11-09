@@ -42,11 +42,11 @@ connect.o:connect.c
 	$(CC) $(CFLAGS) -c connect.c
 connect:connect.o wireless_modem.o rs232.o  connect.o
 	$(CC) $(CFLAGS) -o ./bin/connect wireless_modem.o rs232.o  connect.o
-slave:slave.o libamodem.a  ms.o scheduler.o log.o signal.o wav.o
+slave:slave.o libamodem.a  ms.o log.o signal.o wav.o
 	$(CC) $(CFLAGS) -o ./bin/slave slave.o ./lib/libamodem.a  ms.o log.o signal.o wav.o -lrt -pthread $(LIBNE10)
 slave.o:master.c
 	$(CC) $(CFLAGS) -D CON_SLAVE -c master.c -o slave.o $(LIBNE10)
-master:master.o libamodem.a  ms.o scheduler.o log.o signal.o wav.o
+master:master.o libamodem.a  ms.o log.o signal.o wav.o
 	$(CC) $(CFLAGS) -o ./bin/master master.o ./lib/libamodem.a  ms.o log.o signal.o wav.o -lrt -pthread $(LIBNE10)
 ms.o:ms.c
 	$(CC) $(CFLAGS) -c ms.c

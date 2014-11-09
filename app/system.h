@@ -1,3 +1,6 @@
+#ifndef SYSTEM_H
+#define SYSTEM_H
+
 #define FAIL -1
 #define SUCCESS 1
 #define DEBUG_MSG_PATH "/home/root/log/debug.txt"
@@ -32,3 +35,5 @@ int system_cfg_read();
 node* system_cfg_find(const char*);
 void system_cfg_show();
 int system_msg_dump(char *);
+
+#endif

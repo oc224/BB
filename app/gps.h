@@ -1,3 +1,5 @@
+#ifndef GPS_H
+#define GPS_H
 typedef struct
 {
 float lon;
@@ -18,3 +20,4 @@ extern gps_info gps;
 int gps_update();
 void gps_show();
 void gps_log();
+#endif

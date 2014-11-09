@@ -2,10 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "system.h"
 #include <string.h>
 #include <time.h>
 #include <signal.h>
+
+#include "system.h"
 #include "amodem.h"
 #include "scheduler.h"
 #define BUFSIZE 128

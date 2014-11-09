@@ -1,3 +1,5 @@
+#ifndef SIGNAL_H
+#define SIGNAL_H
 #include "NE10.h"
 typedef struct{
 ne10_float32_t snr;
@@ -12,3 +14,5 @@ int mm;
 
 int wav2CIR(const char*,const char *,const char *,DATA_COOK *);
 int DATA_COOK_show(DATA_COOK *);
+
+#endif

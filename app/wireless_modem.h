@@ -1,3 +1,5 @@
+#ifndef WIRELESS_MODEM_H
+#define WIRELESS_MODEM_H
 #define w_modem_serial_baud_rate 115200 //s102 1
 #define w_modem_net_addr//s104 ex.1234567890
 #define w_modem_unit_addr//s105 2-65534
@@ -21,3 +23,5 @@ int w_modem_info_get();// get wireless modem info, addr...etc
 void w_modem_info_show();// show info.
 int w_modem_close();// quit command mode
 int w_modem_connect(const char *);// connect to a given node
+
+#endif
