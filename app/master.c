@@ -4,6 +4,8 @@
 #include "ms.h"
 #include "master.h"
 #include "signal.h"
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,10 +42,15 @@ int this_node;
 float snr;
 float travel_time;
 }NODE;
+NODE** node,*node_target;
 
+//read node list from a file
 NODE** NODE_read(const char *);
+//show node list
 void NODE_show(NODE **);
+//return node by name
 NODE* NODE_lookup(NODE **,const char*);
+
 
 void command_wait();
 int command_exec();
@@ -55,14 +62,12 @@ int data_anal(DATA_COOK *,const char*);
 
 int main(int argc,char *argv[])
 {
-NODE **list,*node_target;
 //NODE
-if ((list=NODE_read(" "))==NULL){
+if ((node=NODE_read(" "))==NULL){
 fprintf(stderr,"fail to read node list\n");
 return FAIL;}
-
-NODE_show(list);
-node_target=NODE_lookup(list,"master");
+NODE_show(node);
+node_target=NODE_lookup(node,"master");
 printf("debug,%s %d\n",node_target->name,node_target->id_mseq);
 
 //SET
@@ -113,6 +118,9 @@ case TALK:
 break;
 case ATALK:
 ret=ctalk();
+break;
+case PROB:
+//prob();
 break;
 case CONVERSATION:
 //master_con();
@@ -175,6 +183,8 @@ return ret;
 
 int data_anal(DATA_COOK *dc,const char *txname){
 //upload data xcorr...
+// input :	txname path to xxx.wav
+//		keyin tx wav (without .wav )
 char buf[BUFSIZE];
 char fname[40];
 //char fname[40];
@@ -196,18 +206,24 @@ strcpy(strstr(path_out,".wav"),".out");
 printf("proc %s, output %s ...\n",fname,path_out);
 
 //enter tx wav
-if (strlen(txname)<2){
+if (txname==NULL){
 fprintf(stdout,"tx wav:>");
 fgets(fname,40,stdin);
 fname[strlen(fname)-1]=0;
-sprintf(buf,"/root/tx/%s",fname);}
+sprintf(buf,"%s%s.wav",PATH_TX_SIGNAL,fname);}
 else{
-sprintf(buf,"/root/tx/%s",txname);
+sprintf(buf,"%s%s.wav",PATH_TX_SIGNAL,txname);
 }
 
 wav2CIR(path_in,buf,path_out,dc);
 
 return SUCCESS;
+}
+
+int file_exist (char *filename)
+{
+  struct stat   buffer;
+  return (stat (filename, &buffer) == 0);
 }
 
 int xcorr(){
@@ -216,8 +232,12 @@ char fname[40];
 char path_out[120],path_in[120];
 DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
 //input fname
+fname[0]=0;
 sscanf(task_exec.arg,"%*s %s",fname);
 sprintf(path_in,"%s/%s.wav",PATH_RAW_DATA,fname);
+if (file_exist(path_in)) {
+ERR_PRINT("invalid rx data\n");
+return FAIL;}
 strcpy(path_out,path_in);
 strcpy(strstr(path_out,".wav"),".out");
 printf("proc %s, output %s ...\n",fname,path_out);
@@ -227,14 +247,29 @@ fprintf(stdout,"tx wav:>");
 fgets(fname,40,stdin);
 fname[strlen(fname)-1]=0;
 sprintf(buf,"/root/tx/%s.wav",fname);
+if (file_exist(buf)) {
+ERR_PRINT("invalid rx data\n");
+return FAIL;}
 
 wav2CIR(path_in,buf,path_out,&dc);
 return SUCCESS;
 }
 
-int prob(){
+int prob_2nodes(){
 #ifdef CON_MASTER
-NODE** node;
+char buf[30];
+sprintf(buf,"atr%d\r",PROB);
+amodem_puts_local(buf);
+return SUCCESS;
+#endif
+#ifdef CON_MASTER
+return SUCCESS;
+#endif
+
+}
+int prob(){
+//want to prob N nodes setup
+#ifdef CON_MASTER
 char buf[BUFSIZE];
 int i;
 //call nodes
@@ -249,8 +284,8 @@ sprintf(buf,"atx%s\r",node[i]->amodem_addr);
 amodem_puts_local(buf);
 //wait report
 //store
-//node[i]->snr = 
-//node[i]->travel_time = 
+//node[i]->snr =
+//node[i]->travel_time =
 }
 
 //cal S1 to prob
@@ -259,7 +294,6 @@ return SUCCESS;
 #endif
 
 #ifdef CON_SLAVE
-NODE** node;
 //sleep
 //wait until signal
 int i;
@@ -277,7 +311,7 @@ sprintf(buf,"atx%s\r",node[i]->amodem_addr);
 amodem_puts_local(buf);
 //wait report
 //store
-//node[i]->snr = 
+//node[i]->snr 
 //node[i]->travel_time = 
 }
 
@@ -313,16 +347,34 @@ return SUCCESS;
 int ctalk(){
 #ifdef CON_MASTER
 DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
+int N;
+int i;
+char arg[10];
+char buf[80];
+//input arg N times
+sscanf(task_exec.arg,"%*s %s",arg);
+if (strlen(arg)!=0) N=atoi(arg);
+else N=1;
+printf("ctalk, %d times\n",N);
+
+for (i=0;i<N;i++){
+//
 //inform remotes
 amodem_puts_local("atr3\r");
 sleep(11);
 //play
-amodem_play("mseq10_T1_l1.wav");
+amodem_play(TX_DEFAULT);
 sleep(10);
 //record
 amodem_record(GUARD_HEAD+2000+GUARD_TAIL*1000);
 //anal
-data_anal(&dc,"mseq10_T1_l1.wav");
+data_anal(&dc,TX_DEFAULT);
+DATA_COOK_show(&dc);
+sleep(10);
+amodem_wait_remote("RX",5000,buf,79);
+printf("%s\n",buf);
+printf("done\n");
+}
 return 0;
 #endif
 
@@ -336,9 +388,10 @@ amodem_record(GUARD_HEAD+2000+GUARD_TAIL*1000);
 //
 sleep(10-GUARD_HEAD-2-GUARD_TAIL);
 //
-amodem_play("mseq10_T1_l1.wav");
+amodem_play(TX_DEFAULT);
 //anal send back
-data_anal(&dc,"mseq10_T1_l1.wav");
+data_anal(&dc,TX_DEFAULT);
+DATA_COOK_show(&dc);
 sprintf(buf,"SNR = %4.1f, RX %d:%d:%f\n",dc.snr,dc.hh,dc.mm,dc.ss+dc.offset);
 amodem_mode_select('o',3);
 amodem_puts_local(buf);
@@ -385,6 +438,9 @@ void wait_command_user()
 		isremote=1;
 	}else if (strcmp(arg0,"atalk")==0){
 		type=ATALK;
+		isremote=0;
+	}else if (strcmp(arg0,"prob")==0){
+		type=PROB;
 		isremote=0;
 	}else if (strcmp(arg0,"con")==0){
 		type=CONVERSATION;
@@ -484,7 +540,7 @@ NODE** NODE_read(const char *pathname){
 NODE ** list=NULL;
 int N=3;
 int i;
-int err;
+int err=-1;
 char hostname[20];
 gethostname(hostname,19);
 
@@ -517,21 +573,21 @@ list[3]=NULL;
 //find this node in the list
 for (i=0;list[i]!=NULL;i++)
 if (strcmp(hostname,list[i]->name)==0) {
-err=-1;
+err=0;
 list[i]->this_node=1;}
 
-if (err==-1)
-printf("%s,can't find local node in the nodelist\n",__func__);
+if (err==-1) ERR_PRINT("ca't find the local node in the nodelist\n");
+//printf("%s,can't find local node in the nodelist\n",__func__);
 
 return list;
 }
 
 void NODE_show(NODE **node){
 int i;
-printf("%10s%10s%10s%10s\n","name","addr","id_mseq","id_run");
+printf("%10s%10s%10s%10s%10s\n","name","addr","id_mseq","id_run","this");
 printf("--------------------------------------------------\n");
 for (i=0;node[i]!=NULL;i++)
-printf("%10s%10s%10d%10d\n",node[i]->name,node[i]->amodem_addr,node[i]->id_mseq,node[i]->id_run);
+printf("%10s%10s%10d%10d%10d\n",node[i]->name,node[i]->amodem_addr,node[i]->id_mseq,node[i]->id_run,node[i]->this_node);
 }
 
 NODE* NODE_lookup(NODE **list,const char* name){
