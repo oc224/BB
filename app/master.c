@@ -16,8 +16,8 @@
 #define BUFSIZE 128
 #define BUFSHORT 20
 #define MASTER_LOGPATH "/root/log/master_log.txt"
-#define GUARD_HEAD 0
-#define GUARD_TAIL 0
+#define GUARD_HEAD 3
+#define GUARD_TAIL 3
 #define ADDR_BROADCAST 255
 
 logger *t_log;
@@ -364,15 +364,23 @@ amodem_puts_local("atr3\r");
 sleep(11);
 //play
 amodem_play(TX_DEFAULT);
-sleep(10);
+sleep(10-GUARD_HEAD);
 //record
-amodem_record(GUARD_HEAD+2000+GUARD_TAIL*1000);
+amodem_record(GUARD_HEAD*1000+1000+GUARD_TAIL*1000);
 //anal
 data_anal(&dc,TX_DEFAULT);
 DATA_COOK_show(&dc);
-sleep(10);
-amodem_wait_remote("RX",5000,buf,79);
-printf("%s\n",buf);
+sleep(20);
+/*char *p_RX;
+int rmtRxHH,rmtRxDD;
+float rmtRxSS;
+if (amodem_wait_remote("SNR",5000,buf,79)!=NULL){
+if ((p_RX = strstr(buf,"RX")!=NULL) sscanf(p_RX+3,"%d:%d:%f",&rmtRxHH,&rmtRxDD,&rmtRxSS);
+}*/
+amodem_wait_remote(NULL,5000,buf,79);
+printf(" 1 %s\n",buf);
+amodem_wait_remote(NULL,5000,buf,79);
+printf(" 2 %s\n",buf);
 printf("done\n");
 }
 return 0;
@@ -382,9 +390,9 @@ return 0;
 DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
 char buf[BUFSIZE];
 //wait
-sleep(9-GUARD_HEAD);
+sleep(10-GUARD_HEAD);
 //record
-amodem_record(GUARD_HEAD+2000+GUARD_TAIL*1000);
+amodem_record(GUARD_HEAD*1000+1000+GUARD_TAIL*1000);
 //
 sleep(10-GUARD_HEAD-2-GUARD_TAIL);
 //

@@ -24,6 +24,7 @@ char dump[BUFSIZE];
 char *remote_msg;
 int n;
 int type;
+	char *pNL;
 while(1){
 
 	usleep(10000);
@@ -32,7 +33,9 @@ while(1){
 	pthread_mutex_unlock(&modem.readthread);
         if (n<1) continue;
         /*store to input buffer*/
-        dump[n-2]='\0';/*remove newline char*/
+	if ((pNL=strstr(dump,"\r"))!=NULL) *pNL = '\0';
+	if ((pNL=strstr(dump,"\n"))!=NULL) *pNL = '\0';
+//        dump[n-2]='\0';/*remove newline char*/
 
 	// packet for address signal
 	if (strstr(dump,"$Packet ")!=NULL){
@@ -113,7 +116,7 @@ void amodem_msg_show(amodem_msg * list){
 	printf("N_unread = %d, i = %d\n",list->N_unread,list->i);
 	for (i=0;i<32;i++)printf("-");
 	printf("\n");
-	for (i=0;i<LIST_SIZE;i++)printf("%2d %s\n",i,list->text[(list->i+i)%LIST_SIZE]);
+	for (i=0;i<LIST_SIZE;i++) printf("%2d %s\n",i,list->text[i]);
 	printf("\n");
 }
 

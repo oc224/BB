@@ -19,7 +19,7 @@ pthread_mutex_lock(&msg->msg_mutex);
 //init check
 if (msg->N_unread>0) {
 //get pointer that point output string
-ret = msg->text[(msg->i-msg->N_unread+1+LIST_SIZE)%LIST_SIZE];
+ret = msg->text[(msg->i-msg->N_unread+LIST_SIZE)%LIST_SIZE];
 // N_unread update
 msg->N_unread--;
 }
@@ -35,9 +35,19 @@ pthread_mutex_lock(&msg->msg_mutex);
 memset((void *)msg->text[msg->i],0,sizeof(msg->text[msg->i]));
 strcpy(msg->text[msg->i],msg_str);
 // N_unread i update
+if (msg->N_unread < LIST_SIZE) msg->N_unread++;
+if (msg->N_unread >= 0) msg->i =(msg->i+1)%LIST_SIZE;//FULL
+//else msg->i=(msg->i+1)%LIST_SIZE;
+/*if (msg->N_unread<LIST_SIZE){//not full
+msg->N_unread++;
+if 
+}
+
+if (msg->N_unread==0){
+}
 if (msg->N_unread>0) msg->i=(msg->i+1)%LIST_SIZE;
-if (msg->N_unread>=LIST_SIZE) printf("%s,input msg list overrun\n",__func__);
-else msg->N_unread++;
+if (msg->N_unread==LIST_SIZE) printf("%s,input msg list overrun\n",__func__);
+else msg->N_unread++;*/
 //return
 pthread_mutex_unlock(&msg->msg_mutex);
 return SUCCESS;
