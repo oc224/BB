@@ -9,7 +9,7 @@ TARGET2=dylan
 TARGET3=master
 LIBNE10=-I ./include/ -L ./lib -lNE10 -lm -mfpu=neon -ftree-vectorize -ffast-math
 
-all:master slave
+all:master slave scheduler.o
 unicon.o:unicon.c
 	$(CC) $(CFLAGS) -c unicon.c
 unicon:unicon.o rs232.o acoustic_modem.o log.o
@@ -42,12 +42,12 @@ connect.o:connect.c
 	$(CC) $(CFLAGS) -c connect.c
 connect:connect.o wireless_modem.o rs232.o  connect.o
 	$(CC) $(CFLAGS) -o ./bin/connect wireless_modem.o rs232.o  connect.o
-slave:slave.o libamodem.a  ms.o log.o signal.o wav.o
-	$(CC) $(CFLAGS) -o ./bin/slave slave.o ./lib/libamodem.a  ms.o log.o signal.o wav.o -lrt -pthread $(LIBNE10)
+slave:slave.o libamodem.a  ms.o log.o signal.o wav.o scheduler.o
+	$(CC) $(CFLAGS) -o ./bin/slave slave.o ./lib/libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -pthread $(LIBNE10)
 slave.o:master.c
 	$(CC) $(CFLAGS) -D CON_SLAVE -c master.c -o slave.o $(LIBNE10)
-master:master.o libamodem.a  ms.o log.o signal.o wav.o
-	$(CC) $(CFLAGS) -o ./bin/master master.o ./lib/libamodem.a  ms.o log.o signal.o wav.o -lrt -pthread $(LIBNE10)
+master:master.o libamodem.a  ms.o log.o signal.o wav.o scheduler.o
+	$(CC) $(CFLAGS) -o ./bin/master master.o ./lib/libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -pthread $(LIBNE10)
 ms.o:ms.c
 	$(CC) $(CFLAGS) -c ms.c $(LIBNE10)
 master.o:master.c

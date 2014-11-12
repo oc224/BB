@@ -9,31 +9,38 @@
 #define SCHEDULER_H_
 
 #include <signal.h>
+
 typedef enum{
 	SD_PLAY,SD_RECORD,SD_SLEEP,SD_SYNC
-}type_task;
+}SDtype_task;
 
 typedef struct{
 	int index;
-	type_task this_task;
+	SDtype_task this_task;
 	int duration;
 	char *arg;
 	void *next_task;
-	void *prev_task;
-} task;
+} SDtask;
 
 typedef struct{
+	char init_time;//
+	int N;//exec N cycle.
+	int isBlock;
+	int hh;
+	int mm;
+	int ss;
 	int n_task;
-	task *p_head;
-	task *p_this;
-} schedule;
+	SDtask *p_head;
+	SDtask *p_this;
+} SD;
 
 int scheduler_init();
-void scheduler_task_show();
-int scheduler_task_add(char *cfg_msg);
-int scheduler_read(char *filename);
-void scheduler_exce(int sig, siginfo_t *si, void *uc);
-int scheduler_start(int hh,int mm, int ss,char type);
-int scheduler_stop();
+void scheduler_show(SD *);
+int scheduler_task_add(SD *,char *cfg_msg);
+int scheduler_set(SD *sd,int mode,int N,int hh,int mm,int ss);
+int scheduler_read(SD *,char *filename);
+void scheduler_exec(int sig, siginfo_t *si, void *uc);
+int scheduler_start(SD *);
+int scheduler_stop(SD *);
 
 #endif /* SCHEDULER_H_ */

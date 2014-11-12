@@ -224,6 +224,7 @@ strcpy(strstr(flog,".wav"),".log");
 //rx time
 f32_findpeak_end(flog,avg,max,i_max,dc);
 
+DATA_COOK_show(dc);
 //return
 NE10_FREE(H);
 NE10_FREE(X);

@@ -4,6 +4,8 @@
 #include "ms.h"
 #include "master.h"
 #include "signal.h"
+#include "scheduler.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -58,10 +60,12 @@ void wait_command_user();
 int xcorr();
 int ctalk();
 int data_anal(DATA_COOK *,const char*);
+SD sd;
 
 
 int main(int argc,char *argv[])
 {
+
 //NODE
 if ((node=NODE_read(" "))==NULL){
 fprintf(stderr,"fail to read node list\n");
@@ -83,6 +87,10 @@ printf("amodem on %s\n",argv[1]);
 
 //amodem init
 amodem_init(argv[1]);
+
+//scheduler
+scheduler_init();
+
 
 while (1)
 {
@@ -185,6 +193,7 @@ int data_anal(DATA_COOK *dc,const char *txname){
 //upload data xcorr...
 // input :	txname path to xxx.wav
 //		keyin tx wav (without .wav )
+// output : dc structure
 char buf[BUFSIZE];
 char fname[40];
 //char fname[40];
@@ -216,7 +225,7 @@ sprintf(buf,"%s%s.wav",PATH_TX_SIGNAL,txname);
 }
 
 wav2CIR(path_in,buf,path_out,dc);
-
+DATA_COOK_show(dc);
 return SUCCESS;
 }
 
@@ -235,7 +244,7 @@ DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0
 fname[0]=0;
 sscanf(task_exec.arg,"%*s %s",fname);
 sprintf(path_in,"%s/%s.wav",PATH_RAW_DATA,fname);
-if (file_exist(path_in)) {
+if (!file_exist(path_in)) {
 ERR_PRINT("invalid rx data\n");
 return FAIL;}
 strcpy(path_out,path_in);
@@ -247,11 +256,12 @@ fprintf(stdout,"tx wav:>");
 fgets(fname,40,stdin);
 fname[strlen(fname)-1]=0;
 sprintf(buf,"/root/tx/%s.wav",fname);
-if (file_exist(buf)) {
-ERR_PRINT("invalid rx data\n");
+if (!file_exist(buf)) {
+ERR_PRINT("invalid tx data\n");
 return FAIL;}
 
 wav2CIR(path_in,buf,path_out,&dc);
+DATA_COOK_show(&dc);
 return SUCCESS;
 }
 
@@ -345,59 +355,49 @@ return SUCCESS;
 }*/
 
 int ctalk(){
-#ifdef CON_MASTER
 DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
+char buf[BUFSIZE];
+
+#ifdef CON_MASTER
 int N;
 int i;
 char arg[10];
-char buf[80];
 //input arg N times
 sscanf(task_exec.arg,"%*s %s",arg);
 if (strlen(arg)!=0) N=atoi(arg);
 else N=1;
 printf("ctalk, %d times\n",N);
 
-for (i=0;i<N;i++){
-//
-//inform remotes
+//SD
+scheduler_set(&sd,1,1,0,0,12);
+scheduler_task_add(&sd,"record 2000");
+scheduler_task_add(&sd,"sleep 8700");
+scheduler_task_add(&sd,"play 1300 mseq10_T1_l1");
+scheduler_task_add(&sd,"sleep 8000");
+scheduler_show(&sd);
 amodem_puts_local("atr3\r");
-sleep(11);
-//play
-amodem_play(TX_DEFAULT);
-sleep(10-GUARD_HEAD);
-//record
-amodem_record(GUARD_HEAD*1000+1000+GUARD_TAIL*1000);
-//anal
+scheduler_start(&sd);
 data_anal(&dc,TX_DEFAULT);
 DATA_COOK_show(&dc);
-sleep(20);
-/*char *p_RX;
-int rmtRxHH,rmtRxDD;
-float rmtRxSS;
-if (amodem_wait_remote("SNR",5000,buf,79)!=NULL){
-if ((p_RX = strstr(buf,"RX")!=NULL) sscanf(p_RX+3,"%d:%d:%f",&rmtRxHH,&rmtRxDD,&rmtRxSS);
-}*/
-amodem_wait_remote(NULL,5000,buf,79);
-printf(" 1 %s\n",buf);
-amodem_wait_remote(NULL,5000,buf,79);
-printf(" 2 %s\n",buf);
-printf("done\n");
-}
-return 0;
 #endif
 
 #ifdef CON_SLAVE
-DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
-char buf[BUFSIZE];
-//wait
-sleep(10-GUARD_HEAD);
-//record
-amodem_record(GUARD_HEAD*1000+1000+GUARD_TAIL*1000);
-//
-sleep(10-GUARD_HEAD-2-GUARD_TAIL);
-//
-amodem_play(TX_DEFAULT);
-//anal send back
+
+//SD
+scheduler_set(&sd,1,1,0,0,12);
+scheduler_task_add(&sd,"record 2000");
+scheduler_task_add(&sd,"sleep 8700");
+scheduler_task_add(&sd,"play 1300 mseq10_T1_l1");
+scheduler_task_add(&sd,"sleep 8000");
+
+/*scheduler_task_add(&sd,"sleep 700");
+scheduler_task_add(&sd,"play 1300 mseq10_T1_l1");
+scheduler_task_add(&sd,"sleep 8000");
+scheduler_task_add(&sd,"record 2000");
+scheduler_task_add(&sd,"sleep 8000");*/
+scheduler_show(&sd);
+scheduler_start(&sd);
+
 data_anal(&dc,TX_DEFAULT);
 DATA_COOK_show(&dc);
 sprintf(buf,"SNR = %4.1f, RX %d:%d:%f\n",dc.snr,dc.hh,dc.mm,dc.ss+dc.offset);
@@ -407,8 +407,9 @@ sleep(2);
 amodem_puts_local(modem.latest_tx_stamp);
 sleep(2);
 amodem_mode_select('c',3);
-return 0;
 #endif
+return 0;
+
 }
 
 void wait_command_user()
