@@ -28,16 +28,17 @@ typedef struct{
 	int isBlock;
 	int hh;
 	int mm;
-	int ss;
+	float ss;
 	int n_task;
 	SDtask *p_head;
 	SDtask *p_this;
+	int OneRound;
 } SD;
 
 int scheduler_init();
 void scheduler_show(SD *);
 int scheduler_task_add(SD *,char *cfg_msg);
-int scheduler_set(SD *sd,int mode,int N,int hh,int mm,int ss);
+int scheduler_set(SD *sd,int mode,int N,int hh,int mm,float ss);
 int scheduler_read(SD *,char *filename);
 void scheduler_exec(int sig, siginfo_t *si, void *uc);
 int scheduler_start(SD *);

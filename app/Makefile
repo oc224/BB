@@ -29,7 +29,7 @@ w_test.o:w_test.c
 w_test:w_test.o wireless_modem.o rs232.o
 	$(CC) $(CFLAGS) -o ./bin/w_test w_test.o wireless_modem.o rs232.o
 scheduler.o:scheduler.c
-	$(CC) $(CFLAGS) -c -lrt scheduler.c 
+	$(CC) $(CFLAGS) -c -lrt -lm scheduler.c 
 exp.o:exp.c
 	$(CC) $(CFLAGS) -c -lrt exp.c 
 exp:scheduler.o exp.o acoustic_modem.o rs232.o log.o
@@ -43,11 +43,11 @@ connect.o:connect.c
 connect:connect.o wireless_modem.o rs232.o  connect.o
 	$(CC) $(CFLAGS) -o ./bin/connect wireless_modem.o rs232.o  connect.o
 slave:slave.o libamodem.a  ms.o log.o signal.o wav.o scheduler.o
-	$(CC) $(CFLAGS) -o ./bin/slave slave.o ./lib/libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -pthread $(LIBNE10)
+	$(CC) $(CFLAGS) -o ./bin/slave slave.o ./lib/libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -lm -pthread $(LIBNE10)
 slave.o:master.c
 	$(CC) $(CFLAGS) -D CON_SLAVE -c master.c -o slave.o $(LIBNE10)
 master:master.o libamodem.a  ms.o log.o signal.o wav.o scheduler.o
-	$(CC) $(CFLAGS) -o ./bin/master master.o ./lib/libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -pthread $(LIBNE10)
+	$(CC) $(CFLAGS) -o ./bin/master master.o ./lib/libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -lm -pthread $(LIBNE10)
 ms.o:ms.c
 	$(CC) $(CFLAGS) -c ms.c $(LIBNE10)
 master.o:master.c

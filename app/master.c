@@ -369,13 +369,13 @@ else N=1;
 printf("ctalk, %d times\n",N);
 
 //SD
-scheduler_set(&sd,1,1,0,0,12);
+scheduler_set(&sd,1,1,0,0,12.0);
 scheduler_task_add(&sd,"record 2000");
-scheduler_task_add(&sd,"sleep 8700");
-scheduler_task_add(&sd,"play 1300 mseq10_T1_l1");
+scheduler_task_add(&sd,"sleep 8500");
+scheduler_task_add(&sd,"play 1500 mseq10_T1_l1");
 scheduler_task_add(&sd,"sleep 8000");
 scheduler_show(&sd);
-amodem_puts_local("atr3\r");
+//amodem_puts_local("atr3\r");
 scheduler_start(&sd);
 data_anal(&dc,TX_DEFAULT);
 DATA_COOK_show(&dc);
@@ -384,17 +384,12 @@ DATA_COOK_show(&dc);
 #ifdef CON_SLAVE
 
 //SD
-scheduler_set(&sd,1,1,0,0,12);
-scheduler_task_add(&sd,"record 2000");
-scheduler_task_add(&sd,"sleep 8700");
-scheduler_task_add(&sd,"play 1300 mseq10_T1_l1");
-scheduler_task_add(&sd,"sleep 8000");
-
-/*scheduler_task_add(&sd,"sleep 700");
-scheduler_task_add(&sd,"play 1300 mseq10_T1_l1");
+scheduler_set(&sd,1,1,0,0,11);
+scheduler_task_add(&sd,"sleep 500");
+scheduler_task_add(&sd,"play 1500 mseq10_T1_l1");
 scheduler_task_add(&sd,"sleep 8000");
 scheduler_task_add(&sd,"record 2000");
-scheduler_task_add(&sd,"sleep 8000");*/
+scheduler_task_add(&sd,"sleep 8000");
 scheduler_show(&sd);
 scheduler_start(&sd);
 
