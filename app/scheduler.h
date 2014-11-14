@@ -32,7 +32,7 @@ typedef struct{
 	int n_task;
 	SDtask *p_head;
 	SDtask *p_this;
-	int OneRound;
+	int RoundTime;
 } SD;
 
 int scheduler_init();

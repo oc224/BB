@@ -53,7 +53,6 @@ int scheduler_init() {
 
 	//printf("timer ID is 0x%lx\n", (long) timerid);
 
-//	sd->n_task = 0;
 	return SUCCESS;
 }
 
@@ -69,6 +68,7 @@ sd -> n_task = 0;
 sd -> isBlock = 1;
 sd -> p_head = NULL;
 sd -> p_this = NULL;
+sd -> RoundTime = 0;
 break;
 default :
 ERR_PRINT("mode invalid\n");
@@ -86,7 +86,7 @@ void scheduler_show(SD *sd) {
 	printf("Number of Cycle : %d\n",sd->N);
 	printf("START TIME : %d:%d:%f\n",sd->hh,sd->mm,sd->ss);
 	printf("IS BLOCK : %d\n",sd->isBlock);
-	printf("ROUND TIME : %d msec\n",sd -> OneRound);
+	printf("ROUND TIME : %d msec\n",sd -> RoundTime);
 	printf("%d tasks\n", sd->n_task);
 	printf("index type duration arg\n");
 
@@ -121,8 +121,7 @@ int scheduler_task_add(SD *sd,char *cfg_msg) {
 	}
 	new_task->arg = strdup(arg);
 	new_task->index = sd->n_task;
-	new_task->next_task = NULL;
-	sd -> OneRound += new_task->duration;
+	sd -> RoundTime += new_task->duration;
 
 
 	if (sd->n_task == 1) {	//first task
@@ -209,17 +208,7 @@ int carry;
 	}
 
 	// book next task
-	if (pSD->p_this->index == pSD->n_task) {
-	pSD->p_this = pSD -> p_head;
-	pSD->N--;//finish one cycle
-	printf("one cycle done\n");}
-	if (pSD->N==0) {
-	printf("SD done\n");
-	return;
-	}
 	carry=0;
-//	its.it_interval.tv_nsec=0;
-//	its.it_interval.tv_sec=0;
 	its.it_value.tv_nsec+=(pSD->p_this->duration%1000)*1000000;
 	if (its.it_value.tv_nsec>=1000000000){
 		its.it_value.tv_nsec+=-1000000000;
@@ -227,9 +216,23 @@ int carry;
 	}
 	its.it_value.tv_sec+=pSD->p_this->duration/1000+carry;
 	//printf("%ld %ld\n",its.it_value.tv_sec,its.it_value.tv_nsec);
-    if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
-         errExit("timer_settime");
-	pSD->p_this=pSD->p_this->next_task;
+
+	if (pSD->p_this->index == pSD->n_task) {//one round done
+	pSD->p_this = pSD -> p_head;
+	pSD->N--;//finish one cycle
+	printf("one cycle done\n");
+	if (pSD->N==0) {//finish
+	printf("SD done\n");
+	return;
+	}}else{
+	pSD->p_this=pSD->p_this->next_task;}
+
+
+
+
+	if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
+		errExit("timer_settime");
+
 }
 
 int scheduler_start(SD *sd) {
@@ -244,7 +247,7 @@ int scheduler_start(SD *sd) {
 	long ss_int;
 	long ss_frac = 0;
 	time_t now;
-	int OneRound;//sec
+	int BlockSec;//sec
 
 	/*figures out Number of seconds before first interrupt*/
 	time(&now);
@@ -268,42 +271,37 @@ int scheduler_start(SD *sd) {
 	return FAIL;
 	break;
 	}
-
+	ss_int += ss_frac/1000000000;
 	its.it_interval.tv_nsec = 0;//one shot timer
 	its.it_interval.tv_sec = 0;
-	its.it_value.tv_sec = ss_int + ss_frac / 1000000000;
+	its.it_value.tv_sec = now_clock.tv_sec + ss_int;
 	its.it_value.tv_nsec = ss_frac % 1000000000;
 
-	its.it_interval.tv_nsec = 0;//one shot timer
-	its.it_interval.tv_sec = 0;
-	its.it_value.tv_sec = ;
-	its.it_value.tv_nsec = ss_frac % 1000000000;
-
-	if (its.it_value.tv_sec < 2){
+	if (ss_int < 2){
 		printf("error, target time has passed\n");
 		return FAIL;
 	}
 
 
-	printf("%ld seconds left\n", its.it_value.tv_sec);
-	printf("sec%ld\nnsec %ld\n",(long)its.it_value.tv_sec,(long)its.it_value.tv_nsec);
+	//printf("sec%ld\nnsec %ld\n",(long)its.it_value.tv_sec,(long)its.it_value.tv_nsec);
         if (timer_settime(timerid, TIMER_ABSTIME, &its, NULL) == -1)
          errExit("timer_settime");
 
 	// pSD
 	printf("scheduler start\n");
+	printf("%ld seconds left\n", ss_int);
 	sd -> p_this = sd->p_head;
-	OneRound = sd -> OneRound / 1000;
+	BlockSec = (sd -> RoundTime / 1000) * (sd->N) + ss_int +1;
 	pSD = sd;
 
-	printf("scheduler executing...%d sec\n",OneRound);
+	printf("scheduler executing...%d sec\n",BlockSec);
 
 	//block
 	if (pSD -> isBlock){
 	do{
-	OneRound = sleep(OneRound);
+	BlockSec = sleep(BlockSec);
 	}
-	while (OneRound > 0);
+	while (BlockSec > 0);
 	printf("scheduler end\n");
 	}
 

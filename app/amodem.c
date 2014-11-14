@@ -1,8 +1,8 @@
 #define _GNU_SOURCE
-#include "master.h"
 #include "amodem.h"
 #include "rs232.h"
 #include "common.h"
+#include "master.h"
 #include "gps.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,19 +37,19 @@ while(1){
 	if ((pNL=strstr(dump,"\n"))!=NULL) *pNL = '\0';
 //        dump[n-2]='\0';/*remove newline char*/
 
+//#ifdef MASTER_H
 	// packet for address signal
 	if (strstr(dump,"$Packet ")!=NULL){
 	sscanf(dump,"%*s %*s %*s %d",&type);
 	printf("recv command %d\n",type);
 	task_push(&task_recv_master,type,0," ");
 	continue;}
-
         /*return if text = user <>*/
-
+//#endif
         //store to msg list (local & remote)*/
         if (strstr(dump,"DATA")==NULL)  amodem_msg_push(&msg_local,dump);//local
+//#ifdef MASTER_H
         else   {//remote
-
         remote_msg=strstr(dump,":")+1;
         //if msg from remote , show it
         printf("Remote : %s\n",remote_msg);
@@ -66,8 +66,8 @@ while(1){
 	task_push(&task_recv_master,type,0," ");
 	continue;
         }
-
 }
+//#endif
 
 }
 }

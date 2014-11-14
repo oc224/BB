@@ -357,9 +357,8 @@ return SUCCESS;
 int ctalk(){
 DATA_COOK dc = {.snr = 0.0, .avg = 0.0, .max = 0.0, .offset = 0.0, .i_offset = 0, .hh = 0, .mm = 0};
 char buf[BUFSIZE];
-
-#ifdef CON_MASTER
 int N;
+#ifdef CON_MASTER
 int i;
 char arg[10];
 //input arg N times
@@ -369,31 +368,31 @@ else N=1;
 printf("ctalk, %d times\n",N);
 
 //SD
-scheduler_set(&sd,1,1,0,0,12.0);
+scheduler_set(&sd,1,10,0,0,12.0);
 scheduler_task_add(&sd,"record 2000");
-scheduler_task_add(&sd,"sleep 8500");
-scheduler_task_add(&sd,"play 1500 mseq10_T1_l1");
+scheduler_task_add(&sd,"sleep 8700");
+scheduler_task_add(&sd,"play 1300 mseq10_T1_l1");
 scheduler_task_add(&sd,"sleep 8000");
 scheduler_show(&sd);
-//amodem_puts_local("atr3\r");
+amodem_puts_local("atr3\r");
 scheduler_start(&sd);
-data_anal(&dc,TX_DEFAULT);
-DATA_COOK_show(&dc);
+//data_anal(&dc,TX_DEFAULT);
+//DATA_COOK_show(&dc);
 #endif
 
 #ifdef CON_SLAVE
 
 //SD
-scheduler_set(&sd,1,1,0,0,11);
-scheduler_task_add(&sd,"sleep 500");
-scheduler_task_add(&sd,"play 1500 mseq10_T1_l1");
+scheduler_set(&sd,1,10,0,0,11.5);
+scheduler_task_add(&sd,"sleep 300");
+scheduler_task_add(&sd,"play 1700 mseq10_T1_l1");
 scheduler_task_add(&sd,"sleep 8000");
 scheduler_task_add(&sd,"record 2000");
 scheduler_task_add(&sd,"sleep 8000");
 scheduler_show(&sd);
 scheduler_start(&sd);
 
-data_anal(&dc,TX_DEFAULT);
+/*data_anal(&dc,TX_DEFAULT);
 DATA_COOK_show(&dc);
 sprintf(buf,"SNR = %4.1f, RX %d:%d:%f\n",dc.snr,dc.hh,dc.mm,dc.ss+dc.offset);
 amodem_mode_select('o',3);
@@ -401,7 +400,7 @@ amodem_puts_local(buf);
 sleep(2);
 amodem_puts_local(modem.latest_tx_stamp);
 sleep(2);
-amodem_mode_select('c',3);
+amodem_mode_select('c',3);*/
 #endif
 return 0;
 

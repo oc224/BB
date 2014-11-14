@@ -9,7 +9,7 @@ TARGET2=dylan
 TARGET3=master
 LIBNE10=-I ./include/ -L ./lib -lNE10 -lm -mfpu=neon -ftree-vectorize -ffast-math
 
-all:master slave scheduler.o
+all:master slave
 unicon.o:unicon.c
 	$(CC) $(CFLAGS) -c unicon.c
 unicon:unicon.o rs232.o acoustic_modem.o log.o
@@ -20,8 +20,8 @@ amodem.o:amodem.c
 	$(CC) $(CFLAGS) -c amodem.c -pthread
 amodem_io.o:amodem_io.c
 	$(CC) $(CFLAGS) -c amodem_io.c
-libamodem.a:amodem.o amodem_io.o rs232.o gps.o
-	$(AR) rcs ./lib/libamodem.a amodem.o amodem_io.o rs232.o gps.o
+libamodem.a:amodem.o amodem_io.o rs232.o gps.o master.o
+	$(AR) rcs libamodem.a amodem.o amodem_io.o rs232.o gps.o master.o
 wireless_modem.o:wireless_modem.c wireless_modem.h
 	$(CC) $(CFLAGS) -c wireless_modem.c rs232.o
 w_test.o:w_test.c
@@ -35,19 +35,15 @@ exp.o:exp.c
 exp:scheduler.o exp.o acoustic_modem.o rs232.o log.o
 	$(CC) $(CFLAGS) -o ./bin/exp scheduler.o exp.o acoustic_modem.o rs232.o log.o -lrt -pthread
 data_upload.o:data_upload.c
-	$(CC) $(CFLAGS) -c data_upload.c
-data_upload:data_upload.o acoustic_modem.o rs232.o log.o
-	$(CC) $(CFLAGS) -o ./bin/data_upload data_upload.o acoustic_modem.o rs232.o  log.o -pthread
-connect.o:connect.c
-	$(CC) $(CFLAGS) -c connect.c
-connect:connect.o wireless_modem.o rs232.o  connect.o
-	$(CC) $(CFLAGS) -o ./bin/connect wireless_modem.o rs232.o  connect.o
+	$(CC) $(CFLAGS) -c data_upload.c -pthread
+data_upload:data_upload.o libamodem.a
+	$(CC) $(CFLAGS) -o ./bin/data_upload data_upload.o libamodem.a log.o -pthread
 slave:slave.o libamodem.a  ms.o log.o signal.o wav.o scheduler.o
-	$(CC) $(CFLAGS) -o ./bin/slave slave.o ./lib/libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -lm -pthread $(LIBNE10)
+	$(CC) $(CFLAGS) -o ./bin/slave slave.o libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -lm -pthread $(LIBNE10)
 slave.o:master.c
 	$(CC) $(CFLAGS) -D CON_SLAVE -c master.c -o slave.o $(LIBNE10)
 master:master.o libamodem.a  ms.o log.o signal.o wav.o scheduler.o
-	$(CC) $(CFLAGS) -o ./bin/master master.o ./lib/libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -lm -pthread $(LIBNE10)
+	$(CC) $(CFLAGS) -o ./bin/master master.o libamodem.a  ms.o log.o signal.o wav.o scheduler.o -lrt -lm -pthread $(LIBNE10)
 ms.o:ms.c
 	$(CC) $(CFLAGS) -c ms.c $(LIBNE10)
 master.o:master.c
