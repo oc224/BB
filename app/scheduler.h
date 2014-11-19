@@ -38,6 +38,7 @@ typedef struct{
 int scheduler_init();
 void scheduler_show(SD *);
 int scheduler_task_add(SD *,char *cfg_msg);
+int scheduler_task_add_para(SD *sd,int task, int mSec, char* arg);
 int scheduler_set(SD *sd,int mode,int N,int hh,int mm,float ss);
 int scheduler_read(SD *,char *filename);
 void scheduler_exec(int sig, siginfo_t *si, void *uc);

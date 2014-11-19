@@ -54,7 +54,7 @@ return SUCCESS;
 }
 
 
-char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
+char* amodem_msg_wait(amodem_msg *msg,char *key_word, int mSec, char *info,
                 int info_size) {
         /*block until key_word prompt or timout(miliseconds), if key_word prompt, 
         store that line contained key_word to info, the output info is a string
@@ -63,7 +63,7 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
 
         char *new_msg;
         int delay=0;
-        int Niter=mSec/100;
+        int Niter=mSec/50;
         int is_copy=(info!=NULL);
         int is_nullkeyword=(key_word==NULL);
         char* ret=NULL;
@@ -71,7 +71,7 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
         if (is_copy) info[0]=0;/*make sure input buffer clear when this funtion fail*/
 
         while(delay<Niter) {//before timeout
-                usleep(100000);
+                usleep(50000);
                 delay++;
 		//printf("test\n");
                 if ((new_msg=amodem_msg_pop(msg))!=NULL) {//got new msg
@@ -89,7 +89,7 @@ char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,
 
 int amodem_wait_ack(amodem_msg* msg,char * keyword,int mSec){
 char *str;
-str=amodem_wait_msg(msg,keyword,mSec,NULL,0);
+str=amodem_msg_wait(msg,keyword,mSec,NULL,0);
 if (str==NULL) {
 printf("%s,ack timeout (%s)\n",__func__,keyword);
 return FAIL;

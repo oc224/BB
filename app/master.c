@@ -368,33 +368,37 @@ else N=1;
 printf("ctalk, %d times\n",N);
 
 //SD
-scheduler_set(&sd,1,10,0,0,12.0);
-scheduler_task_add(&sd,"record 2000");
-scheduler_task_add(&sd,"sleep 8700");
-scheduler_task_add(&sd,"play 1300 mseq10_T1_l1");
-scheduler_task_add(&sd,"sleep 8000");
+scheduler_set(&sd,1,1,0,0,12.0);
+scheduler_task_add_para(&sd,SD_SLEEP,1000,NULL);
+scheduler_task_add_para(&sd,SD_RECORD,5000,NULL);
+scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
+scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
+scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
+scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
+scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
+
 scheduler_show(&sd);
 amodem_puts_local("atr3\r");
 scheduler_start(&sd);
-//data_anal(&dc,TX_DEFAULT);
-//DATA_COOK_show(&dc);
+data_anal(&dc,TX_DEFAULT);
 #endif
 
 #ifdef CON_SLAVE
 
 //SD
-scheduler_set(&sd,1,10,0,0,11.5);
-scheduler_task_add(&sd,"sleep 300");
-scheduler_task_add(&sd,"play 1700 mseq10_T1_l1");
-scheduler_task_add(&sd,"sleep 8000");
-scheduler_task_add(&sd,"record 2000");
-scheduler_task_add(&sd,"sleep 8000");
+scheduler_set(&sd,1,1,0,0,11.2);
+scheduler_task_add_para(&sd,SD_SLEEP,2000,NULL);
+scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
+scheduler_task_add_para(&sd,SD_SLEEP,7000,NULL);
+scheduler_task_add_para(&sd,SD_RECORD,5000,NULL);
+scheduler_task_add_para(&sd,SD_SLEEP,4000,NULL);
+scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
+scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
 scheduler_show(&sd);
 scheduler_start(&sd);
 
-/*data_anal(&dc,TX_DEFAULT);
-DATA_COOK_show(&dc);
-sprintf(buf,"SNR = %4.1f, RX %d:%d:%f\n",dc.snr,dc.hh,dc.mm,dc.ss+dc.offset);
+data_anal(&dc,TX_DEFAULT);
+/*sprintf(buf,"SNR = %4.1f, RX %d:%d:%f\n",dc.snr,dc.hh,dc.mm,dc.ss+dc.offset);
 amodem_mode_select('o',3);
 amodem_puts_local(buf);
 sleep(2);
@@ -513,7 +517,7 @@ wait_command_user();
 #endif
 #ifdef CON_SLAVE
 //from master
-while (task_pop(&task_recv_master,&task_exec)==FAIL) usleep(100000);
+while (task_pop(&task_recv_master,&task_exec)==FAIL) usleep(20000);
 #endif
 }
 

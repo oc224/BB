@@ -72,12 +72,12 @@ int amodem_end();
 /*low level io*/
 int amodem_msg_push(amodem_msg *msg_list ,char *msg_str);
 char* amodem_msg_pop(amodem_msg* msg);
-char* amodem_wait_msg(amodem_msg *msg,char *key_word, int mSec, char *info,int info_size);
+char* amodem_msg_wait(amodem_msg *msg,char *key_word, int mSec, char *info,int info_size);
 void amodem_msg_show(amodem_msg *);/*show msg list*/
 
 /*io*/
-#define amodem_wait_local(key_word,mSec,buf,bufsize) amodem_wait_msg(&msg_local,key_word,mSec,buf,bufsize)
-#define amodem_wait_remote(key_word,mSec,buf,bufsize) amodem_wait_msg(&msg_remote,key_word,mSec,buf,bufsize)
+#define amodem_wait_local(key_word,mSec,buf,bufsize) amodem_msg_wait(&msg_local,key_word,mSec,buf,bufsize)
+#define amodem_wait_remote(key_word,mSec,buf,bufsize) amodem_msg_wait(&msg_remote,key_word,mSec,buf,bufsize)
 int amodem_wait_ack(amodem_msg* msg,char* keyword,int mSec);
 int amodem_puts_local(const char*msg);
 int amodem_puts_remote(int addr,const char*msg);/*send msg to remote*/
@@ -100,6 +100,6 @@ int amodem_cfg_set(const char *);
 /*sync*/
 int amodem_sync_clock_gps(int);
 int amodem_sync_time_gps();
-int amodem_sync_status();
+int amodem_sync_isClockSync();
 
 #endif

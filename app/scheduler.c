@@ -99,6 +99,28 @@ void scheduler_show(SD *sd) {
 	printf("-------------------------\n\n");
 }
 
+int scheduler_task_add_para(SD *sd,int task, int mSec, char* arg){
+	//new item setup
+	SDtask *new_task = (SDtask*) malloc(sizeof(SDtask));
+	SDtask *task_tail;
+	sd->n_task++;
+	new_task->duration = mSec;
+	new_task->this_task = task;
+	if (arg != NULL) new_task->arg = strdup(arg);
+	new_task->index = sd->n_task;
+	sd -> RoundTime += new_task->duration;
+
+
+	if (sd->n_task == 1) {	//first task
+	sd->p_head = new_task;
+	} else {
+	task_tail = sd->p_head;
+	while ( task_tail->next_task != NULL ) task_tail = task_tail->next_task;
+	task_tail->next_task = new_task;
+	}
+
+	return SUCCESS;
+}
 int scheduler_task_add(SD *sd,char *cfg_msg) {
 	char type_task[16];
 	char arg[128];
@@ -165,7 +187,11 @@ int scheduler_read(SD *sd,char *filename) {
 }
 */
 void scheduler_exec(int sig, siginfo_t *si, void *uc) {
-int carry;
+long ss_int;
+long ss_frac;
+struct timespec now_clock;
+clock_gettime(CLOCKID,&now_clock);//Get sub second precision time
+printf("now : %ld, %ld\n",now_clock.tv_sec,now_clock.tv_nsec);
 /*	timer_t *tidp;
 	           int or;
 
@@ -181,23 +207,22 @@ int carry;
 	               printf("    overrun count = %d\n", or);*/
 	//timer_t now;
 	//time(&now);
-	//system_msg_dump("start");
-	//system_msg_dump(ctime(&now));
 
 
 	// do this task
     //printf("task : %d\n",sd->p_this->index);
+
 	switch (pSD->p_this->this_task) {
 	case SD_PLAY:
-		//printf("debug, amodem play\n");
+		printf("debug, amodem play\n");
 		amodem_play(pSD->p_this->arg);
 		break;
 	case SD_RECORD:
-		//printf("debug, amodem record\n");
-		amodem_record(pSD->p_this->duration);
+		printf("debug, amodem record\n");
+		amodem_record(pSD->p_this->duration-2000);
 		break;
 	case SD_SLEEP:
-		//printf("debug, amodem sleep\n");
+		printf("debug, amodem sleep\n");
 		break;
 	case SD_SYNC:
 		amodem_sync_clock_gps(4);
@@ -208,14 +233,17 @@ int carry;
 	}
 
 	// book next task
-	carry=0;
-	its.it_value.tv_nsec+=(pSD->p_this->duration%1000)*1000000;
-	if (its.it_value.tv_nsec>=1000000000){
-		its.it_value.tv_nsec+=-1000000000;
-		carry=1;
-	}
-	its.it_value.tv_sec+=pSD->p_this->duration/1000+carry;
-	//printf("%ld %ld\n",its.it_value.tv_sec,its.it_value.tv_nsec);
+	//duration int frac part
+	ss_int = pSD->p_this->duration / 1000;
+	ss_frac = (pSD->p_this->duration - ss_int*1000)*1000000;
+	printf("debug, duration %ld %ld\n",ss_int,ss_frac);
+	//addition
+	its.it_value.tv_sec += ss_int;
+	its.it_value.tv_nsec += ss_frac;
+	//increment
+	its.it_value.tv_sec += its.it_value.tv_nsec/1000000000;
+	its.it_value.tv_nsec = its.it_value.tv_nsec%1000000000;
+
 
 	if (pSD->p_this->index == pSD->n_task) {//one round done
 	pSD->p_this = pSD -> p_head;
@@ -245,37 +273,46 @@ int scheduler_start(SD *sd) {
 	struct timespec now_clock;
 	struct tm start_time;
 	long ss_int;
-	long ss_frac = 0;
+	long ss_frac;
 	time_t now;
 	int BlockSec;//sec
+	/*set the first timer interrupt*/
+	clock_gettime(CLOCKID,&now_clock);//Get sub second precision time
 
 	/*figures out Number of seconds before first interrupt*/
 	time(&now);
 	start_time=*localtime(&now);
-	start_time.tm_hour=sd->hh;start_time.tm_min=sd->mm;start_time.tm_sec=(int) floor(sd->ss);
-	ss_frac = (long)sd->ss*1000000000 - start_time.tm_sec*1000000000;
+	//start_time.tm_hour=sd->hh;start_time.tm_min=sd->mm;start_time.tm_sec=;
 
-	/*set the first timer interrupt*/
-	clock_gettime(CLOCKID,&now_clock);//Get sub second precision time
+	//ss input cal
+	ss_int = floor(sd->ss);
+	ss_frac = (long) (((double) sd->ss - (double) ss_int)*1000000000.0);
+	printf("debug : %ld, %ld\n",ss_int,ss_frac);
+
 
 	switch(sd->init_time){
 	case 'a':
 	ss_int = difftime(mktime(&start_time),now) + 1;
 	break;
 	case 'r':
-	ss_int = sd->ss;
 	ss_frac += now_clock.tv_nsec;
+	ss_int += now_clock.tv_sec;
 	break;
 	default:
 	fprintf(stderr,"scheduler arg invalid\n");
 	return FAIL;
 	break;
 	}
+	//increment
 	ss_int += ss_frac/1000000000;
+	ss_frac = ss_frac%1000000000;
+	printf("now : %ld, %ld\n",now_clock.tv_sec,now_clock.tv_nsec);
+	printf("init : %ld, %ld\n",ss_int,ss_frac);
+
 	its.it_interval.tv_nsec = 0;//one shot timer
 	its.it_interval.tv_sec = 0;
-	its.it_value.tv_sec = now_clock.tv_sec + ss_int;
-	its.it_value.tv_nsec = ss_frac % 1000000000;
+	its.it_value.tv_sec = ss_int;
+	its.it_value.tv_nsec = ss_frac;
 
 	if (ss_int < 2){
 		printf("error, target time has passed\n");
@@ -291,7 +328,7 @@ int scheduler_start(SD *sd) {
 	printf("scheduler start\n");
 	printf("%ld seconds left\n", ss_int);
 	sd -> p_this = sd->p_head;
-	BlockSec = (sd -> RoundTime / 1000) * (sd->N) + ss_int +1;
+	BlockSec = (sd -> RoundTime / 1000) * (sd->N) + sd->ss +1;
 	pSD = sd;
 
 	printf("scheduler executing...%d sec\n",BlockSec);

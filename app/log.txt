@@ -130,3 +130,13 @@ Done
 11-7 10:40
 C->D	3.6ms	1
 C->D 		lfm_T3_data_l30
+
+11/13
+charlie modem SD unable to find
+format the SD card outside the modem.
+
+11/17
+I found the Sat data were wrong. Clock error.
+And I open the modem charlie, it turned out that one of the connector in the charlie 
+is not well plug.
+Hint I open the charlie to reformat the SD card, the connectors might unplugged during my opening.

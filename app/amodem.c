@@ -24,10 +24,10 @@ char dump[BUFSIZE];
 char *remote_msg;
 int n;
 int type;
-	char *pNL;
+char *pNL;
 while(1){
 
-	usleep(10000);
+	usleep(50000);
 	pthread_mutex_lock(&modem.readthread);
 	n=RS232_PollComport(modem.fd,dump,BUFSIZE);
 	pthread_mutex_unlock(&modem.readthread);
@@ -213,12 +213,13 @@ int amodem_play(char * filename) {
 	}
 	// get time stamp
 	//TODO buffer time is random
-	if (amodem_wait_local("tx",TIMEOUT_SERIAL, buf, BUFSIZE)!=NULL) {
-		printf("local tx time : %s\n", buf);
+	if (amodem_wait_local("TX",TIMEOUT_SERIAL, buf, BUFSIZE)!=NULL) {
+		amodem_puts_local("\r");
+		printf("Local TX Time : %s\n", buf);
 		strcpy(modem.latest_tx_stamp,buf);
 		fprintf(modem.tx_p,"%s,%s\n",filename,buf);
-		//fprintf(modem.tx_p,"sync %d\n",amodem_is_clock_Sync(2));
-		fprintf(modem.tx_p,"BB:%s\n",ctime(&bb_stamp));
+		fprintf(modem.tx_p,"BB : %s",ctime(&bb_stamp));
+		fprintf(modem.tx_p,"Sync : %d\n\n",amodem_sync_isClockSync());
 		fflush(modem.tx_p);
 		return SUCCESS;
 	} else {
@@ -287,11 +288,11 @@ duration in mili seconds
 	/*get log name*/
 	if (amodem_wait_local("log", 4*TIMEOUT_SERIAL, buf, BUFSIZE)!=NULL){
 	sscanf(buf,"%*s log file %s",logname);
-	printf("local log file : %s\n",logname+4);
+	printf("Local Log File : %s\n",logname+4);
 	strcpy(modem.latest_rx_fname,logname+4);
 	fprintf(modem.rx_p,"%s\n",logname+4);
-	//fprintf(modem.rx_p,"sync %d\n",amodem_is_clock_Sync(2));
-	fprintf(modem.rx_p,"bb : %s\n",ctime(&bb_stamp));
+	fprintf(modem.rx_p,"BB : %s",ctime(&bb_stamp));
+	fprintf(modem.rx_p,"Sync : %d\n\n",amodem_sync_isClockSync());
 	fflush(modem.rx_p);
 	return SUCCESS;
 	}else{
@@ -329,13 +330,46 @@ int amodem_sync_clock_gps(int sec) {
 	}
 	// confirm sync
 	printf("modem sync to pps signal...\n");
+/*
 	if (amodem_sync_status(sec)==SYNC_FALSE) {
 		printf("amodem, fail to sync\n");
 		return SYNC_FALSE;
-	}
+	}*/
 	printf("local modem sync!\n");
 	return SYNC_FALSE;
 }
+int amodem_sync_isClockSync(){
+int state;
+//int isppsx, isSync;
+//float fD, fA, eD, eA;
+//char buf[100];
+//
+amodem_puts_local("sync\r");
+
+//parse response
+/*isppsx = (amodem_wait_ack(&msg_local,"ppsx",2000)==SUCCESS);
+if (amodem_wait_local("fd",100,buf,99)!=NULL) sscanf(buf,"%*s %f %*s %f",&fD,&fA);
+if (amodem_wait_local("ed",100,buf,99)!=NULL) sscanf(buf,"%*s %f %*s %f",&eD,&eA);*/
+
+if (amodem_wait_ack(&msg_local,"Synchronized",2000)==SUCCESS) state = SYNC;
+else state = NOT_SYNC;
+/*printf("fD : %f\n",fD);
+printf("fA : %f\n",fA);
+printf("eD : %f\n",eD);
+printf("eA : %f\n",eA);
+printf("is sync :%d\n",isSync);*/
+
+/*if ((fD!=0)&&(fA!=0)&&(eD!=0)&&(eA!=0)&&isSync&&isppsx) state = 1;
+else state = 0;*/
+
+
+//return
+modem.sync_state = state;
+return state;
+}
+
+
+
 
 int amodem_sync_status(int sec) {
 	//check if clock sync (regardless of clock source) until synchronized or timeout
