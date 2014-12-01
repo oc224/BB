@@ -1,0 +1,3 @@
+#!/bin/bash
+# Given station name & list
+# this program scp the file and anal using octave script

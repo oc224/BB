@@ -140,3 +140,32 @@ I found the Sat data were wrong. Clock error.
 And I open the modem charlie, it turned out that one of the connector in the charlie 
 is not well plug.
 Hint I open the charlie to reformat the SD card, the connectors might unplugged during my opening.
+
+
+12/1
+
+One of the modems have trouble using command "rb" and "date -store" (maybe other issue as well)
+So I reinstall the firmware for the modem.
+Discovery :
+1. Since the battery in Modem is dead , after setting @P1protocol = RS-485,
+unplugged the cable is like power off for the modem. 
+However, when I unplugged the cable then quickly plugged another cable. The modem shutdown, then boots up.
+And the modem keep the @p1protocol setting (I thought any setting will be kept only after cfg store, if not cfg store, the modified setting 
+will be discard once the modem power off. And it seems not the case today)
+
+2. The sx in buoy may differ from those in linux PC.
+I was tring to upload the firmware using Xmodem on buoy (beagleboard running archlinux).
+And it fail to do so.
+Then I use linux PC to upload the firmware, it works.
+
+The Comparision
+X86 Linux PC
+RS-232 115200 
+minicom sx
+
+BB on Buoy
+ARM BB
+RS-485 115200
+minicom sx
+
+

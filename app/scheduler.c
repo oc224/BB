@@ -231,6 +231,8 @@ printf("now : %ld, %ld\n",now_clock.tv_sec,now_clock.tv_nsec);
 	default:
 		break;
 	}
+clock_gettime(CLOCKID,&now_clock);//Get sub second precision time
+printf("now : %ld, %ld\n",now_clock.tv_sec,now_clock.tv_nsec);
 
 	// book next task
 	//duration int frac part

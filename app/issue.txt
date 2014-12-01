@@ -1,0 +1,58 @@
+
+The issue of Benthos Modem
+	Yun-Wen 2014-11-24
+
+1. The available storage size of /ffs directory is crucial.
+Use "df" command to see the size. Available size should be enough.
+Otherwise you will feel latency when you interact with modems.
+Do not delete any .ini files!
+Delete useless .wav or .log files to gain more available space.
+There are system important files (.ini). Leave them alone!
+
+2. Serial Port setting
+Just be aware there are three serial port protocol, that is RS-232, RS-485,
+RS-422. We use RS-422 and the baudrate is 115200.
+The serial port setting changes when you reinstall the firmware or restore the default modem setting.
+The default serial port setting of the modem is RS-232, baudrate is 9600
+
+3. Synchronization
+Several commands are involved.
+@syncpps  see the clock source of the modem
+@syncpps=2 set the clock source to be modem internal clock
+you should set the syncpps to either external Rising Edge or Falling Edge.
+
+
+sync 
+see the synchronization status.
+
+@verbose = 4
+see more sync information each seconds.
+
+In addition, you may use atr command to validate whether two modems are synchronized or not.
+ie. modem charlie(addr = 213) , modem dylan (addr = 214) are very close to each other
+on charlie, issue command atr214, then you should see TX time stamp and RX time stamp.
+on dylan, you should see RX time stamp.
+If RX time = TX time + Process time (0.4 sec) + Travel time between two modems (nearly zero)
+If the equation is not hold, then modems may not properly synchronized.
+
+
+4. SD card
+SD card installed in the modem may crash sometimes, we don't know what cause the crash.
+If your SD card crash, you won't see /sd directory( see ls ).
+You will not able to record without /sd
+
+You can try instructions below if your /sd directory is missing.
+setpriv update
+mount sd
+
+If it not work. You have to 
+1. Open the case of modem to retrieve the SD card. 
+2. Then format the SD card in your computer.(FAT16 or 32??)
+3. Then insert the SD card back to your modem.
+4. Open the modem. See if /sd is there. If not see step 5.
+5. setpriv update
+6. mount sd
+7. you should be able to see /sd directory now. Personally I reformat the SD card again on the modem. see step 8.
+8. setpriv update
+9. format sd
+10. setpriv user

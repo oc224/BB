@@ -368,36 +368,36 @@ else N=1;
 printf("ctalk, %d times\n",N);
 
 //SD
-scheduler_set(&sd,1,1,0,0,12.0);
+scheduler_set(&sd,1,20,0,0,12.0);
 scheduler_task_add_para(&sd,SD_SLEEP,1000,NULL);
 scheduler_task_add_para(&sd,SD_RECORD,5000,NULL);
 scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
 scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
 scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
-scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
-scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
+//scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
+//scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
 
 scheduler_show(&sd);
 amodem_puts_local("atr3\r");
 scheduler_start(&sd);
-data_anal(&dc,TX_DEFAULT);
+//data_anal(&dc,TX_DEFAULT);
 #endif
 
 #ifdef CON_SLAVE
 
 //SD
-scheduler_set(&sd,1,1,0,0,11.2);
+scheduler_set(&sd,1,20,0,0,11.5);
 scheduler_task_add_para(&sd,SD_SLEEP,2000,NULL);
 scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
 scheduler_task_add_para(&sd,SD_SLEEP,7000,NULL);
 scheduler_task_add_para(&sd,SD_RECORD,5000,NULL);
 scheduler_task_add_para(&sd,SD_SLEEP,4000,NULL);
-scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
-scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
+//scheduler_task_add_para(&sd,SD_SLEEP,6000,NULL);
+//scheduler_task_add_para(&sd,SD_PLAY,2000,TX_DEFAULT);
 scheduler_show(&sd);
 scheduler_start(&sd);
 
-data_anal(&dc,TX_DEFAULT);
+//data_anal(&dc,TX_DEFAULT);
 /*sprintf(buf,"SNR = %4.1f, RX %d:%d:%f\n",dc.snr,dc.hh,dc.mm,dc.ss+dc.offset);
 amodem_mode_select('o',3);
 amodem_puts_local(buf);
