@@ -169,3 +169,17 @@ RS-485 115200
 minicom sx
 
 
+12/11
+
+
+The modem that had trouble "rb" now have trouble "rb" or "sb" again.
+I verified the buoy is ok by using another modem for reference.
+However, this time, "date -store" on the trouble modem is ok.
+
+I got two buoys from prof. Guo yesterday, and today I uninstall the RF
+modems (MHS113030).
+The buoy station 1 or Anderson have trouble to boot.
+The buoy station 2 is fine.
+The SD card on station1 and station2 are fine.
+It's neccessary for BB to insert a SD card, otherwise there's no prompt.
+
